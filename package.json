@@ -1,0 +1,69 @@
+{
+  "name": "@ahmedrowaihi/openapi-ts-faker",
+  "version": "0.1.0",
+  "description": "Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs",
+  "keywords": [
+    "openapi",
+    "openapi-ts",
+    "faker",
+    "fakerjs",
+    "mock",
+    "mocking",
+    "testing",
+    "typescript",
+    "codegen",
+    "type-safe",
+    "plugin"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/openapi-ts-addon-hub",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/openapi-ts-addon-hub/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/openapi-ts-addon-hub.git",
+    "directory": "plugins/faker"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "format": "biome format --write .",
+    "format:check": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hey-api/openapi-ts": ">=0.92.0",
+    "@faker-js/faker": "^9.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.1",
+    "@faker-js/faker": "^9.3.0",
+    "@hey-api/codegen-core": "^0.7.0",
+    "@hey-api/openapi-ts": "^0.92.0",
+    "@hey-api/shared": "^0.2.0",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
