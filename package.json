@@ -62,6 +62,7 @@
     "@hey-api/codegen-core": "^0.7.0",
     "@hey-api/openapi-ts": "^0.92.0",
     "@hey-api/shared": "^0.2.0",
+    "@types/node": "^22",
     "typescript": "5.9.3"
   },
   "engines": {
