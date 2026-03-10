@@ -11,6 +11,30 @@ export type ServerConfig = {
    * @default false
    */
   implementation?: boolean;
+  /**
+   * Scaffold handler files under `handlersDir`.
+   * - New files are created with `throw new ORPCError('NOT_IMPLEMENTED')` stubs.
+   * - Existing files are patched: only procedures absent from the file are appended.
+   * Files are never wiped; set to `false` to disable entirely.
+   * @default true when `implementation` is true
+   */
+  handlers?:
+    | boolean
+    | {
+        /**
+         * Directory to write handler files into.
+         * Resolved relative to `process.cwd()`.
+         * @default 'src/handlers'
+         */
+        dir?: string;
+        /**
+         * Path alias prefix used when importing `server.gen` inside handler files.
+         * When set (e.g. `'#/'`), the import becomes `#/generated/.../server.gen`.
+         * When omitted, a relative path is used instead.
+         * @example '#/'
+         */
+        importAlias?: string;
+      };
 };
 
 export type ClientConfig = {
@@ -87,7 +111,7 @@ export type UserConfig = Plugin.Hooks &
 export type Config = Plugin.Hooks &
   Plugin.Exports & {
     name: "@ahmedrowaihi/openapi-ts-orpc";
-    server: Required<ServerConfig>;
+    server: Required<Omit<ServerConfig, "handlers">> & { handlers: false | { dir: string; importAlias?: string } };
     client: Required<ClientConfig>;
     group: "paths" | "flat" | "tags";
     mode: "detailed" | "compact";

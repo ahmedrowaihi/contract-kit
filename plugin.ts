@@ -1,6 +1,9 @@
+import { dirname, join, relative } from "node:path";
+
 import {
   generateClients,
   generateContracts,
+  generateHandlers,
   generateRouter,
   generateServer,
   generateTanstack,
@@ -58,6 +61,31 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
         plugin,
         routerSymbol,
         serverFile,
+      });
+    }
+
+    // ==========================================================================
+    // Handler Scaffolding
+    // ==========================================================================
+
+    const handlersConfig = plugin.config.server.handlers;
+    if (handlersConfig) {
+      // Absolute path to the output directory (e.g. /project/src/generated)
+      const outputDir: string = plugin.context.config.output.path;
+      // Absolute path to the handlers directory (e.g. /project/src/handlers)
+      const handlersDir = join(process.cwd(), handlersConfig.dir);
+      const serverGenAbsolute = join(outputDir, plugin.name, "server.gen");
+      const { importAlias } = handlersConfig;
+      const serverGenImport = importAlias
+        // e.g. "#/generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
+        ? `${importAlias}${relative(dirname(outputDir), serverGenAbsolute).replace(/\\/g, "/")}`
+        // e.g. "../generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
+        : relative(handlersDir, serverGenAbsolute).replace(/\\/g, "/");
+
+      generateHandlers({
+        handlersDir,
+        serverGenImport,
+        routerStructure,
       });
     }
 
