@@ -154,7 +154,7 @@ export const generateContracts = ({
 
           // Determine if we can use compact mode (merge all parts)
           const canMerge =
-            (bodyIsObject && (hasPathParams || hasQueryParams)) ||
+            bodyIsObject ||
             (!hasBody && hasPathParams && !hasQueryParams) ||
             (!hasBody && !hasPathParams && hasQueryParams && isGetOrDelete) ||
             (!hasBody && hasPathParams && hasQueryParams && isGetOrDelete);
