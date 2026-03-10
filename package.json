@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-orpc",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs",
   "keywords": [
     "openapi",
