@@ -7,23 +7,23 @@ import type { ClientGeneratorInput, ClientTypeConfig } from "./types";
  * Maps client types to their external symbols and config.
  */
 const CLIENT_TYPE_CONFIGS: Record<ClientType, ClientTypeConfig | null> = {
-  openApiLink: {
+  openapi: {
     configTypeName: "OpenApiLinkClientConfig",
     functionName: "createOpenApiClient",
     linkSymbolResource: "@orpc/openapi-client/fetch.OpenAPILink",
     needsRouter: true, // OpenAPILink requires router as first arg
   },
-  rpcLink: {
+  rpc: {
     configTypeName: "RpcLinkClientConfig",
     functionName: "createRpcLinkClient",
     linkSymbolResource: "@orpc/client/fetch.RPCLink",
   },
-  rpcMessagePort: {
+  messageport: {
     configTypeName: "RpcMessagePortClientConfig",
     functionName: "createRpcMessagePortClient",
     linkSymbolResource: "@orpc/client/message-port.RPCLink",
   },
-  rpcWebSocket: {
+  websocket: {
     configTypeName: "RpcWebSocketClientConfig",
     functionName: "createRpcWebSocketClient",
     linkSymbolResource: "@orpc/client/websocket.RPCLink",

@@ -4,62 +4,82 @@ export type TransformOperationNameFn = (
   operation: IR.OperationObject,
 ) => string;
 
-export type ClientType =
-  | "rpcMessagePort"
-  | "rpcWebSocket"
-  | "openApiLink"
-  | "tanstack"
-  | "rpcLink";
+export type ServerConfig = {
+  /**
+   * Generate server.gen.ts — the `os = implement(router)` helper used to
+   * type-safely implement each procedure in your backend.
+   * @default false
+   */
+  implementation?: boolean;
+};
 
-export type Preset = "fullstack" | "client" | "server";
+export type ClientConfig = {
+  /**
+   * Generate an HTTP client using the native oRPC RPC protocol.
+   * @default false
+   */
+  rpc?: boolean;
+  /**
+   * Generate a WebSocket client using the native oRPC RPC protocol.
+   * @default false
+   */
+  websocket?: boolean;
+  /**
+   * Generate a MessagePort client (Web Workers, iframes).
+   * @default false
+   */
+  messageport?: boolean;
+  /**
+   * Generate an OpenAPI-compatible REST client.
+   * Use this when the server exposes standard REST endpoints.
+   * @default false
+   */
+  openapi?: boolean;
+  /**
+   * Generate TanStack Query utilities (useQuery, useMutation, etc.).
+   * Wraps any of the above clients.
+   * @default false
+   */
+  tanstack?: boolean;
+};
+
+export type ClientType = keyof ClientConfig;
 
 export type UserConfig = Plugin.Hooks &
   Plugin.UserExports & {
     name: "@ahmedrowaihi/openapi-ts-orpc";
     /**
-     * Client types to generate.
-     * Specify which client utilities to generate.
-     * @default ['rpcLink']
-     * @example ['rpcLink', 'tanstack']
-     * @example ['openApiLink', 'rpcWebSocket', 'tanstack']
+     * Server-side generation options.
+     * Controls what backend files are produced.
+     * Contracts and router are always generated regardless of this setting.
+     * @example { implementation: true }
      */
-    clients?: ReadonlyArray<ClientType>;
+    server?: ServerConfig;
+    /**
+     * Client-side generation options.
+     * Each key enables a specific client transport or utility.
+     * @example { rpc: true, tanstack: true }
+     * @example { openapi: true }
+     */
+    client?: ClientConfig;
     /**
      * Router grouping strategy.
-     * - 'tags' (default): Group by OpenAPI tags (e.g., { authentication: {...}, users: {...} })
-     * - 'paths': Group by REST path structure (e.g., { auth: { phone: {...} }, users: {...} })
-     * - 'flat': Flat structure with no grouping (e.g., { authPhoneSendOtp: ..., usersById: ... })
+     * - 'tags' (default): Group by OpenAPI tags
+     * - 'paths': Group by REST path structure
+     * - 'flat': No grouping, all procedures at root level
      * @default 'tags'
      */
     group?: "paths" | "flat" | "tags";
     /**
      * Contract input structure mode.
-     * - 'compact' (default): Flat schema with path + body (POST/PUT/PATCH) or path + query (GET/DELETE), excludes headers
-     * - 'detailed': Explicit structure with params, query, headers, and body properties
+     * - 'compact' (default): Flat merged schema (path + body for mutations, path + query for reads)
+     * - 'detailed': Explicit { path, query, headers, body } structure
      * @default 'compact'
      */
     mode?: "detailed" | "compact";
     /**
-     * Preset configuration for common use cases.
-     * - 'client': Frontend (includes clients + tanstack)
-     * - 'server': Backend (no clients, router only)
-     * - 'fullstack': Monorepo (router + clients + tanstack)
-     *
-     * Individual options override preset defaults.
-     * @example 'client'
-     */
-    preset?: Preset;
-    /**
      * Custom function to transform operation names in the router.
-     * Receives the full operation object and returns the transformed name.
-     * Access operation.id, operation.tags, operation.path, operation.method, etc.
-     * @example
-     * transformOperationName: (operation) => {
-     *   const name = operation.id;
-     *   const tag = operation.tags?.[0];
-     *   // Custom transform logic using any operation property
-     *   return name.replace(/Controller_/i, '').toLowerCase();
-     * }
+     * @example (operation) => operation.id.replace(/Controller_/i, '')
      */
     transformOperationName?: TransformOperationNameFn;
   };
@@ -67,10 +87,10 @@ export type UserConfig = Plugin.Hooks &
 export type Config = Plugin.Hooks &
   Plugin.Exports & {
     name: "@ahmedrowaihi/openapi-ts-orpc";
-    clients: ReadonlyArray<ClientType>;
+    server: Required<ServerConfig>;
+    client: Required<ClientConfig>;
     group: "paths" | "flat" | "tags";
     mode: "detailed" | "compact";
-    preset?: Preset;
     transformOperationName?: TransformOperationNameFn;
   };
 

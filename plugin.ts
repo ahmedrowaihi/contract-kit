@@ -6,7 +6,7 @@ import {
   generateTanstack,
 } from "./generators";
 import { registerExternalSymbols } from "./symbols/external";
-import type { ORPCPlugin } from "./types";
+import type { ClientType, ORPCPlugin } from "./types";
 
 /**
  * Main oRPC plugin handler.
@@ -53,10 +53,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
     // Server Generation
     // ==========================================================================
 
-    const preset = plugin.config.preset;
-    const shouldGenerateServer = preset === "server" || preset === "fullstack";
-
-    if (shouldGenerateServer) {
+    if (plugin.config.server.implementation) {
       generateServer({
         plugin,
         routerSymbol,
@@ -68,7 +65,12 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
     // Client Generation
     // ==========================================================================
 
-    const clientTypes = plugin.config.clients;
+    const { tanstack, ...transports } = plugin.config.client;
+    const clientTypes = (
+      Object.entries(transports) as [string, boolean][]
+    )
+      .filter(([, enabled]) => enabled)
+      .map(([type]) => type as ClientType);
 
     if (clientTypes.length > 0) {
       const context = {
@@ -82,7 +84,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
 
       generateClients({ clientTypes, context });
 
-      if (clientTypes.includes("tanstack")) {
+      if (tanstack) {
         generateTanstack(context);
       }
     }
