@@ -1,0 +1,25 @@
+tsconfig.json
+  5b8d1fbcab2fa608 7
+example/openapi-ts.config.ts
+  5b8d1fbcab2fa608 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.10",
+  "base_commit_sha": "c87b5820466caa279799aa7f5644a654a27cc366",
+  "prompts": {
+    "5b8d1fbcab2fa608": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eeeb62fa-7d22-4e43-b3e8-0eb0cc59a48c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "ahmedrowaihi <ahmedrowaihi1@gmail.com>",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
