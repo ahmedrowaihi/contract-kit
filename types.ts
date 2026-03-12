@@ -71,7 +71,7 @@ export type ClientType = keyof ClientConfig;
 
 export type UserConfig = Plugin.Hooks &
   Plugin.UserExports & {
-    name: "@ahmedrowaihi/openapi-ts-orpc";
+    name: "@ahmedrowaihi/orpc";
     /**
      * Server-side generation options.
      * Controls what backend files are produced.
@@ -110,7 +110,7 @@ export type UserConfig = Plugin.Hooks &
 
 export type Config = Plugin.Hooks &
   Plugin.Exports & {
-    name: "@ahmedrowaihi/openapi-ts-orpc";
+    name: "@ahmedrowaihi/orpc";
     server: Required<Omit<ServerConfig, "handlers">> & { handlers: false | { dir: string; importAlias?: string } };
     client: Required<ClientConfig>;
     group: "paths" | "flat" | "tags";
@@ -123,6 +123,6 @@ export type ORPCPlugin = DefinePlugin<UserConfig, Config>;
 // Module augmentation to register the orpc plugin in the PluginConfigMap
 declare module "@hey-api/openapi-ts" {
   export interface PluginConfigMap {
-    "@ahmedrowaihi/openapi-ts-orpc": ORPCPlugin["Types"];
+    "@ahmedrowaihi/orpc": ORPCPlugin["Types"];
   }
 }

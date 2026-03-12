@@ -56,7 +56,7 @@ export const defaultConfig: ORPCPlugin["Config"] = {
   },
   dependencies: ["@hey-api/typescript", "zod"],
   handler,
-  name: "@ahmedrowaihi/openapi-ts-orpc",
+  name: "@ahmedrowaihi/orpc",
   resolveConfig: (plugin) => {
     plugin.config.server ??= { implementation: false, handlers: false };
     plugin.config.server.handlers = resolveHandlers(plugin.config.server);

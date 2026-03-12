@@ -51,18 +51,18 @@
   },
   "peerDependencies": {
     "@hey-api/openapi-ts": ">=0.92.0",
-    "@orpc/client": "^1.13.0",
-    "@orpc/contract": "^1.13.0",
-    "@orpc/openapi": "^1.13.0",
-    "@orpc/openapi-client": "^1.13.0",
-    "@orpc/server": "^1.13.0",
-    "@orpc/tanstack-query": "^1.13.0"
+    "@orpc/client": "^1.13",
+    "@orpc/contract": "^1.13",
+    "@orpc/openapi": "^1.13",
+    "@orpc/openapi-client": "^1.13",
+    "@orpc/server": "^1.13",
+    "@orpc/tanstack-query": "^1.13"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.1",
-    "@hey-api/codegen-core": "^0.7.0",
-    "@hey-api/openapi-ts": "^0.92.0",
-    "@hey-api/shared": "^0.2.0",
+    "@hey-api/codegen-core": "^0.7.1",
+    "@hey-api/openapi-ts": "^0.94.0",
+    "@hey-api/shared": "^0.2.2",
     "@types/node": "^22",
     "typescript": "5.9.3"
   },
