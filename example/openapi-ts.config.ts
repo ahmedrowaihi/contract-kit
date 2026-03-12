@@ -13,13 +13,22 @@ export default defineConfig({
   },
   plugins: [
     "@hey-api/typescript",
-    "zod",
+    {
+      name: "zod",
+      "~hooks": {
+        symbols: {
+          getFilePath: (symbol) => {
+            const tag = symbol.meta?.tags?.[0];
+            if (tag) return `zod/${tag}/schemas`;
+          },
+        },
+      },
+    },
     defineORPCConfig({
-      // Generates server + client + tanstack
-      clients: ["openApiLink", "tanstack", "rpcLink"],
       group: "tags",
       mode: "compact",
-      preset: "fullstack",
+      server: { implementation: true },
+      client: { rpc: true, openapi: true, tanstack: true },
     }),
   ],
 });

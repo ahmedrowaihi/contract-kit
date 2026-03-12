@@ -58,9 +58,17 @@ export const generateContracts = ({
       }
     }
 
+    // Compute group key early so we can use it for file placement
+    const groupMode = plugin.config.group;
+    const groupKey = getGroupKey(operation, groupMode);
+    const contractFilePath =
+      groupMode === "flat"
+        ? contractFile
+        : `${plugin.name}/${groupKey}/contract`;
+
     // Register contract symbol
     const symbol = plugin.symbol(contractName, {
-      getFilePath: () => contractFile,
+      getFilePath: () => contractFilePath,
       meta: {
         category: "contract",
         resource: "operation",
@@ -282,8 +290,6 @@ export const generateContracts = ({
     plugin.node(statement);
 
     // Add to router structure
-    const groupMode = plugin.config.group;
-    const groupKey = getGroupKey(operation, groupMode);
     const operationName = operation.operationId || operationId;
 
     if (!routerStructure.has(groupKey)) {
