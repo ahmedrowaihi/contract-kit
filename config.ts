@@ -5,7 +5,7 @@ import type { ORPCPlugin, UserConfig } from "./types";
 
 function resolveHandlers(
   server: UserConfig["server"],
-): false | { dir: string; importAlias?: string } {
+): false | { dir: string; importAlias?: string; implementer?: { name: string; from: string } } {
   const handlers = server?.handlers;
   const implementation = server?.implementation ?? false;
   if (handlers === false) return false;
@@ -13,7 +13,11 @@ function resolveHandlers(
     return { dir: "src/handlers" };
   }
   if (typeof handlers === "object") {
-    return { dir: handlers.dir ?? "src/handlers", importAlias: handlers.importAlias };
+    return {
+      dir: handlers.dir ?? "src/handlers",
+      importAlias: handlers.importAlias,
+      implementer: handlers.implementer,
+    };
   }
   return false;
 }
@@ -36,6 +40,7 @@ export const resolveConfig = (
     group: userConfig.group ?? "tags",
     includeInEntry: true,
     mode: userConfig.mode ?? "compact",
+    validation: userConfig.validation ?? "zod",
     transformOperationName: userConfig.transformOperationName,
   };
 };
@@ -53,6 +58,7 @@ export const defaultConfig: ORPCPlugin["Config"] = {
     group: "tags",
     includeInEntry: true,
     mode: "compact",
+    validation: "zod",
   },
   dependencies: ["@hey-api/typescript", "zod"],
   handler,
@@ -60,6 +66,9 @@ export const defaultConfig: ORPCPlugin["Config"] = {
   resolveConfig: (plugin) => {
     plugin.config.server ??= { implementation: false, handlers: false };
     plugin.config.server.handlers = resolveHandlers(plugin.config.server);
+    if (plugin.config.validation === "typia") {
+      plugin.dependencies?.delete("zod");
+    }
   },
   tags: ["transformer"],
 };

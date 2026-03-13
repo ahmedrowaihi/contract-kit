@@ -27,9 +27,9 @@ export interface HandlersGeneratorInput {
   /** Relative import path from a handler file to server.gen.js. */
   serverGenImport: string;
   routerStructure: Map<string, RouterNode[]>;
+  /** Override the implementer used in stubs (default: { name: 'os', from: serverGenImport }). */
+  implementer?: { name: string; from: string };
 }
-
-// ─── AST analysis ────────────────────────────────────────────────────────────
 
 interface HandlerObjectInfo {
   /** Property names already declared in the handler object. */
@@ -72,8 +72,6 @@ function analyzeHandlerFile(source: string, varName: string): HandlerObjectInfo 
   return null;
 }
 
-// ─── AST node factories ───────────────────────────────────────────────────────
-
 const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 
 /**
@@ -112,11 +110,11 @@ function makeImport(names: string[], from: string): ts.ImportDeclaration {
 /**
  * Builds the AST node for a single handler property:
  *
- *   procedure: os.tag.procedure.handler(async () => {
+ *   procedure: implementerName.tag.procedure.handler(async () => {
  *     throw new ORPCError('NOT_IMPLEMENTED');
  *   })
  */
-function makeHandlerProperty(tag: string, procedure: string): ts.PropertyAssignment {
+function makeHandlerProperty(tag: string, procedure: string, implementerName: string): ts.PropertyAssignment {
   const throwStmt = ts.factory.createThrowStatement(
     ts.factory.createNewExpression(
       ts.factory.createIdentifier("ORPCError"),
@@ -138,7 +136,7 @@ function makeHandlerProperty(tag: string, procedure: string): ts.PropertyAssignm
     ts.factory.createPropertyAccessExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier("os"),
+          ts.factory.createIdentifier(implementerName),
           ts.factory.createIdentifier(tag),
         ),
         ts.factory.createIdentifier(procedure),
@@ -155,18 +153,21 @@ function makeHandlerProperty(tag: string, procedure: string): ts.PropertyAssignm
   );
 }
 
-// ─── Code generation ─────────────────────────────────────────────────────────
-
 /**
  * Generates a complete handler file.
  * The full source file is constructed as a TypeScript AST and printed with
  * `ts.createPrinter` — no template strings involved.
  */
-function stubFile(tag: string, procedures: string[], serverGenImport: string): string {
+function stubFile(
+  tag: string,
+  procedures: string[],
+  serverGenImport: string,
+  implementer: { name: string; from: string },
+): string {
   const varName = safeVarName(tag);
   const statements: ts.Statement[] = [
     makeImport(["ORPCError"], "@orpc/server"),
-    makeImport(["os"], serverGenImport),
+    makeImport([implementer.name], implementer.from),
     ts.factory.createVariableStatement(
       undefined,
       ts.factory.createVariableDeclarationList(
@@ -176,7 +177,7 @@ function stubFile(tag: string, procedures: string[], serverGenImport: string): s
             undefined,
             undefined,
             ts.factory.createObjectLiteralExpression(
-              procedures.map((p) => makeHandlerProperty(tag, p)),
+              procedures.map((p) => makeHandlerProperty(tag, p, implementer.name)),
               /* multiLine */ true,
             ),
           ),
@@ -212,8 +213,8 @@ function detectIndent(source: string): string {
  * converts that to the file's detected indent unit, then prepends the outer
  * indent (one level) to every line.
  */
-function printStubProperty(tag: string, procedure: string, indent: string): string {
-  const node = makeHandlerProperty(tag, procedure);
+function printStubProperty(tag: string, procedure: string, indent: string, implementerName: string): string {
+  const node = makeHandlerProperty(tag, procedure, implementerName);
   const raw = printer.printNode(ts.EmitHint.Unspecified, node, emptySourceFile);
 
   const normalized = raw
@@ -238,13 +239,13 @@ function printStubProperty(tag: string, procedure: string, indent: string): stri
  * The original file content is preserved for all existing code; only the
  * new stubs are spliced in at the exact character position of the closing `}`.
  */
-function patchFile(source: string, tag: string, missing: string[]): string {
+function patchFile(source: string, tag: string, missing: string[], implementerName: string): string {
   const info = analyzeHandlerFile(source, safeVarName(tag));
   if (!info) return source; // can't locate the object — leave the file untouched
 
   const indent = detectIndent(source);
   const insertion =
-    missing.map((p) => `\n${printStubProperty(tag, p, indent)}`).join("\n") + "\n";
+    missing.map((p) => `\n${printStubProperty(tag, p, indent, implementerName)}`).join("\n") + "\n";
 
   return (
     source.slice(0, info.closingBracePos) +
@@ -253,16 +254,17 @@ function patchFile(source: string, tag: string, missing: string[]): string {
   );
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
 export function generateHandlers({
   handlersDir,
   serverGenImport,
   routerStructure,
+  implementer,
 }: HandlersGeneratorInput): void {
   if (!existsSync(handlersDir)) {
     mkdirSync(handlersDir, { recursive: true });
   }
+
+  const impl = implementer ?? { name: "os", from: serverGenImport };
 
   for (const [group, nodes] of routerStructure) {
     const tag = toCamelCase(group);
@@ -270,7 +272,7 @@ export function generateHandlers({
     const filePath = join(handlersDir, `${tag}.ts`);
 
     if (!existsSync(filePath)) {
-      writeFileSync(filePath, stubFile(tag, procedures, serverGenImport));
+      writeFileSync(filePath, stubFile(tag, procedures, serverGenImport, impl));
       continue;
     }
 
@@ -280,7 +282,7 @@ export function generateHandlers({
 
     const missing = procedures.filter((p) => !info.existingNames.has(p));
     if (missing.length > 0) {
-      writeFileSync(filePath, patchFile(source, tag, missing));
+      writeFileSync(filePath, patchFile(source, tag, missing, impl.name));
     }
   }
 }

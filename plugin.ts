@@ -20,7 +20,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
   // External Symbols Registration
   // ============================================================================
 
-  registerExternalSymbols(plugin);
+  registerExternalSymbols(plugin, plugin.config);
 
   // ============================================================================
   // File Paths Configuration
@@ -86,6 +86,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
         handlersDir,
         serverGenImport,
         routerStructure,
+        implementer: handlersConfig.implementer,
       });
     }
 

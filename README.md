@@ -161,3 +161,9 @@ router.usersGetById({ id: 123 });
 
 - `@hey-api/typescript` plugin (auto-included as dependency)
 - `zod` plugin (auto-included as dependency)
+
+---
+
+## Typia Integration
+
+Want compile-time validators instead of Zod? See [docs/typia.md](docs/typia.md).
