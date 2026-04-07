@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-faker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs",
   "keywords": [
     "openapi",
@@ -36,6 +36,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
     },
     "./package.json": "./package.json"
   },

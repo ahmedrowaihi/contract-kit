@@ -3,3 +3,4 @@ import "./types";
 
 export { defaultConfig, defineConfig } from "./config";
 export type { FakerPlugin } from "./types";
+export * from "./core";
