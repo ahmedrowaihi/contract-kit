@@ -2,9 +2,14 @@
 
 import { oc } from '@orpc/contract';
 
-import { zCreateUserData, zCreateUserResponse, zCreateUsersWithListInputData, zCreateUsersWithListInputResponse, zDeleteUserData, zGetUserByNameData, zGetUserByNameResponse, zLoginUserData, zLoginUserResponse, zUpdateUserData } from '../../../zod/user/schemas.gen';
+import { zCreateUserResponse, zCreateUsersWithListInputResponse, zGetUserByNameResponse, zLoginUserResponse } from '../../../zod/user/schemas.gen';
 
-export const createUserContract = oc.route({
+/**
+ * Create user.
+ *
+ * This can only be done by the logged in user.
+ */
+export const CreateUserContract = oc.route({
     method: 'POST',
     path: '/user',
     operationId: 'createUser',
@@ -13,9 +18,14 @@ export const createUserContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zCreateUserData.shape.body.unwrap()).output(zCreateUserResponse);
+}).output(zCreateUserResponse);
 
-export const createUsersWithListInputContract = oc.route({
+/**
+ * Creates list of users with given input array.
+ *
+ * Creates list of users with given input array.
+ */
+export const CreateUsersWithListInputContract = oc.route({
     method: 'POST',
     path: '/user/createWithList',
     operationId: 'createUsersWithListInput',
@@ -24,9 +34,14 @@ export const createUsersWithListInputContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'Successful operation'
-}).input(zCreateUsersWithListInputData.shape.body.unwrap()).output(zCreateUsersWithListInputResponse);
+}).output(zCreateUsersWithListInputResponse);
 
-export const loginUserContract = oc.route({
+/**
+ * Logs user into the system.
+ *
+ * Log into the system.
+ */
+export const LoginUserContract = oc.route({
     method: 'GET',
     path: '/user/login',
     operationId: 'loginUser',
@@ -35,9 +50,14 @@ export const loginUserContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zLoginUserData.shape.query.unwrap()).output(zLoginUserResponse);
+}).output(zLoginUserResponse);
 
-export const logoutUserContract = oc.route({
+/**
+ * Logs out current logged in user session.
+ *
+ * Log user out of the system.
+ */
+export const LogoutUserContract = oc.route({
     method: 'GET',
     path: '/user/logout',
     operationId: 'logoutUser',
@@ -48,7 +68,12 @@ export const logoutUserContract = oc.route({
     successDescription: 'successful operation'
 });
 
-export const deleteUserContract = oc.route({
+/**
+ * Delete user resource.
+ *
+ * This can only be done by the logged in user.
+ */
+export const DeleteUserContract = oc.route({
     method: 'DELETE',
     path: '/user/{username}',
     operationId: 'deleteUser',
@@ -57,9 +82,14 @@ export const deleteUserContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'User deleted'
-}).input(zDeleteUserData.shape.path);
+});
 
-export const getUserByNameContract = oc.route({
+/**
+ * Get user by user name.
+ *
+ * Get user detail based on username.
+ */
+export const GetUserByNameContract = oc.route({
     method: 'GET',
     path: '/user/{username}',
     operationId: 'getUserByName',
@@ -68,9 +98,14 @@ export const getUserByNameContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zGetUserByNameData.shape.path).output(zGetUserByNameResponse);
+}).output(zGetUserByNameResponse);
 
-export const updateUserContract = oc.route({
+/**
+ * Update user resource.
+ *
+ * This can only be done by the logged in user.
+ */
+export const UpdateUserContract = oc.route({
     method: 'PUT',
     path: '/user/{username}',
     operationId: 'updateUser',
@@ -79,4 +114,4 @@ export const updateUserContract = oc.route({
     tags: ['user'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zUpdateUserData.shape.body.unwrap().merge(zUpdateUserData.shape.path));
+});

@@ -3,13 +3,17 @@ import { dirname, join, relative } from "node:path";
 import {
   generateClients,
   generateContracts,
+  generateFakerFactories,
   generateHandlers,
   generateRouter,
   generateServer,
   generateTanstack,
 } from "./generators";
+import type { ResponseSchemaInfo } from "./generators/handlers";
+import { extractResponseSchema } from "./schema/extractor";
 import { registerExternalSymbols } from "./symbols/external";
 import type { ClientType, ORPCPlugin } from "./types";
+import { operationName } from "./utils";
 
 /**
  * Main oRPC plugin handler.
@@ -77,16 +81,47 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
       const serverGenAbsolute = join(outputDir, plugin.name, "server.gen");
       const { importAlias } = handlersConfig;
       const serverGenImport = importAlias
-        // e.g. "#/generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
-        ? `${importAlias}${relative(dirname(outputDir), serverGenAbsolute).replace(/\\/g, "/")}`
-        // e.g. "../generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
-        : relative(handlersDir, serverGenAbsolute).replace(/\\/g, "/");
+        ? // e.g. "#/generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
+          `${importAlias}${relative(dirname(outputDir), serverGenAbsolute).replace(/\\/g, "/")}`
+        : // e.g. "../generated/@ahmedrowaihi/openapi-ts-orpc/server.gen"
+          relative(handlersDir, serverGenAbsolute).replace(/\\/g, "/");
+
+      let fakerFactoryNames: Map<string, string> | undefined;
+      let fakerGenImportBase: string | undefined;
+      if (handlersConfig.mode === "faker") {
+        const responseSchemas = new Map<string, ResponseSchemaInfo>();
+        for (const [, nodes] of routerStructure) {
+          for (const node of nodes) {
+            const opName = operationName(node.operationName);
+            const schema = extractResponseSchema(node.operation, plugin);
+            if (schema) responseSchemas.set(opName, schema);
+          }
+        }
+
+        const { factoryNames } = generateFakerFactories({
+          plugin,
+          routerStructure,
+          responseSchemas,
+        });
+
+        fakerFactoryNames = factoryNames;
+
+        const pluginOutputAbsolute = join(outputDir, plugin.name);
+        fakerGenImportBase = importAlias
+          ? `${importAlias}${relative(dirname(outputDir), pluginOutputAbsolute).replace(/\\/g, "/")}`
+          : relative(handlersDir, pluginOutputAbsolute).replace(/\\/g, "/");
+      }
 
       generateHandlers({
         handlersDir,
         serverGenImport,
         routerStructure,
         implementer: handlersConfig.implementer,
+        mode: handlersConfig.mode,
+        override: handlersConfig.override,
+        proxyConfig: handlersConfig.proxy,
+        fakerFactoryNames,
+        fakerGenImportBase,
       });
     }
 
@@ -95,9 +130,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
     // ==========================================================================
 
     const { tanstack, ...transports } = plugin.config.client;
-    const clientTypes = (
-      Object.entries(transports) as [string, boolean][]
-    )
+    const clientTypes = (Object.entries(transports) as [string, boolean][])
       .filter(([, enabled]) => enabled)
       .map(([type]) => type as ClientType);
 

@@ -20,11 +20,10 @@ export const generateRouter = ({
     },
   });
 
-  const groupMode = plugin.config.group;
   const routerObj = buildRouterObject(
     routerStructure,
-    groupMode,
-    plugin.config.transformOperationName,
+    plugin.config.group,
+    plugin.config.naming.operation,
   );
 
   const routerStatement = $.const(routerSymbol).export().assign(routerObj);

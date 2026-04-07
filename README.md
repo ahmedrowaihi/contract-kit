@@ -1,6 +1,6 @@
 # @ahmedrowaihi/openapi-ts-orpc
 
-Generates type-safe [oRPC](https://orpc.unnoq.com/) contracts, routers, server skeletons, and clients from OpenAPI specifications. Plugin for [@hey-api/openapi-ts](https://heyapi.dev/).
+Generates type-safe [oRPC](https://orpc.unnoq.com/) contracts, routers, server skeletons, clients, and mock factories from OpenAPI specifications. Plugin for [@hey-api/openapi-ts](https://heyapi.dev/).
 
 ## Installation
 
@@ -11,28 +11,30 @@ bun add @orpc/contract @orpc/server @orpc/client zod
 
 ## What it generates
 
-- **`contract.gen.ts`** — Type-safe oRPC contracts with Zod input/output schemas
-- **`router.gen.ts`** — Organized router structure (by tags, paths, or flat)
-- **`server.gen.ts`** — `os = implement(router)` helper for type-safe backend implementation _(optional)_
-- **`src/handlers/<tag>.ts`** — Scaffolded handler stubs, patched progressively _(optional)_
-- **`client.gen.ts`** — Ready-to-use client functions _(optional)_
-
-Contracts and router are always generated. Everything else is opt-in.
+| File                    | Description                                              | Required              |
+| ----------------------- | -------------------------------------------------------- | --------------------- |
+| `contract.gen.ts`       | Type-safe oRPC contracts with input/output schemas       | Always                |
+| `router.gen.ts`         | Organized router structure                               | Always                |
+| `server.gen.ts`         | `os = implement(router)` helper                          | Optional              |
+| `client.gen.ts`         | Client factory functions (RPC, WebSocket, OpenAPI, etc.) | Optional              |
+| `tanstack.gen.ts`       | TanStack Query utilities                                 | Optional              |
+| `faker.gen.ts`          | Mock data factory functions per tag                      | Optional (faker mode) |
+| `src/handlers/<tag>.ts` | Handler files with three modes                           | Optional              |
 
 ---
 
 ## Basic Usage
 
 ```typescript
-import { defineConfig } from '@hey-api/openapi-ts';
-import { defineConfig as defineORPCConfig } from '@ahmedrowaihi/openapi-ts-orpc';
+import { defineConfig } from "@hey-api/openapi-ts";
+import { defineConfig as defineORPCConfig } from "@ahmedrowaihi/openapi-ts-orpc";
 
 export default defineConfig({
-  input: 'openapi.json',
-  output: { path: './src/generated' },
+  input: "openapi.json",
+  output: { path: "./src/generated" },
   plugins: [
-    '@hey-api/typescript',
-    'zod',
+    "@hey-api/typescript",
+    "zod",
     defineORPCConfig(), // contracts + router only (default)
   ],
 });
@@ -42,53 +44,84 @@ export default defineConfig({
 
 ## Server (Backend)
 
-Enable `server.implementation` to generate `server.gen.ts` (the `os` builder). Enable `server.handlers` to scaffold handler files under `src/handlers/`.
-
 ```typescript
 defineORPCConfig({
   server: {
-    implementation: true,   // generate server.gen.ts
+    implementation: true,
     handlers: {
-      dir: 'src/handlers',  // scaffold handler stubs here (default: 'src/handlers')
-      importAlias: '#/',    // use path alias in generated imports (e.g. '#/generated/...')
+      dir: "src/handlers",
+      importAlias: "#/",
+      mode: "stub", // 'stub' | 'faker' | 'proxy'
     },
   },
-  group: 'tags',
-  mode: 'compact',
-})
+});
 ```
 
-### Handler scaffolding
+### Handler modes
 
-When `handlers` is enabled:
-- **New tags** → creates `src/handlers/<tag>.ts` with `throw new ORPCError('NOT_IMPLEMENTED')` stubs
-- **Existing files** → only appends procedures that are missing; never overwrites existing code
-- **Reserved JS keywords** as tag names (e.g. `protected`, `class`) → safe variable names via `<tag>Handlers` suffix
+**`stub`** (default) — throws `ORPCError('NOT_IMPLEMENTED')`:
+
+```typescript
+getUser: os.users.getUser.handler(async () => {
+  throw new ORPCError("NOT_IMPLEMENTED");
+}),
+```
+
+**`faker`** — returns mock data from generated `faker.gen.ts` factories:
+
+```typescript
+getUser: os.users.getUser.handler(async () => mockGetUser()),
+```
+
+Requires `@faker-js/faker` as a dependency. Generates type-safe factories with:
+
+- Field name heuristics (email, phone, url, etc.)
+- Enum support via `faker.helpers.arrayElement()`
+- Nested objects and arrays from schema
+- Date `.toISOString()` chaining
+
+**`proxy`** — forwards requests through the generated OpenAPI client:
+
+```typescript
+getUser: os.users.getUser.handler(async ({ input }) => apiClient.users.getUser(input)),
+```
+
+Configure the client import:
+
+```typescript
+handlers: {
+  mode: 'proxy',
+  proxy: { clientImport: { name: 'apiClient', from: '#/lib/client' } },
+}
+```
+
+### Handler file management
+
+- **New tags** create new handler files
+- **Existing files** only get missing procedures appended (never overwritten)
+- **`override: true`** rewrites files completely on each run
 
 ---
 
 ## Client (Frontend)
 
-Enable individual client transports as needed:
-
 ```typescript
 defineORPCConfig({
   client: {
-    rpc: true,       // HTTP client (native oRPC RPC protocol)
-    tanstack: true,  // TanStack Query utilities (useQuery, useMutation, etc.)
+    rpc: true, // HTTP client (native oRPC RPC protocol)
+    openapi: true, // REST client (OpenAPI protocol)
+    tanstack: true, // TanStack Query utilities
   },
-})
+});
 ```
 
-Available client options:
-
-| Option | Description |
-|---|---|
-| `rpc` | HTTP/Fetch client (native RPC protocol) |
-| `websocket` | WebSocket client (native RPC protocol) |
+| Option        | Description                               |
+| ------------- | ----------------------------------------- |
+| `rpc`         | HTTP/Fetch client (native RPC protocol)   |
+| `websocket`   | WebSocket client                          |
 | `messageport` | MessagePort client (Web Workers, iframes) |
-| `openapi` | REST client (OpenAPI/REST protocol) |
-| `tanstack` | TanStack Query utilities |
+| `openapi`     | REST client (OpenAPI protocol)            |
+| `tanstack`    | TanStack Query utilities                  |
 
 ---
 
@@ -98,11 +131,18 @@ Available client options:
 defineORPCConfig({
   // Server-side generation
   server: {
-    implementation: false,  // generate server.gen.ts
-    handlers: false,        // true | false | { dir?, importAlias? }
+    implementation: false,
+    handlers: {
+      dir: "src/handlers",
+      importAlias: "#/",
+      implementer: { name: "publicOs", from: "#/procedures" },
+      mode: "stub", // 'stub' | 'faker' | 'proxy'
+      override: false, // rewrite files on each run
+      proxy: { clientImport: { name: "apiClient", from: "#/lib/client" } },
+    },
   },
 
-  // Client-side generation (all off by default)
+  // Client-side generation
   client: {
     rpc: false,
     websocket: false,
@@ -111,59 +151,72 @@ defineORPCConfig({
     tanstack: false,
   },
 
-  // Router grouping: 'tags' (default) | 'paths' | 'flat'
-  group: 'tags',
+  // Router grouping
+  group: "tags", // 'tags' | 'paths' | 'flat' | 'operationId'
 
-  // Input schema shape: 'compact' (default) | 'detailed'
-  mode: 'compact',
+  // JSDoc comments on contracts
+  comments: true,
 
-  // Optional: rename operations in the generated router
-  transformOperationName: (operation) => operation.id.replace(/Controller_/i, ''),
-})
+  // Naming rules (uses hey-api's applyNaming)
+  naming: {
+    contract: { casing: "PascalCase" }, // contract constant names
+    operation: { casing: "camelCase" }, // router/procedure keys
+  },
+
+  // Validator configuration
+  validator: "zod", // string | false | { input: string | false, output: string | false }
+});
 ```
 
 ### `group` — Router grouping
 
-**`tags`** (default) — group by OpenAPI tag:
+| Mode             | Description                 | Example                      |
+| ---------------- | --------------------------- | ---------------------------- |
+| `tags` (default) | Group by OpenAPI tag        | `router.users.getById()`     |
+| `paths`          | Group by URL structure      | `router.api.users.getById()` |
+| `flat`           | No grouping                 | `router.getUserById()`       |
+| `operationId`    | Group by operationId prefix | `router.auth.login()`        |
+
+### `validator` — Validation configuration
+
+Works with any hey-api validator plugin (zod, valibot, arktype):
+
 ```typescript
-router.users.getById({ id: 123 });
+// Single validator for both input and output (default)
+validator: 'zod'
+
+// Separate input/output validators
+validator: { input: 'zod', output: false }
+
+// Disable validation entirely
+validator: false
 ```
 
-**`paths`** — group by URL structure:
+### `naming` — Name customization
+
+Uses `applyNaming` from `@hey-api/shared`:
+
 ```typescript
-router.users.id.get({ id: 123 });
+naming: {
+  contract: { casing: 'PascalCase' },   // GetUserContract
+  operation: { casing: 'camelCase' },    // getUser
+}
 ```
 
-**`flat`** — no grouping:
-```typescript
-router.usersGetById({ id: 123 });
-```
-
-### `mode` — Input schema shape
-
-**`compact`** (default) — flat merged schema:
-```typescript
-// GET: path + query merged
-{ id: number, search?: string }
-
-// POST/PUT: path + body merged
-{ id: number, username: string }
-```
-
-**`detailed`** — explicit structure:
-```typescript
-{ path: { id: number }, query: { search?: string }, body: { username: string } }
-```
+Supports `'camelCase'`, `'PascalCase'`, `'snake_case'`, `'SCREAMING_SNAKE_CASE'`, `'preserve'`, or a custom transform function.
 
 ---
 
 ## Requirements
 
+- `@hey-api/openapi-ts` >= 0.95.0
 - `@hey-api/typescript` plugin (auto-included as dependency)
-- `zod` plugin (auto-included as dependency)
+- A validator plugin (`zod`, `valibot`, `arktype`) configured in your plugins
 
 ---
 
 ## Typia Integration
 
 Want compile-time validators instead of Zod? See [docs/typia.md](docs/typia.md).
+
+Set `validator: { input: 'typia', output: 'typia' }` to use Typia's Standard Schema validators.

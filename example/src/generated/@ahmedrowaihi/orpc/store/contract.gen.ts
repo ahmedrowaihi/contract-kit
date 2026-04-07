@@ -2,9 +2,14 @@
 
 import { oc } from '@orpc/contract';
 
-import { zDeleteOrderData, zGetInventoryResponse, zGetOrderByIdData, zGetOrderByIdResponse, zPlaceOrderData, zPlaceOrderResponse } from '../../../zod/store/schemas.gen';
+import { zGetInventoryResponse, zGetOrderByIdResponse, zPlaceOrderResponse } from '../../../zod/store/schemas.gen';
 
-export const getInventoryContract = oc.route({
+/**
+ * Returns pet inventories by status.
+ *
+ * Returns a map of status codes to quantities.
+ */
+export const GetInventoryContract = oc.route({
     method: 'GET',
     path: '/store/inventory',
     operationId: 'getInventory',
@@ -15,7 +20,12 @@ export const getInventoryContract = oc.route({
     successDescription: 'successful operation'
 }).output(zGetInventoryResponse);
 
-export const placeOrderContract = oc.route({
+/**
+ * Place an order for a pet.
+ *
+ * Place a new order in the store.
+ */
+export const PlaceOrderContract = oc.route({
     method: 'POST',
     path: '/store/order',
     operationId: 'placeOrder',
@@ -24,9 +34,14 @@ export const placeOrderContract = oc.route({
     tags: ['store'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zPlaceOrderData.shape.body.unwrap()).output(zPlaceOrderResponse);
+}).output(zPlaceOrderResponse);
 
-export const deleteOrderContract = oc.route({
+/**
+ * Delete purchase order by identifier.
+ *
+ * For valid response try integer IDs with value < 1000. Anything above 1000 or non-integers will generate API errors.
+ */
+export const DeleteOrderContract = oc.route({
     method: 'DELETE',
     path: '/store/order/{orderId}',
     operationId: 'deleteOrder',
@@ -35,9 +50,14 @@ export const deleteOrderContract = oc.route({
     tags: ['store'],
     successStatus: 200,
     successDescription: 'order deleted'
-}).input(zDeleteOrderData.shape.path);
+});
 
-export const getOrderByIdContract = oc.route({
+/**
+ * Find purchase order by ID.
+ *
+ * For valid response try integer IDs with value <= 5 or > 10. Other values will generate exceptions.
+ */
+export const GetOrderByIdContract = oc.route({
     method: 'GET',
     path: '/store/order/{orderId}',
     operationId: 'getOrderById',
@@ -46,4 +66,4 @@ export const getOrderByIdContract = oc.route({
     tags: ['store'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zGetOrderByIdData.shape.path).output(zGetOrderByIdResponse);
+}).output(zGetOrderByIdResponse);

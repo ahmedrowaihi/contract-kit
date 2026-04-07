@@ -79,13 +79,17 @@ packages:
     resolution: {directory: .., type: directory}
     engines: {node: '>=20.19.0'}
     peerDependencies:
+      '@faker-js/faker': ^9.0.0 || ^8.0.0
       '@hey-api/openapi-ts': '>=0.92.0'
-      '@orpc/client': ^1.13.0
-      '@orpc/contract': ^1.13.0
-      '@orpc/openapi': ^1.13.0
-      '@orpc/openapi-client': ^1.13.0
-      '@orpc/server': ^1.13.0
-      '@orpc/tanstack-query': ^1.13.0
+      '@orpc/client': ^1.13
+      '@orpc/contract': ^1.13
+      '@orpc/openapi': ^1.13
+      '@orpc/openapi-client': ^1.13
+      '@orpc/server': ^1.13
+      '@orpc/tanstack-query': ^1.13
+    peerDependenciesMeta:
+      '@faker-js/faker':
+        optional: true
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}

@@ -6,7 +6,10 @@ import type { Config } from "../types";
  * Register all external symbols from oRPC packages.
  * These symbols are imported from external packages and used throughout the plugin.
  */
-export const registerExternalSymbols = (plugin: PluginInstance, config: Pick<Config, "validation">) => {
+export const registerExternalSymbols = (
+  plugin: PluginInstance,
+  config: Pick<Config, "validator" | "server">,
+) => {
   // Core oRPC contract symbols
   plugin.symbol("oc", {
     external: "@orpc/contract",
@@ -69,10 +72,21 @@ export const registerExternalSymbols = (plugin: PluginInstance, config: Pick<Con
     meta: { category: "external", resource: "@orpc/server.implement" },
   });
 
-  if (config.validation === "typia") {
+  if (
+    config.validator.input === "typia" ||
+    config.validator.output === "typia"
+  ) {
     plugin.symbol("createValidate", {
       external: "typia",
       meta: { category: "external", resource: "typia.createValidate" },
+    });
+  }
+
+  // Register faker when handler mode is 'faker'
+  if (config.server.handlers && config.server.handlers.mode === "faker") {
+    plugin.symbol("faker", {
+      external: "@faker-js/faker",
+      meta: { category: "external", resource: "@faker-js/faker.faker" },
     });
   }
 };

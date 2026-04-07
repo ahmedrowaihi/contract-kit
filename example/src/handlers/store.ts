@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { os } from "../generated/@ahmedrowaihi/openapi-ts-orpc/server.gen";
+import { os } from "../generated/@ahmedrowaihi/orpc/server.gen";
 const store = {
     getInventory: os.store.getInventory.handler(async () => {
         throw new ORPCError("NOT_IMPLEMENTED");

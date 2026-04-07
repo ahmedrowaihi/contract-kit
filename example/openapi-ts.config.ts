@@ -26,8 +26,13 @@ export default defineConfig({
     },
     defineORPCConfig({
       group: "tags",
-      mode: "compact",
-      server: { implementation: true },
+      comments: true,
+      server: {
+        implementation: true,
+        handlers: {
+          mode: "stub",
+        },
+      },
       client: { rpc: true, openapi: true, tanstack: true },
     }),
   ],

@@ -6,6 +6,7 @@
 
 export { generateClients } from "./client";
 export { generateContracts } from "./contract";
+export { generateFakerFactories } from "./faker";
 export { generateHandlers, type HandlersGeneratorInput } from "./handlers";
 export { generateRouter } from "./router";
 export { generateServer } from "./server";

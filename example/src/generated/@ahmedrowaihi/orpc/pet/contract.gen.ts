@@ -2,9 +2,14 @@
 
 import { oc } from '@orpc/contract';
 
-import { zAddPetData, zAddPetResponse, zDeletePetData, zFindPetsByStatusData, zFindPetsByStatusResponse, zFindPetsByTagsData, zFindPetsByTagsResponse, zGetPetByIdData, zGetPetByIdResponse, zUpdatePetData, zUpdatePetResponse, zUpdatePetWithFormData, zUpdatePetWithFormResponse, zUploadFileData, zUploadFileResponse } from '../../../zod/pet/schemas.gen';
+import { zAddPetResponse, zFindPetsByStatusResponse, zFindPetsByTagsResponse, zGetPetByIdResponse, zUpdatePetResponse, zUpdatePetWithFormResponse, zUploadFileResponse } from '../../../zod/pet/schemas.gen';
 
-export const addPetContract = oc.route({
+/**
+ * Add a new pet to the store.
+ *
+ * Add a new pet to the store.
+ */
+export const AddPetContract = oc.route({
     method: 'POST',
     path: '/pet',
     operationId: 'addPet',
@@ -13,9 +18,14 @@ export const addPetContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'Successful operation'
-}).input(zAddPetData.shape.body).output(zAddPetResponse);
+}).output(zAddPetResponse);
 
-export const updatePetContract = oc.route({
+/**
+ * Update an existing pet.
+ *
+ * Update an existing pet by Id.
+ */
+export const UpdatePetContract = oc.route({
     method: 'PUT',
     path: '/pet',
     operationId: 'updatePet',
@@ -24,9 +34,14 @@ export const updatePetContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'Successful operation'
-}).input(zUpdatePetData.shape.body).output(zUpdatePetResponse);
+}).output(zUpdatePetResponse);
 
-export const findPetsByStatusContract = oc.route({
+/**
+ * Finds Pets by status.
+ *
+ * Multiple status values can be provided with comma separated strings.
+ */
+export const FindPetsByStatusContract = oc.route({
     method: 'GET',
     path: '/pet/findByStatus',
     operationId: 'findPetsByStatus',
@@ -35,9 +50,14 @@ export const findPetsByStatusContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zFindPetsByStatusData.shape.query).output(zFindPetsByStatusResponse);
+}).output(zFindPetsByStatusResponse);
 
-export const findPetsByTagsContract = oc.route({
+/**
+ * Finds Pets by tags.
+ *
+ * Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+ */
+export const FindPetsByTagsContract = oc.route({
     method: 'GET',
     path: '/pet/findByTags',
     operationId: 'findPetsByTags',
@@ -46,9 +66,14 @@ export const findPetsByTagsContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zFindPetsByTagsData.shape.query).output(zFindPetsByTagsResponse);
+}).output(zFindPetsByTagsResponse);
 
-export const deletePetContract = oc.route({
+/**
+ * Deletes a pet.
+ *
+ * Delete a pet.
+ */
+export const DeletePetContract = oc.route({
     method: 'DELETE',
     path: '/pet/{petId}',
     operationId: 'deletePet',
@@ -57,9 +82,14 @@ export const deletePetContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'Pet deleted'
-}).input(zDeletePetData.shape.path);
+});
 
-export const getPetByIdContract = oc.route({
+/**
+ * Find pet by ID.
+ *
+ * Returns a single pet.
+ */
+export const GetPetByIdContract = oc.route({
     method: 'GET',
     path: '/pet/{petId}',
     operationId: 'getPetById',
@@ -68,9 +98,14 @@ export const getPetByIdContract = oc.route({
     tags: ['pet'],
     successStatus: 200,
     successDescription: 'successful operation'
-}).input(zGetPetByIdData.shape.path).output(zGetPetByIdResponse);
+}).output(zGetPetByIdResponse);
 
-export const updatePetWithFormContract = oc.route({
+/**
+ * Updates a pet in the store with form data.
+ *
+ * Updates a pet resource based on the form data.
+ */
+export const UpdatePetWithFormContract = oc.route({
     method: 'POST',
     path: '/pet/{petId}',
     operationId: 'updatePetWithForm',
@@ -78,11 +113,15 @@ export const updatePetWithFormContract = oc.route({
     description: 'Updates a pet resource based on the form data.',
     tags: ['pet'],
     successStatus: 200,
-    successDescription: 'successful operation',
-    inputStructure: 'detailed'
-}).input(zUpdatePetWithFormData).output(zUpdatePetWithFormResponse);
+    successDescription: 'successful operation'
+}).output(zUpdatePetWithFormResponse);
 
-export const uploadFileContract = oc.route({
+/**
+ * Uploads an image.
+ *
+ * Upload image of the pet.
+ */
+export const UploadFileContract = oc.route({
     method: 'POST',
     path: '/pet/{petId}/uploadImage',
     operationId: 'uploadFile',
@@ -90,6 +129,5 @@ export const uploadFileContract = oc.route({
     description: 'Upload image of the pet.',
     tags: ['pet'],
     successStatus: 200,
-    successDescription: 'successful operation',
-    inputStructure: 'detailed'
-}).input(zUploadFileData).output(zUploadFileResponse);
+    successDescription: 'successful operation'
+}).output(zUploadFileResponse);
