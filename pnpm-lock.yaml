@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ahmedrowaihi/openapi-ts-faker':
+        specifier: ^0.2.0
+        version: 0.2.0(@faker-js/faker@9.9.0)(@hey-api/openapi-ts@0.95.0(typescript@5.9.3))
       '@faker-js/faker':
         specifier: ^9.0.0 || ^8.0.0
         version: 9.9.0
@@ -50,6 +53,13 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@ahmedrowaihi/openapi-ts-faker@0.2.0':
+    resolution: {integrity: sha512-MVxFi8K8MnuzAC+5TiKeHBQETqFDZjTpxObAYiF1IQOzhP47q3xtmw2yR69KtmnkThiESch6SzVNxqwBe3bb/g==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      '@faker-js/faker': ^9.0.0 || ^8.0.0
+      '@hey-api/openapi-ts': '>=0.92.0'
 
   '@biomejs/biome@2.4.1':
     resolution: {integrity: sha512-8c5DZQl1hfpLRlTZ21W5Ef2R314E4UJUEtkMbo303ElTVe6fYtapwldv7tZlgwm+9YP0Mhk7dUSTkOY8nQ2/2w==}
@@ -430,6 +440,11 @@ packages:
     engines: {node: '>=20'}
 
 snapshots:
+
+  '@ahmedrowaihi/openapi-ts-faker@0.2.0(@faker-js/faker@9.9.0)(@hey-api/openapi-ts@0.95.0(typescript@5.9.3))':
+    dependencies:
+      '@faker-js/faker': 9.9.0
+      '@hey-api/openapi-ts': 0.95.0(typescript@5.9.3)
 
   '@biomejs/biome@2.4.1':
     optionalDependencies:

@@ -9,7 +9,7 @@ import type { IR } from "@hey-api/shared";
 import type {
   PropertyInfo,
   ResponseSchemaInfo,
-} from "../generators/handlers/ast";
+} from "@ahmedrowaihi/openapi-ts-faker/core";
 import type { ORPCPlugin } from "../types";
 
 type PluginCtx = ORPCPlugin["Instance"];

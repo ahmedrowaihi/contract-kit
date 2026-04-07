@@ -8,31 +8,7 @@ import ts from "typescript";
 
 import type { HandlerMode, ProxyHandlerConfig } from "../../types";
 
-// ============================================================================
-// Shared types
-// ============================================================================
-
-/**
- * Recursive schema info for faker mode — supports nested objects and arrays.
- * Used by schema/extractor.ts and generators/faker.ts.
- */
-export interface PropertyInfo {
-  type: string;
-  format?: string;
-  name: string;
-  /** Enum values from the OpenAPI schema (e.g. ["free", "premium"]) */
-  enum?: (string | number | boolean)[];
-  /** Nested object properties (when type === "object") */
-  children?: Record<string, PropertyInfo>;
-  /** Array item schema (when type === "array") */
-  items?: PropertyInfo;
-}
-
-export interface ResponseSchemaInfo {
-  properties: Record<string, PropertyInfo>;
-  /** Whether the top-level response is an array wrapper */
-  isArray: boolean;
-}
+export type { PropertyInfo, ResponseSchemaInfo } from "@ahmedrowaihi/openapi-ts-faker/core";
 
 // ============================================================================
 // Context for file generation
