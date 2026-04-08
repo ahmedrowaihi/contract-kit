@@ -8,7 +8,10 @@ import ts from "typescript";
 
 import type { HandlerMode, ProxyHandlerConfig } from "../../types";
 
-export type { PropertyInfo, ResponseSchemaInfo } from "@ahmedrowaihi/openapi-ts-faker/core";
+export type {
+  PropertyInfo,
+  ResponseSchemaInfo,
+} from "@ahmedrowaihi/openapi-ts-faker/core";
 
 // ============================================================================
 // Context for file generation
