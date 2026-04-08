@@ -30,11 +30,16 @@ export function buildValidatorInput(
     | undefined;
   if (!validatorApi || !("createRequestSchema" in validatorApi)) return null;
 
+  /**
+   * oRPC detailed mode expects "params" for path parameters, not "path".
+   * hey-api's createRequestSchema uses "path" as the layer key by default.
+   * Use the `as` option to rename the output key to match oRPC's convention.
+   */
   const requestSchema = validatorApi.createRequestSchema({
     layers: {
       body: { whenEmpty: "omit" },
       headers: { whenEmpty: "omit" },
-      path: { whenEmpty: "omit" },
+      path: { whenEmpty: "omit", as: "params" },
       query: { whenEmpty: "omit" },
     },
     operation,
