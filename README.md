@@ -151,6 +151,9 @@ defineORPCConfig({
     tanstack: false,
   },
 
+  // Input structure mode
+  mode: "compact", // 'compact' | 'detailed'
+
   // Router grouping
   group: "tags", // 'tags' | 'paths' | 'flat' | 'operationId'
 
@@ -167,6 +170,15 @@ defineORPCConfig({
   validator: "zod", // string | false | { input: string | false, output: string | false }
 });
 ```
+
+### `mode` — Input structure
+
+| Mode | Description |
+| --- | --- |
+| `compact` (default) | Flat merged input — path + body for mutations, path + query for reads |
+| `detailed` | Structured `{ params, query, body, headers }` input |
+
+> **Note:** Standard validators (zod, valibot, arktype) always use detailed mode regardless of this setting. Compact mode is only supported with Typia. This is because hey-api's `createRequestSchema` API always returns a structured object.
 
 ### `group` — Router grouping
 
