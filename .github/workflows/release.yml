@@ -39,18 +39,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Extract changelog for this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk "/^## \\[${VERSION}\\]/{found=1; next} /^## \\[/{if(found) exit} found{print}" CHANGELOG.md > /tmp/release-notes.md
+          printf '\n---\n\n## 📦 Published to npm\n\n```bash\nnpm install @ahmedrowaihi/openapi-ts-orpc@%s\n```\n\n[View on npm](https://www.npmjs.com/package/@ahmedrowaihi/openapi-ts-orpc/v/%s)\n' "$VERSION" "$VERSION" >> /tmp/release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
-          body: |
-            ## 📦 Published to npm
-
-            Install this version:
-            ```bash
-            npm install @ahmedrowaihi/openapi-ts-orpc@${{ github.ref_name }}
-            ```
-
-            [View on npm](https://www.npmjs.com/package/@ahmedrowaihi/openapi-ts-orpc/v/${{ github.ref_name }})
-
-            ---
+          body_path: /tmp/release-notes.md

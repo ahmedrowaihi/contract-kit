@@ -2,6 +2,18 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.1.4](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.1.4) — Multipart Field-Level Patching
+
+### Fixed
+
+- **Multipart form bodies no longer collapsed into a single `z.file()`** — Previously, `multipart/form-data` bodies with named fields (e.g. `{ file, title, description }`) were replaced entirely with `z.file()`, losing field names and causing oRPC to send a raw file instead of proper FormData. Now only individual `format: "binary"` properties are patched to `z.file()` while the object wrapper and other fields are preserved.
+
+### Changed
+
+- **`BodyKind` union replaces boolean flags** — `classifyBody()` returns `"json" | "raw-file" | "multipart" | "other"` instead of passing `bodyIsRawFile` + `bodyIsMultipart` booleans through the call chain.
+- **Cleaner `contract-validator.ts` structure** — Refactored into clear sections: public API, `createRequestSchema` wrapper, file schema helpers, and two focused patching strategies (`patchRawFileBody`, `patchMultipartBody`).
+- **Added multipart example** — Local Petstore spec with a `POST /pet/{petId}/uploadDocument` endpoint using `multipart/form-data` with file + metadata fields.
+
 ## [2.1.3](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.1.3) — Multipart/File Upload Support
 
 ### Added
