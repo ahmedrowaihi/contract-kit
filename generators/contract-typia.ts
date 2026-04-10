@@ -29,6 +29,7 @@ export function buildTypiaInput(
   hasPathParams: boolean,
   hasQueryParams: boolean,
   bodyIsObject: boolean,
+  bodyIsFile: boolean,
   bodyRequired: boolean,
 ): { expr: any; useDetailedMode: boolean } | null {
   const dataTypeSym = plugin.querySymbol({
@@ -40,7 +41,9 @@ export function buildTypiaInput(
   });
   if (!dataTypeSym) return null;
 
-  if (mode === "detailed") {
+  // File uploads always use detailed mode — a File/Blob body cannot be
+  // flattened together with path/query params into a single object.
+  if (mode === "detailed" || bodyIsFile) {
     const omitType = $.type("Omit")
       .generic($.type(dataTypeSym))
       .generic($.type.literal("url"));

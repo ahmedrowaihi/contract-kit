@@ -149,8 +149,12 @@ export const generateContracts = ({
         !!operation.parameters?.query &&
         Object.keys(operation.parameters.query).length > 0;
       const hasBody = !!(operation.body && !isGetOrDelete);
-      const bodyIsObject =
-        hasBody && operation.body?.mediaType === "application/json";
+      const bodyMediaType = operation.body?.mediaType ?? "";
+      const bodyIsObject = hasBody && bodyMediaType === "application/json";
+      const bodyIsFile =
+        hasBody &&
+        (bodyMediaType === "application/octet-stream" ||
+          bodyMediaType === "multipart/form-data");
 
       let useDetailedMode = mode === "detailed";
       let inputExpr: any;
@@ -167,10 +171,11 @@ export const generateContracts = ({
                 hasPathParams,
                 hasQueryParams,
                 bodyIsObject,
+                bodyIsFile,
                 !!operation.body?.required,
               )
             : inputValidator
-              ? buildValidatorInput(plugin, operation)
+              ? buildValidatorInput(plugin, operation, bodyIsFile)
               : null;
 
         if (result) {
