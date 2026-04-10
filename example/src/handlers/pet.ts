@@ -25,5 +25,8 @@ const pet = {
   uploadFile: os.pet.uploadFile.handler(async () => {
     throw new ORPCError("NOT_IMPLEMENTED");
   }),
+  uploadPetDocument: os.pet.uploadPetDocument.handler(async () => {
+    throw new ORPCError("NOT_IMPLEMENTED");
+  }),
 };
 export default pet;

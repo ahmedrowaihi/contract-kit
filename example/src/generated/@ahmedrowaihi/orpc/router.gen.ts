@@ -9,6 +9,7 @@ import {
   UpdatePetContract,
   UpdatePetWithFormContract,
   UploadFileContract,
+  UploadPetDocumentContract,
 } from "./pet/contract.gen";
 import {
   DeleteOrderContract,
@@ -36,6 +37,7 @@ export const router = {
     getPetById: GetPetByIdContract,
     updatePetWithForm: UpdatePetWithFormContract,
     uploadFile: UploadFileContract,
+    uploadPetDocument: UploadPetDocumentContract,
   },
   store: {
     getInventory: GetInventoryContract,

@@ -10,161 +10,88 @@ import { operationResponsesMap } from "@hey-api/shared";
 
 import type { ORPCPlugin } from "../types";
 
-function getValidatorPlugin(
-  plugin: ORPCPlugin["Instance"],
-  validatorName: string,
-): ReturnType<ORPCPlugin["Instance"]["getPlugin"]> {
-  return plugin.getPlugin(validatorName as any);
-}
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-export function buildValidatorInput(
-  plugin: ORPCPlugin["Instance"],
-  operation: IR.OperationObject,
-  bodyIsFile = false,
-): { expr: any; useDetailedMode: boolean } | null {
-  const { input } = plugin.config.validator;
-  if (!input || input === "typia") return null;
+type Plugin = ORPCPlugin["Instance"];
+type InputResult = { expr: any; useDetailedMode: boolean };
 
-  const validatorPlugin = getValidatorPlugin(plugin, input);
-  const validatorApi = validatorPlugin?.api as
-    | Record<string, Function>
-    | undefined;
-  const hasCreateRequestSchema =
-    !!validatorApi && "createRequestSchema" in validatorApi;
+export type BodyKind = "json" | "raw-file" | "multipart" | "other";
 
-  /**
-   * oRPC detailed mode expects "params" for path parameters, not "path".
-   * hey-api's createRequestSchema uses "path" as the layer key by default.
-   * Use the `as` option to rename the output key to match oRPC's convention.
-   *
-   * For binary/multipart bodies, skip the body layer — hey-api's zod plugin
-   * generates z.string() for binary fields, which prevents oRPC from
-   * recognising file uploads. We replace it with oz.file() below.
-   */
-  const requestSchema = hasCreateRequestSchema
-    ? validatorApi!.createRequestSchema({
-        layers: {
-          body: bodyIsFile ? false : { whenEmpty: "omit" },
-          headers: { whenEmpty: "omit" },
-          path: { whenEmpty: "omit", as: "params" },
-          query: { whenEmpty: "omit" },
-        },
-        operation,
-        plugin: validatorPlugin,
-      })
-    : null;
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
-  if (bodyIsFile) {
-    return buildFileInput(plugin, operation, input, requestSchema);
-  }
-
-  if (!requestSchema) return null;
-
-  return { expr: requestSchema, useDetailedMode: true };
-}
-
-/**
- * Return the validator-specific file schema expression that oRPC can
- * recognise at the transport layer to enable automatic FormData
- * serialisation (client) and multipart parsing (server).
- *
- * Each validator uses its own file primitive:
- *   zod v4  → z.file()   from zod          (native)
- *   zod v3  → oz.file()  from @orpc/zod
- *   valibot → v.file()   from valibot       (native)
- *
- * Returns `null` when the validator has no known file schema so the
- * caller can skip input generation rather than emit broken code.
- */
-function fileSchemaExpr(
-  plugin: ORPCPlugin["Instance"],
-  validatorName: string,
-): any | null {
-  switch (validatorName) {
-    case "zod": {
-      const zodPlugin = getValidatorPlugin(plugin, "zod");
-      const compat = (
-        zodPlugin?.config as
-          | { compatibilityVersion?: 3 | 4 | "mini" }
-          | undefined
-      )?.compatibilityVersion;
-
-      if (compat === 4) {
-        // Zod v4 has native z.file()
-        const z = plugin.external("zod.z");
-        return $(z).attr("file").call();
-      }
-      // Zod v3 / mini — use oz.file() from @orpc/zod
-      const oz = plugin.external("@orpc/zod.oz");
-      return $(oz).attr("file").call();
-    }
-    case "valibot": {
-      const v = plugin.external("valibot.*");
-      return $(v).attr("file").call();
-    }
+/** Classify the body media-type so callers don't pass loose booleans. */
+export function classifyBody(mediaType: string | undefined): BodyKind {
+  switch (mediaType) {
+    case "application/json":
+      return "json";
+    case "application/octet-stream":
+      return "raw-file";
+    case "multipart/form-data":
+      return "multipart";
     default:
-      return null;
+      return "other";
   }
 }
 
-/**
- * Build input schema for file/binary body operations.
- *
- * When `createRequestSchema` is available the non-body layers
- * (params, query, headers) come from it and we extend with the
- * file schema; otherwise we emit the file schema in compact mode —
- * path/query params are still handled by oRPC's route matching.
- */
-function buildFileInput(
-  plugin: ORPCPlugin["Instance"],
+/** Build a validator-backed `.input()` expression for a contract. */
+export function buildValidatorInput(
+  plugin: Plugin,
   operation: IR.OperationObject,
-  validatorName: string,
-  requestSchema: any | null,
-): { expr: any; useDetailedMode: boolean } | null {
-  const fileExpr = fileSchemaExpr(plugin, validatorName);
-  if (!fileExpr) return null;
+  bodyKind: BodyKind,
+): InputResult | null {
+  const validatorName = plugin.config.validator.input;
+  if (!validatorName || validatorName === "typia") return null;
 
-  const bodyExpr = operation.body?.required
-    ? fileExpr
-    : fileExpr.attr("optional").call();
+  const requestSchema = callCreateRequestSchema(
+    plugin,
+    validatorName,
+    operation,
+    bodyKind,
+  );
 
-  if (requestSchema) {
-    // createRequestSchema gave us params/query/headers — extend with file body
-    return {
-      expr: $(requestSchema)
-        .attr("extend")
-        .call($.object().prop("body", bodyExpr)),
-      useDetailedMode: true,
-    };
+  switch (bodyKind) {
+    case "raw-file":
+      return patchRawFileBody(plugin, validatorName, operation, requestSchema);
+    case "multipart":
+      return patchMultipartBody(
+        plugin,
+        validatorName,
+        operation,
+        requestSchema,
+      );
+    default:
+      return requestSchema
+        ? { expr: requestSchema, useDetailedMode: true }
+        : null;
   }
-
-  // createRequestSchema not available — use file schema directly.
-  // Path/query params are still enforced by oRPC's route definition.
-  return { expr: bodyExpr, useDetailedMode: false };
 }
 
 export function buildValidatorOutput(
-  plugin: ORPCPlugin["Instance"],
+  plugin: Plugin,
   operationId: string,
 ): any | null {
-  const { output } = plugin.config.validator;
-  if (!output || output === "typia") return null;
+  const validatorName = plugin.config.validator.output;
+  if (!validatorName || validatorName === "typia") return null;
 
   return plugin.referenceSymbol({
     category: "schema",
     resource: "operation",
     resourceId: operationId,
     role: "responses",
-    tool: output,
+    tool: validatorName,
   });
 }
 
 export function buildValidatorErrorMap(
-  plugin: ORPCPlugin["Instance"],
+  plugin: Plugin,
   operation: IR.OperationObject,
 ): any | null {
-  const { input } = plugin.config.validator;
-  if (!input || input === "typia") return null;
+  const validatorName = plugin.config.validator.input;
+  if (!validatorName || validatorName === "typia") return null;
 
   const { errors: errorsSchema } = operationResponsesMap(operation);
   if (!errorsSchema?.properties) return null;
@@ -179,7 +106,7 @@ export function buildValidatorErrorMap(
     const errorSchema = plugin.querySymbol({
       resource: "definition",
       resourceId: errorResponseSchema.$ref,
-      tool: input,
+      tool: validatorName,
     });
     if (errorSchema) {
       errorMapObj = errorMapObj.prop(
@@ -191,4 +118,157 @@ export function buildValidatorErrorMap(
   }
 
   return hasErrors ? errorMapObj : null;
+}
+
+// ---------------------------------------------------------------------------
+// createRequestSchema wrapper
+// ---------------------------------------------------------------------------
+
+/**
+ * Call the validator plugin's `createRequestSchema` API when available.
+ * For raw-file bodies the body layer is skipped (replaced later with z.file()).
+ * For multipart the body layer is kept so field names are preserved.
+ */
+function callCreateRequestSchema(
+  plugin: Plugin,
+  validatorName: string,
+  operation: IR.OperationObject,
+  bodyKind: BodyKind,
+): any | null {
+  const validatorPlugin = plugin.getPlugin(validatorName as any);
+  const api = validatorPlugin?.api as Record<string, Function> | undefined;
+  if (!api || !("createRequestSchema" in api)) return null;
+
+  return api.createRequestSchema({
+    layers: {
+      body: bodyKind === "raw-file" ? false : { whenEmpty: "omit" },
+      headers: { whenEmpty: "omit" },
+      path: { whenEmpty: "omit", as: "params" },
+      query: { whenEmpty: "omit" },
+    },
+    operation,
+    plugin: validatorPlugin,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// File schema helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Produce the validator-native file schema expression oRPC can detect.
+ *
+ *   zod v4  → z.file()          (native)
+ *   zod v3  → oz.file()         (@orpc/zod)
+ *   valibot → v.file()          (native)
+ *
+ * Returns null for unknown validators.
+ */
+function fileSchemaExpr(plugin: Plugin, validatorName: string): any | null {
+  if (validatorName === "zod") {
+    const zodPlugin = plugin.getPlugin("zod" as any);
+    const compat = (
+      zodPlugin?.config as { compatibilityVersion?: 3 | 4 | "mini" } | undefined
+    )?.compatibilityVersion;
+
+    if (compat === 4) {
+      return $(plugin.external("zod.z")).attr("file").call();
+    }
+    return $(plugin.external("@orpc/zod.oz")).attr("file").call();
+  }
+
+  if (validatorName === "valibot") {
+    return $(plugin.external("valibot.*")).attr("file").call();
+  }
+
+  return null;
+}
+
+/** Wrap a file expression with `.optional()` when the field isn't required. */
+function optionalFile(fileExpr: any, required: boolean): any {
+  return required ? fileExpr : fileExpr.attr("optional").call();
+}
+
+// ---------------------------------------------------------------------------
+// Body patching strategies
+// ---------------------------------------------------------------------------
+
+/**
+ * application/octet-stream — body IS the file.
+ * Replace the entire body layer with z.file() / oz.file().
+ */
+function patchRawFileBody(
+  plugin: Plugin,
+  validatorName: string,
+  operation: IR.OperationObject,
+  requestSchema: any | null,
+): InputResult | null {
+  const file = fileSchemaExpr(plugin, validatorName);
+  if (!file) return null;
+
+  const body = optionalFile(file, !!operation.body?.required);
+
+  if (requestSchema) {
+    return {
+      expr: $(requestSchema).attr("extend").call($.object().prop("body", body)),
+      useDetailedMode: true,
+    };
+  }
+
+  // createRequestSchema unavailable — compact mode with just the file.
+  return { expr: body, useDetailedMode: false };
+}
+
+/**
+ * multipart/form-data — body is an object with named fields.
+ * Only the `format: "binary"` properties are patched to z.file();
+ * every other field and the object wrapper are preserved.
+ */
+function patchMultipartBody(
+  plugin: Plugin,
+  validatorName: string,
+  operation: IR.OperationObject,
+  requestSchema: any | null,
+): InputResult | null {
+  if (!requestSchema) return null;
+
+  const bodyProps = operation.body?.schema?.properties;
+  if (!bodyProps) return { expr: requestSchema, useDetailedMode: true };
+
+  const file = fileSchemaExpr(plugin, validatorName);
+  if (!file) return { expr: requestSchema, useDetailedMode: true };
+
+  // Build an .extend() object with only the binary fields replaced.
+  const requiredFields = operation.body?.schema?.required;
+  let overrides = $.object();
+  let count = 0;
+
+  for (const [name, schema] of Object.entries(bodyProps)) {
+    if (schema.format !== "binary") continue;
+    const isRequired =
+      Array.isArray(requiredFields) && requiredFields.includes(name);
+    overrides = overrides.prop(name, optionalFile(file, isRequired));
+    count++;
+  }
+
+  if (count === 0) return { expr: requestSchema, useDetailedMode: true };
+
+  // Reference the body schema symbol, then .extend() only the binary fields.
+  const bodySym = plugin.referenceSymbol({
+    category: "schema",
+    resource: "operation",
+    resourceId: operation.id!,
+    role: "request-body",
+    tool: validatorName,
+  });
+
+  if (!bodySym) return { expr: requestSchema, useDetailedMode: true };
+
+  const patchedBody = $(bodySym).attr("extend").call(overrides);
+  return {
+    expr: $(requestSchema)
+      .attr("extend")
+      .call($.object().prop("body", patchedBody)),
+    useDetailedMode: true,
+  };
 }

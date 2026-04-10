@@ -2,8 +2,7 @@ import { defineConfig as defineORPCConfig } from "@ahmedrowaihi/openapi-ts-orpc"
 import { defineConfig } from "@hey-api/openapi-ts";
 
 export default defineConfig({
-  input:
-    "https://raw.githubusercontent.com/swagger-api/swagger-petstore/master/src/main/resources/openapi.yaml",
+  input: "./petstore.yaml",
   logs: {
     path: "./logs",
   },

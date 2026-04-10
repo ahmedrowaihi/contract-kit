@@ -355,6 +355,41 @@ export type UploadFileResponses = {
 
 export type UploadFileResponse = UploadFileResponses[keyof UploadFileResponses];
 
+export type UploadPetDocumentData = {
+  body: {
+    /**
+     * The document file to upload
+     */
+    file: Blob | File;
+    /**
+     * Document title
+     */
+    title?: string;
+    /**
+     * Document description
+     */
+    description?: string;
+  };
+  path: {
+    /**
+     * ID of pet
+     */
+    petId: number;
+  };
+  query?: never;
+  url: "/pet/{petId}/uploadDocument";
+};
+
+export type UploadPetDocumentResponses = {
+  /**
+   * successful operation
+   */
+  200: ApiResponse;
+};
+
+export type UploadPetDocumentResponse =
+  UploadPetDocumentResponses[keyof UploadPetDocumentResponses];
+
 export type GetInventoryData = {
   body?: never;
   path?: never;

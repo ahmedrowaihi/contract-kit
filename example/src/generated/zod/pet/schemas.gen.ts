@@ -115,3 +115,25 @@ export const zUploadFileQuery = z.object({
  * successful operation
  */
 export const zUploadFileResponse = zApiResponse;
+
+export const zUploadPetDocumentBody = z.object({
+  file: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+});
+
+export const zUploadPetDocumentPath = z.object({
+  petId: z.coerce
+    .bigint()
+    .min(BigInt("-9223372036854775808"), {
+      error: "Invalid value: Expected int64 to be >= -9223372036854775808",
+    })
+    .max(BigInt("9223372036854775807"), {
+      error: "Invalid value: Expected int64 to be <= 9223372036854775807",
+    }),
+});
+
+/**
+ * successful operation
+ */
+export const zUploadPetDocumentResponse = zApiResponse;

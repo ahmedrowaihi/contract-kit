@@ -16,6 +16,7 @@ export {
   UpdatePetContract,
   UpdatePetWithFormContract,
   UploadFileContract,
+  UploadPetDocumentContract,
 } from "./@ahmedrowaihi/orpc/pet/contract.gen";
 export { router } from "./@ahmedrowaihi/orpc/router.gen";
 export { os } from "./@ahmedrowaihi/orpc/server.gen";
@@ -114,6 +115,9 @@ export type {
   UploadFileErrors,
   UploadFileResponse,
   UploadFileResponses,
+  UploadPetDocumentData,
+  UploadPetDocumentResponse,
+  UploadPetDocumentResponses,
   User,
   UserArray,
 } from "./types.gen";

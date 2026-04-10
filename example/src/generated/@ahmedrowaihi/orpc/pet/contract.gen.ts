@@ -23,6 +23,9 @@ import {
   zUploadFilePath,
   zUploadFileQuery,
   zUploadFileResponse,
+  zUploadPetDocumentBody,
+  zUploadPetDocumentPath,
+  zUploadPetDocumentResponse,
 } from "../../../zod/pet/schemas.gen";
 
 /**
@@ -200,3 +203,28 @@ export const UploadFileContract = oc
       .extend({ body: z.file().optional() }),
   )
   .output(zUploadFileResponse);
+
+/**
+ * Upload a pet document.
+ *
+ * Upload a document (image + metadata) for a pet via multipart/form-data.
+ */
+export const UploadPetDocumentContract = oc
+  .route({
+    method: "POST",
+    path: "/pet/{petId}/uploadDocument",
+    operationId: "uploadPetDocument",
+    summary: "Upload a pet document.",
+    description:
+      "Upload a document (image + metadata) for a pet via multipart/form-data.",
+    tags: ["pet"],
+    successStatus: 200,
+    successDescription: "successful operation",
+    inputStructure: "detailed",
+  })
+  .input(
+    z
+      .object({ body: zUploadPetDocumentBody, params: zUploadPetDocumentPath })
+      .extend({ body: zUploadPetDocumentBody.extend({ file: z.file() }) }),
+  )
+  .output(zUploadPetDocumentResponse);

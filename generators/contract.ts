@@ -15,6 +15,7 @@ import {
   buildValidatorErrorMap,
   buildValidatorInput,
   buildValidatorOutput,
+  classifyBody,
 } from "./contract-validator";
 import type { ContractGeneratorInput, ContractGeneratorOutput } from "./types";
 
@@ -149,17 +150,15 @@ export const generateContracts = ({
         !!operation.parameters?.query &&
         Object.keys(operation.parameters.query).length > 0;
       const hasBody = !!(operation.body && !isGetOrDelete);
-      const bodyMediaType = operation.body?.mediaType ?? "";
-      const bodyIsObject = hasBody && bodyMediaType === "application/json";
-      const bodyIsFile =
-        hasBody &&
-        (bodyMediaType === "application/octet-stream" ||
-          bodyMediaType === "multipart/form-data");
+      const bodyKind = hasBody
+        ? classifyBody(operation.body?.mediaType)
+        : ("other" as const);
 
       let useDetailedMode = mode === "detailed";
       let inputExpr: any;
 
       if (hasInput) {
+        const hasFileBody = bodyKind === "raw-file" || bodyKind === "multipart";
         const result =
           useTypiaInput && createValidateSym
             ? buildTypiaInput(
@@ -170,12 +169,12 @@ export const generateContracts = ({
                 isGetOrDelete,
                 hasPathParams,
                 hasQueryParams,
-                bodyIsObject,
-                bodyIsFile,
+                bodyKind === "json",
+                hasFileBody,
                 !!operation.body?.required,
               )
             : inputValidator
-              ? buildValidatorInput(plugin, operation, bodyIsFile)
+              ? buildValidatorInput(plugin, operation, bodyKind)
               : null;
 
         if (result) {
