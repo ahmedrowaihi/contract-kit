@@ -2,6 +2,15 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.2.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.2.0) — Spec Diff Tools
+
+### Added
+
+- **`@ahmedrowaihi/openapi-ts-orpc/tools`** — New export with spec diffing utilities built on hey-api's native IR and schema walker.
+  - `parseSpec(spec)` — Parse any OpenAPI spec (2.0, 3.0, 3.1) into hey-api's normalized IR using `parseOpenApiSpec`, `Context`, and `getParser`.
+  - `diffSpecs(base, head, options?)` — Diff two parsed IR models endpoint-by-endpoint. Compares request body and response shapes property-by-property, detecting added/removed properties, type changes, and required/optional changes.
+  - `options.filter` — Generic filter function `(method, path) => boolean` to scope the diff to specific endpoints.
+
 ## [2.1.4](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.1.4) — Multipart Field-Level Patching
 
 ### Fixed
