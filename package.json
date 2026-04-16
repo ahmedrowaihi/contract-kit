@@ -32,11 +32,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     },
     "./tools": {
       "types": "./dist/tools/index.d.ts",
-      "import": "./dist/tools/index.js"
+      "import": "./dist/tools/index.js",
+      "require": "./dist/tools/index.js"
     },
     "./package.json": "./package.json"
   },
