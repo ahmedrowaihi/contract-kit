@@ -1,5 +1,5 @@
-export { parseSpec } from "./parse";
-export type { IR } from "./parse";
+export { parseSpec } from "./parse.js";
+export type { IR } from "./parse.js";
 export {
 	diffSpecs,
 	type DiffOptions,
@@ -8,4 +8,4 @@ export {
 	type ShapeDiff,
 	type TypeChange,
 	type RequiredChange,
-} from "./diff";
+} from "./diff.js";
