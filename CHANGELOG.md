@@ -2,6 +2,25 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.3.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.3.0) — Full Endpoint Diff (params, query, headers, cookies)
+
+### Added
+
+- **`diffSpecs` now compares all request layers** — path params, query params, headers, and cookies are diffed alongside request body and response. All layers enabled by default.
+- **`options.compare`** — Opt out of specific layers:
+  ```ts
+  diffSpecs(base, head, { compare: { headers: false, cookies: false } })
+  ```
+
+### Fixed
+
+- **`./tools` export** — Subpath was missing from `package.json` exports in v2.2.0.
+
+### Changed
+
+- **`EndpointDiff`** now includes `params`, `query`, `headers`, and `cookies` fields (all `ShapeDiff | null`).
+- **`typedEntries` helper** — Replaces raw `Object.entries` casts for proper type inference on IR records.
+
 ## [2.2.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.2.0) — Spec Diff Tools
 
 ### Added

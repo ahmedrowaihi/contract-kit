@@ -9,9 +9,22 @@ import {
 	operationResponsesMap,
 } from "@hey-api/shared";
 
+function typedEntries<V>(obj: Record<string, V>): [string, V][] {
+	return Object.entries(obj) as [string, V][];
+}
+
 export interface DiffOptions {
 	/** Only include endpoints where this returns true. */
 	filter?: (method: string, path: string) => boolean;
+	/** Which layers to compare. All enabled by default. Set to false to skip. */
+	compare?: {
+		request?: boolean;
+		response?: boolean;
+		params?: boolean;
+		query?: boolean;
+		headers?: boolean;
+		cookies?: boolean;
+	};
 }
 
 export interface TypeChange {
@@ -39,6 +52,10 @@ export interface EndpointDiff {
 	path: string;
 	request: ShapeDiff | null;
 	response: ShapeDiff | null;
+	params: ShapeDiff | null;
+	query: ShapeDiff | null;
+	headers: ShapeDiff | null;
+	cookies: ShapeDiff | null;
 }
 
 export interface DiffReport {
@@ -129,7 +146,7 @@ function createShapeCollector(store: SchemaStore): {
 			if (!schema.properties) return;
 
 			const requiredSet = new Set(schema.required ?? []);
-			for (const [name, prop] of Object.entries(schema.properties)) {
+			for (const [name, prop] of typedEntries(schema.properties)) {
 				const propCtx = childContext(ctx, name);
 				walk(prop, propCtx);
 				const existing = shape.get(pathKey(propCtx));
@@ -188,6 +205,29 @@ function collectShape(schema: IR.SchemaObject, store: SchemaStore): ShapeMap {
 	return shape;
 }
 
+function collectParamsShape(
+	params: Record<string, IR.ParameterObject> | undefined,
+	store: SchemaStore,
+): ShapeMap {
+	const shape: ShapeMap = new Map();
+	if (!params) return shape;
+
+	for (const [name, param] of typedEntries(params)) {
+		const paramShape = collectShape(param.schema, store);
+		if (paramShape.size === 1 && paramShape.has("(root)")) {
+			const root = paramShape.get("(root)")!;
+			shape.set(name, { type: root.type, required: param.required ?? false });
+		} else {
+			shape.set(name, { type: "object", required: param.required ?? false });
+			for (const [key, info] of paramShape) {
+				if (key === "(root)") continue;
+				shape.set(`${name}.${key}`, info);
+			}
+		}
+	}
+	return shape;
+}
+
 function diffShapes(base: ShapeMap, head: ShapeMap): ShapeDiff | null {
 	const added: string[] = [];
 	const removed: string[] = [];
@@ -210,17 +250,23 @@ function diffShapes(base: ShapeMap, head: ShapeMap): ShapeDiff | null {
 	return { added, removed, typeChanged, requiredChanged };
 }
 
+interface EndpointData {
+	request?: IR.SchemaObject;
+	response?: IR.SchemaObject;
+	params?: Record<string, IR.ParameterObject>;
+	query?: Record<string, IR.ParameterObject>;
+	headers?: Record<string, IR.ParameterObject>;
+	cookies?: Record<string, IR.ParameterObject>;
+}
+
 function extractEndpoints(
 	paths: IR.Model["paths"],
 	filter?: DiffOptions["filter"],
-): Map<string, { request?: IR.SchemaObject; response?: IR.SchemaObject }> {
-	const result = new Map<
-		string,
-		{ request?: IR.SchemaObject; response?: IR.SchemaObject }
-	>();
+): Map<string, EndpointData> {
+	const result = new Map<string, EndpointData>();
 	if (!paths) return result;
 
-	for (const [path, pathItem] of Object.entries(paths)) {
+	for (const [path, pathItem] of typedEntries(paths as Record<string, IR.PathItemObject>)) {
 		for (const method of ["get", "post", "put", "patch", "delete"] as const) {
 			const op = pathItem[method];
 			if (!op) continue;
@@ -231,6 +277,10 @@ function extractEndpoints(
 			result.set(key, {
 				request: op.body?.schema,
 				response: resMap.response,
+				params: op.parameters?.path,
+				query: op.parameters?.query,
+				headers: op.parameters?.header,
+				cookies: op.parameters?.cookie,
 			});
 		}
 	}
@@ -240,7 +290,7 @@ function extractEndpoints(
 function countDrifts(diffed: EndpointDiff[]): number {
 	let n = 0;
 	for (const d of diffed) {
-		for (const s of [d.request, d.response]) {
+		for (const s of [d.request, d.response, d.params, d.query, d.headers, d.cookies]) {
 			if (!s) continue;
 			n += s.removed.length + s.added.length + s.typeChanged.length + s.requiredChanged.length;
 		}
@@ -263,6 +313,15 @@ export function diffSpecs(
 	const baseStore: SchemaStore = base.components?.schemas ?? {};
 	const headStore: SchemaStore = head.components?.schemas ?? {};
 
+	const cmp = {
+		request: options?.compare?.request !== false,
+		response: options?.compare?.response !== false,
+		params: options?.compare?.params !== false,
+		query: options?.compare?.query !== false,
+		headers: options?.compare?.headers !== false,
+		cookies: options?.compare?.cookies !== false,
+	};
+
 	const baseEps = extractEndpoints(base.paths, options?.filter);
 	const headEps = extractEndpoints(head.paths, options?.filter);
 
@@ -281,19 +340,39 @@ export function diffSpecs(
 		const h = headEps.get(key)!;
 
 		const reqDiff =
-			b.request && h.request
+			cmp.request && b.request && h.request
 				? diffShapes(collectShape(b.request, baseStore), collectShape(h.request, headStore))
 				: null;
 
 		const resDiff =
-			b.response && h.response
+			cmp.response && b.response && h.response
 				? diffShapes(
 						collectShape(b.response, baseStore),
 						collectShape(h.response, headStore),
 					)
 				: null;
 
-		if (reqDiff || resDiff) {
+		const paramsDiff =
+			cmp.params
+				? diffShapes(collectParamsShape(b.params, baseStore), collectParamsShape(h.params, headStore))
+				: null;
+
+		const queryDiff =
+			cmp.query
+				? diffShapes(collectParamsShape(b.query, baseStore), collectParamsShape(h.query, headStore))
+				: null;
+
+		const headersDiff =
+			cmp.headers
+				? diffShapes(collectParamsShape(b.headers, baseStore), collectParamsShape(h.headers, headStore))
+				: null;
+
+		const cookiesDiff =
+			cmp.cookies
+				? diffShapes(collectParamsShape(b.cookies, baseStore), collectParamsShape(h.cookies, headStore))
+				: null;
+
+		if (reqDiff || resDiff || paramsDiff || queryDiff || headersDiff || cookiesDiff) {
 			const [method, ...rest] = key.split(" ");
 			diffed.push({
 				endpoint: key,
@@ -301,6 +380,10 @@ export function diffSpecs(
 				path: rest.join(" "),
 				request: reqDiff,
 				response: resDiff,
+				params: paramsDiff,
+				query: queryDiff,
+				headers: headersDiff,
+				cookies: cookiesDiff,
 			});
 		} else {
 			matching.push(key);
