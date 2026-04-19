@@ -2,6 +2,12 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.3.3](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.3.3) — Fix missing runtime deps
+
+### Fixed
+
+- **`@hey-api/codegen-core` and `@hey-api/shared` moved from `devDependencies` to `dependencies`** — Both are imported by `./tools` (`parse.js`, `diff.js`) at runtime, but were only declared as dev deps. Under strict package managers (pnpm), consumers hit `Module not found: Can't resolve '@hey-api/codegen-core'` at build time because the packages weren't present in the plugin's isolated `node_modules`. Previously worked only by accident when the consumer's hoisting happened to expose them.
+
 ## [2.3.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.3.0) — Full Endpoint Diff (params, query, headers, cookies)
 
 ### Added
