@@ -1,0 +1,74 @@
+{
+  "name": "@ahmedrowaihi/openapi-ts-typia",
+  "version": "0.1.0",
+  "description": "Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs",
+  "keywords": [
+    "openapi",
+    "openapi-ts",
+    "typia",
+    "standard-schema",
+    "validator",
+    "codegen",
+    "type-safe",
+    "plugin"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/openapi-ts",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/openapi-ts/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git",
+    "directory": "openapi-ts-typia-plugin"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "prepack": "pnpm build",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "format": "biome format --write .",
+    "format:check": "biome check --write .",
+    "sync-tags": "tsx scripts/sync-tags.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hey-api/openapi-ts": ">=0.95.0",
+    "@standard-schema/spec": "^1.0.0",
+    "typia": "^12.0.0"
+  },
+  "dependencies": {
+    "@hey-api/codegen-core": "^0.7.4",
+    "@hey-api/shared": "^0.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.1",
+    "@hey-api/openapi-ts": "^0.95.0",
+    "@types/node": "^22",
+    "tsx": "^4.19.0",
+    "typescript": "5.9.3",
+    "typia": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
