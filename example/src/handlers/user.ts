@@ -24,5 +24,9 @@ const user = {
   updateUser: os.user.updateUser.handler(async () => {
     throw new ORPCError("NOT_IMPLEMENTED");
   }),
+
+  updateProfile: os.user.updateProfile.handler(async () => {
+    throw new ORPCError("NOT_IMPLEMENTED");
+  }),
 };
 export default user;

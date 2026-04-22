@@ -1,6 +1,8 @@
 /**
  * Generates oRPC contracts from OpenAPI operations.
- * Delegates input/output schema building to typia or validator-specific modules.
+ * Input/output schemas come from the configured validator plugin via its
+ * standard `createRequestSchema` / symbol-lookup API — identical code path
+ * for zod, valibot, arktype, and typia.
  */
 
 import { $ } from "@hey-api/openapi-ts";
@@ -10,7 +12,6 @@ import { escapeComment } from "@hey-api/shared";
 import type { RouterNode } from "../router-organizer";
 import { getGroupKey } from "../router-organizer";
 import { contractName as toContractName } from "../utils";
-import { buildTypiaInput, buildTypiaOutput } from "./contract-typia";
 import {
   buildValidatorErrorMap,
   buildValidatorInput,
@@ -27,12 +28,6 @@ export const generateContracts = ({
   const oc = plugin.external("@orpc/contract.oc");
   const { input: inputValidator, output: outputValidator } =
     plugin.config.validator;
-  const useTypiaInput = inputValidator === "typia";
-  const useTypiaOutput = outputValidator === "typia";
-  const createValidateSym =
-    useTypiaInput || useTypiaOutput
-      ? plugin.external("typia.createValidate")
-      : null;
 
   plugin.forEach(
     "operation",
@@ -143,12 +138,6 @@ export const generateContracts = ({
 
       const isGetOrDelete =
         operation.method === "get" || operation.method === "delete";
-      const hasPathParams =
-        !!operation.parameters?.path &&
-        Object.keys(operation.parameters.path).length > 0;
-      const hasQueryParams =
-        !!operation.parameters?.query &&
-        Object.keys(operation.parameters.query).length > 0;
       const hasBody = !!(operation.body && !isGetOrDelete);
       const bodyKind = hasBody
         ? classifyBody(operation.body?.mediaType)
@@ -157,26 +146,8 @@ export const generateContracts = ({
       let useDetailedMode = mode === "detailed";
       let inputExpr: any;
 
-      if (hasInput) {
-        const hasFileBody = bodyKind === "raw-file" || bodyKind === "multipart";
-        const result =
-          useTypiaInput && createValidateSym
-            ? buildTypiaInput(
-                plugin,
-                operationId,
-                mode,
-                createValidateSym,
-                isGetOrDelete,
-                hasPathParams,
-                hasQueryParams,
-                bodyKind === "json",
-                hasFileBody,
-                !!operation.body?.required,
-              )
-            : inputValidator
-              ? buildValidatorInput(plugin, operation, bodyKind)
-              : null;
-
+      if (hasInput && inputValidator) {
+        const result = buildValidatorInput(plugin, operation, bodyKind);
         if (result) {
           inputExpr = result.expr;
           useDetailedMode = result.useDetailedMode;
@@ -191,19 +162,12 @@ export const generateContracts = ({
 
       if (inputExpr) contractExpr = contractExpr.attr("input").call(inputExpr);
 
-      if (hasOutput) {
-        const outputExpr =
-          useTypiaOutput && createValidateSym
-            ? buildTypiaOutput(plugin, operationId, createValidateSym)
-            : outputValidator
-              ? buildValidatorOutput(plugin, operationId)
-              : null;
-
-        if (outputExpr)
-          contractExpr = contractExpr.attr("output").call(outputExpr);
+      if (hasOutput && outputValidator) {
+        const outputExpr = buildValidatorOutput(plugin, operationId);
+        if (outputExpr) contractExpr = contractExpr.attr("output").call(outputExpr);
       }
 
-      if (inputValidator && inputValidator !== "typia") {
+      if (inputValidator) {
         const errorMap = buildValidatorErrorMap(plugin, operation);
         if (errorMap) contractExpr = contractExpr.attr("errors").call(errorMap);
       }

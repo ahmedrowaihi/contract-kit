@@ -1,19 +1,35 @@
 # Typia Integration
 
-Instead of Zod, you can use [Typia](https://typia.io/) for runtime validation. Typia generates validators at compile-time from TypeScript types — no schema duplication.
+Instead of Zod, you can use [Typia](https://typia.io/) for runtime validation.
+Typia generates validators at compile-time from TypeScript types — no schema
+duplication.
+
+Integration is via the [`@ahmedrowaihi/openapi-ts-typia`](https://github.com/ahmedrowaihi/openapi-ts)
+companion plugin. This oRPC plugin consumes it through the standard
+validator API, the same way it consumes `zod`, `valibot`, or `arktype`.
 
 ## How it works
 
-With `validation: 'typia'`, the plugin generates contracts using `typia.createValidate<T>()` referencing the TypeScript types produced by `@hey-api/typescript`. Typia v11 returns Standard Schema objects, which oRPC accepts directly on `.input()` and `.output()`.
+With `validator: '@ahmedrowaihi/openapi-ts-typia'`, the typia plugin emits
+one `typia.createValidate<T>()` per operation plus a bulk
+`typia.json.schemas<[...]>()` call whose result is indexed by
+operation. The oRPC plugin references those symbols directly on each
+contract's `.input()` / `.output()` / `.errors()`.
 
 ## Installation
 
 ```bash
-bun add typia
+bun add -d @ahmedrowaihi/openapi-ts-typia
+bun add typia @standard-schema/spec
 bun add -d @ryoppippi/unplugin-typia
 ```
 
-> Typia requires a compiler transform to work. Use `unplugin-typia` for your bundler.
+Typia requires a compiler transform to work. Use `unplugin-typia` for
+your bundler.
+
+`@standard-schema/spec` is already a runtime dep of typia; pnpm's strict
+mode hides transitives, so generated code's `import type { StandardSchemaV1 }`
+requires you list it as a direct install.
 
 ## Build setup
 
@@ -43,11 +59,13 @@ export default { plugins: [UnpluginTypia()] }
 
 ## openapi-ts config
 
-Typia requires a type transformer to annotate TypeScript types with constraint tags (MinLength, Maximum, etc.) so validators are generated correctly. Import it directly from this package:
-
 ```typescript
-import { defineConfig as defineORPCConfig, typiaTypeTransformer } from '@ahmedrowaihi/openapi-ts-orpc';
 import { defineConfig } from '@hey-api/openapi-ts';
+import { defineConfig as defineORPCConfig } from '@ahmedrowaihi/openapi-ts-orpc';
+import {
+  defineConfig as defineTypiaConfig,
+  typiaTypeTransformer,
+} from '@ahmedrowaihi/openapi-ts-typia';
 
 export default defineConfig({
   input: 'openapi.json',
@@ -58,50 +76,53 @@ export default defineConfig({
       name: '@hey-api/transformers',
       typeTransformers: [typiaTypeTransformer],
     },
+    defineTypiaConfig(),
     defineORPCConfig({
-      validation: 'typia',
+      validator: '@ahmedrowaihi/openapi-ts-typia',
       // ... rest of your config
     }),
   ],
 });
 ```
 
-> Note: the `zod` plugin is not needed when using Typia. The plugin removes it automatically from its dependencies when `validation: 'typia'` is set.
+`typiaTypeTransformer` annotates generated TypeScript types with typia
+constraint tags (see [table below](#what-the-transformer-does)) so the
+emitted `createValidate<T>()` calls enforce those constraints.
 
 ## OpenAPI spec generation
 
-oRPC's OpenAPI generator needs to convert your Typia schemas to JSON Schema. Typia schemas don't carry JSON Schema by default — you need to attach it at build time using `typia.json.schema<T>()` alongside `typia.createValidate<T>()`.
+The typia plugin emits a plain JSON Schema twin per operation alongside
+each validator:
 
-Copy [`typia-orpc.ts`](./typia-orpc.ts) into your project (e.g. `src/lib/typia-orpc.ts`), then:
-
-1. Wrap your schemas with `ot.schema()`:
-
-```typescript
-import typia from 'typia'
-import { ot } from '#/lib/typia-orpc'
-
-const UserSchema = ot.schema(
-  typia.createValidate<User>(),
-  typia.json.schema<User>(),
-)
+```ts
+export const tGetUserData: StandardSchemaV1<...> = createValidate<...>();
+export const tGetUserDataJsonSchema = typiaSchemas.schemas[0];
 ```
 
-2. Register `TypiaToJsonSchemaConverter` in your OpenAPI plugin:
+For oRPC's OpenAPI generator, write a small `ConditionalSchemaConverter`
+that pairs the validator with its twin and registers both with
+`SmartCoercionPlugin`:
 
 ```typescript
-import { TypiaToJsonSchemaConverter } from '#/lib/typia-orpc'
+import { createTypiaConverter } from './lib/typia-converter'
+import { ZodToJsonSchemaConverter } from '@orpc/zod'
 
 new SmartCoercionPlugin({
   schemaConverters: [
     new ZodToJsonSchemaConverter(),
-    new TypiaToJsonSchemaConverter(),
+    createTypiaConverter(),
   ],
 })
 ```
 
+The converter is a thin wrapper — it detects validators produced by
+typia (via `'~standard'.vendor === 'typia'`) and returns the companion
+JSON Schema symbol by naming convention (`${validatorName}JsonSchema`).
+
 ## What the transformer does
 
-`typiaTypeTransformer` annotates TypeScript types with Typia constraint tags derived from your OpenAPI schema:
+`typiaTypeTransformer` annotates TypeScript types with Typia constraint
+tags derived from your OpenAPI schema:
 
 | OpenAPI constraint | Typia tag |
 |---|---|
@@ -110,5 +131,22 @@ new SmartCoercionPlugin({
 | `format` | `Format<"...">` |
 | `minimum` / `maximum` | `Minimum<N>` / `Maximum<N>` |
 | `exclusiveMinimum` / `exclusiveMaximum` | `ExclusiveMinimum<N>` / `ExclusiveMaximum<N>` |
-| integer `format` (int32, int64, …) | `Type<"int32">` etc. |
+| `multipleOf` | `MultipleOf<N>` |
 | `minItems` / `maxItems` | `MinItems<N>` / `MaxItems<N>` |
+| `uniqueItems` | `UniqueItems` |
+| integer `format` (int32, int64, …) | `Type<"int32">` etc. |
+
+## Error responses
+
+4xx/5xx responses get per-status validators. Generated contracts wire
+them automatically:
+
+```ts
+export const GetUserContract = oc.route({...})
+  .input(tGetUserData)
+  .output(tGetUserResponse)
+  .errors({
+    404: { data: tGetUserResponseError404 },
+    500: { data: tGetUserResponseError500 },
+  });
+```

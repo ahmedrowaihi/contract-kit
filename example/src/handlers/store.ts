@@ -13,5 +13,13 @@ const store = {
   getOrderById: os.store.getOrderById.handler(async () => {
     throw new ORPCError("NOT_IMPLEMENTED");
   }),
+
+  createShape: os.store.createShape.handler(async () => {
+    throw new ORPCError("NOT_IMPLEMENTED");
+  }),
+
+  submitMeasurement: os.store.submitMeasurement.handler(async () => {
+    throw new ORPCError("NOT_IMPLEMENTED");
+  }),
 };
 export default store;

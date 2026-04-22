@@ -2,32 +2,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { createRpcLinkClient } from "@/generated/orpc/client.gen";
-import { createOrpcUtils } from "@/generated/orpc/tanstack.gen";
+import { createOpenApiClient } from "@/generated/@ahmedrowaihi/orpc/client.gen";
+import { createOrpcUtils } from "@/generated/@ahmedrowaihi/orpc/tanstack.gen";
 
 import { Providers } from "./providers";
 
-/**
- * Create oRPC client pointing to our Next.js API route
- */
-const client = createRpcLinkClient({
-  fetch: async (url, init) => {
-    const response = await fetch(url, init);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response;
-  },
-  url: "/api/orpc",
+// Absolute URL on the server (SSR), relative in the browser.
+const client = createOpenApiClient({
+  url: typeof window === "undefined" ? "http://localhost:3000/api/openapi" : "/api/openapi",
 });
 
-/**
- * Create TanStack Query utilities from the client
- */
 const orpc = createOrpcUtils(client);
 
 function PetsList() {
-  // Use generated TanStack Query hooks with full type safety
   const {
     data: pets,
     error,
@@ -35,7 +22,10 @@ function PetsList() {
   } = useQuery(
     orpc.pet.findPetsByStatus.queryOptions({
       input: {
-        status: "available",
+        body: undefined,
+        headers: undefined,
+        params: undefined,
+        query: { status: "available" },
       },
     }),
   );

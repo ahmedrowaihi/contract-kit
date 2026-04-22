@@ -108,20 +108,13 @@ export const defaultConfig: ORPCPlugin["Config"] = {
     plugin.config.server ??= { implementation: false, handlers: false };
     plugin.config.server.handlers = resolveHandlers(plugin.config.server);
 
-    const validator = plugin.config.validator as {
-      input: string | false;
-      output: string | false;
-    };
-    if (validator.input && validator.input !== "typia") {
-      plugin.dependencies?.add(validator.input);
-    }
-    if (
-      validator.output &&
-      validator.output !== "typia" &&
-      validator.output !== validator.input
-    ) {
-      plugin.dependencies?.add(validator.output);
-    }
+    plugin.config.validator = resolveValidator(
+      plugin.config.validator,
+    );
+
+    const { input, output } = plugin.config.validator;
+    if (input) plugin.dependencies?.add(input);
+    if (output && output !== input) plugin.dependencies?.add(output);
   },
   tags: ["transformer"],
 };

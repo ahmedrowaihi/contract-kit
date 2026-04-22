@@ -44,7 +44,7 @@ export function buildValidatorInput(
   bodyKind: BodyKind,
 ): InputResult | null {
   const validatorName = plugin.config.validator.input;
-  if (!validatorName || validatorName === "typia") return null;
+  if (!validatorName) return null;
 
   const requestSchema = callCreateRequestSchema(
     plugin,
@@ -52,6 +52,16 @@ export function buildValidatorInput(
     operation,
     bodyKind,
   );
+
+  // Typia validators are Symbol references to pre-emitted `createValidate<T>()`
+  // calls with the full request shape baked into the TS type argument. Body
+  // kind-specific patching (e.g. replacing a body property with `z.file()`)
+  // doesn't apply — the TS type already models File/Blob where appropriate.
+  if (validatorName === "@ahmedrowaihi/openapi-ts-typia") {
+    return requestSchema
+      ? { expr: requestSchema, useDetailedMode: true }
+      : null;
+  }
 
   switch (bodyKind) {
     case "raw-file":
@@ -75,13 +85,16 @@ export function buildValidatorOutput(
   operationId: string,
 ): any | null {
   const validatorName = plugin.config.validator.output;
-  if (!validatorName || validatorName === "typia") return null;
+  if (!validatorName) return null;
 
+  // Typia plugin emits a flattened `role: 'response'` symbol per operation.
+  // Zod/valibot/arktype emit the unflattened `role: 'responses'`.
+  const role = validatorName === "@ahmedrowaihi/openapi-ts-typia" ? "response" : "responses";
   return plugin.referenceSymbol({
     category: "schema",
     resource: "operation",
     resourceId: operationId,
-    role: "responses",
+    role,
     tool: validatorName,
   });
 }
@@ -91,8 +104,61 @@ export function buildValidatorErrorMap(
   operation: IR.OperationObject,
 ): any | null {
   const validatorName = plugin.config.validator.input;
-  if (!validatorName || validatorName === "typia") return null;
+  if (!validatorName) return null;
 
+  return validatorName === "@ahmedrowaihi/openapi-ts-typia"
+    ? buildTypiaErrorMap(plugin, operation)
+    : buildComponentErrorMap(plugin, validatorName, operation);
+}
+
+/**
+ * Typia plugin emits one `error-<code>` validator per error status per
+ * operation (no per-$ref symbols). Look up each status's symbol and
+ * assemble `.errors({ 404: { data: tFooError404 }, ... })`.
+ */
+function buildTypiaErrorMap(
+  plugin: Plugin,
+  operation: IR.OperationObject,
+): any | null {
+  const responses = operation.responses;
+  if (!responses) return null;
+
+  let errorMapObj = $.object().pretty();
+  let hasErrors = false;
+
+  for (const statusCode in responses) {
+    const status = Number.parseInt(statusCode, 10);
+    if (!Number.isFinite(status)) continue;
+    if (status < 400 || status > 599) continue;
+
+    const errorSymbol = plugin.querySymbol({
+      category: "schema",
+      resource: "operation",
+      resourceId: operation.id,
+      role: `error-${status}`,
+      tool: "@ahmedrowaihi/openapi-ts-typia",
+    });
+    if (!errorSymbol) continue;
+
+    errorMapObj = errorMapObj.prop(
+      statusCode,
+      $.object().prop("data", $(errorSymbol)),
+    );
+    hasErrors = true;
+  }
+
+  return hasErrors ? errorMapObj : null;
+}
+
+/**
+ * Standard validators (zod/valibot/arktype) emit per-component symbols
+ * at each `$ref`. Map each error response to its component symbol.
+ */
+function buildComponentErrorMap(
+  plugin: Plugin,
+  validatorName: string,
+  operation: IR.OperationObject,
+): any | null {
   const { errors: errorsSchema } = operationResponsesMap(operation);
   if (!errorsSchema?.properties) return null;
 

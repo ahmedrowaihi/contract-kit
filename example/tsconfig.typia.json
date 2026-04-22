@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": ".typia-smoke",
+    "rootDir": "./",
+    "plugins": [{ "transform": "typia/lib/transform" }]
+  },
+  "include": [
+    "typia-smoke.ts",
+    "src/generated/types.gen.ts",
+    "src/generated/@ahmedrowaihi/openapi-ts-typia.gen.ts"
+  ],
+  "exclude": ["node_modules"]
+}

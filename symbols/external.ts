@@ -72,16 +72,6 @@ export const registerExternalSymbols = (
     meta: { category: "external", resource: "@orpc/server.implement" },
   });
 
-  if (
-    config.validator.input === "typia" ||
-    config.validator.output === "typia"
-  ) {
-    plugin.symbol("createValidate", {
-      external: "typia",
-      meta: { category: "external", resource: "typia.createValidate" },
-    });
-  }
-
   // Register faker when handler mode is 'faker'
   if (config.server.handlers && config.server.handlers.mode === "faker") {
     plugin.symbol("faker", {

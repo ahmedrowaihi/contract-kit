@@ -19,3 +19,7 @@ logs/
 # IDE
 .vscode/
 .idea/
+
+# TypeScript
+*.tsbuildinfo
+.typia*
