@@ -5,7 +5,7 @@ import { buildSymbolIn, type Casing, type NameTransformer } from '@hey-api/share
 import type { RequestInputType } from './operation';
 import type { TypiaPlugin } from '../types';
 
-const BULK_SCHEMAS_NAME = '__typiaSchemas';
+const BULK_SCHEMAS_NAME = 'typiaSchemas';
 
 interface RegisterSymbolArgs {
   meta: {
@@ -106,7 +106,7 @@ export function emitBulkJsonSchemas({ plugin, typeExprs }: EmitBulkJsonSchemasAr
     .call()
     .generic($.type.tuple(...typeExprs));
 
-  plugin.node($.const(symbol).assign(value));
+  plugin.node($.const(symbol).export().assign(value));
   return symbol;
 }
 
@@ -118,7 +118,7 @@ interface EmitJsonSchemaTwinArgs {
 }
 
 /**
- * Emits `export const <name> = __typiaSchemas.schemas[i]`.
+ * Emits `export const <name> = typiaSchemas.schemas[i]`.
  */
 export function emitJsonSchemaTwin({
   bulkSymbol,
@@ -128,4 +128,36 @@ export function emitJsonSchemaTwin({
 }: EmitJsonSchemaTwinArgs): void {
   const value = $(bulkSymbol).attr('schemas').attr(index).computed();
   plugin.node($.const(symbol).export().assign(value));
+}
+
+interface EmitJsonComponentsArgs {
+  bulkSymbol: Symbol;
+  plugin: TypiaPlugin['Instance'];
+}
+
+/**
+ * Emits `export const typiaJsonComponents = typiaSchemas.components;` so
+ * consumers (e.g. an oRPC SmartCoercion converter) can resolve `$ref`s that
+ * typia's JSON schemas point into `#/components/schemas/...`.
+ */
+export function emitJsonComponents({ bulkSymbol, plugin }: EmitJsonComponentsArgs): Symbol {
+  const name = 'typiaJsonComponents';
+  const symbol = plugin.registerSymbol(
+    buildSymbolIn({
+      meta: {
+        category: 'schema',
+        resource: 'definition',
+        resourceId: name,
+        role: 'components',
+        tool: '@ahmedrowaihi/openapi-ts-typia',
+      },
+      name,
+      naming: { case: 'camelCase', name },
+      plugin,
+      schema: {},
+    }),
+  );
+  const value = $(bulkSymbol).attr('components');
+  plugin.node($.const(symbol).export().assign(value));
+  return symbol;
 }

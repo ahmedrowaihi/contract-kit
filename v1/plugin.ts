@@ -2,6 +2,7 @@ import { $ } from '@hey-api/openapi-ts';
 import { applyNaming, type Casing, type IR, type NameTransformer } from '@hey-api/shared';
 import {
   emitBulkJsonSchemas,
+  emitJsonComponents,
   emitJsonSchemaTwin,
   emitValidator,
   registerTypiaSymbol,
@@ -82,6 +83,10 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
         typeExprs: slots.map((slot) => slot.typeExpr),
       })
     : undefined;
+
+  if (bulkSymbol) {
+    emitJsonComponents({ bulkSymbol, plugin });
+  }
 
   slots.forEach((slot, index) => {
     const naming = namingForRole(plugin, slot.role);
