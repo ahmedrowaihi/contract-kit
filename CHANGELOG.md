@@ -2,6 +2,29 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.4.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.4.0) — typia validator support
+
+### Added
+
+- **`validator: "@ahmedrowaihi/openapi-ts-typia"`** — typia joins zod / valibot / arktype as a first-class validator option. Generated contracts pass each operation's typia validator directly to `.input()` / `.output()` and per-status error twins to `.errors({ [code]: { data: tXxxResponseError<code> } })`.
+
+  ```ts
+  import { defineConfig as defineORPCConfig } from "@ahmedrowaihi/openapi-ts-orpc";
+  import { defineConfig as defineTypiaConfig } from "@ahmedrowaihi/openapi-ts-typia";
+
+  export default defineConfig({
+    plugins: [
+      // ...typescript + transformers
+      defineTypiaConfig(),
+      defineORPCConfig({
+        validator: "@ahmedrowaihi/openapi-ts-typia",
+      }),
+    ],
+  });
+  ```
+
+  Requires `@ahmedrowaihi/openapi-ts-typia` ^0.2.0.
+
 ## [2.3.3](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.3.3) — Fix missing runtime deps
 
 ### Fixed
