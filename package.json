@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-typia",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs",
   "keywords": [
     "openapi",
@@ -57,7 +57,9 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/openapi-ts": ">=0.95.0",
+    "@hey-api/shared": ">=0.3.0",
     "@orpc/contract": ">=1.13.0",
     "@orpc/openapi": ">=1.13.0",
     "@standard-schema/spec": "^1.0.0",
@@ -71,13 +73,11 @@
       "optional": true
     }
   },
-  "dependencies": {
-    "@hey-api/codegen-core": "^0.7.4",
-    "@hey-api/shared": "^0.3.0"
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.1",
-    "@hey-api/openapi-ts": "^0.95.0",
+    "@hey-api/codegen-core": "^0.8.0",
+    "@hey-api/openapi-ts": "^0.96.1",
+    "@hey-api/shared": "^0.4.1",
     "@orpc/contract": "^1.13.14",
     "@orpc/openapi": "^1.13.14",
     "@types/node": "^22",
