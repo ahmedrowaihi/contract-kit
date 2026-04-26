@@ -1,52 +1,70 @@
-import { DEFAULT_FIELD_HINTS, DEFAULT_FORMAT_MAPPING, FAKER_RETURN_TYPE } from "./hints";
+import { DEFAULT_FORMAT_MAPPING } from "./hints";
+import type {
+  FakerMethodPath,
+  FieldNameHints,
+  FormatMapping,
+  PropertyInfo,
+} from "./types";
 
-export function schemaTypeToJs(type: string): "string" | "number" | "boolean" {
-  switch (type) {
-    case "integer":
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    default:
-      return "string";
-  }
+const NULL_METHOD = "__null__" as const;
+export type ResolvedFakerMethod = FakerMethodPath | typeof NULL_METHOD;
+
+export interface ResolveOptions {
+  fieldHints?: FieldNameHints;
+  formatHints?: FormatMapping;
+  respectConstraints?: boolean;
 }
 
-export function isCompatible(method: string, schemaType: string): boolean {
-  const returnType = FAKER_RETURN_TYPE[method];
-  if (!returnType) return true;
-  return returnType === schemaTypeToJs(schemaType);
+export interface FakerCallSpec {
+  method: ResolvedFakerMethod;
+  args?: Record<string, number>;
 }
 
-export function resolveFakerMethod(
-  fieldName: string,
-  type: string,
-  format?: string,
-  fieldHints: Record<string, string> = DEFAULT_FIELD_HINTS,
-  formatHints: Record<string, string> = DEFAULT_FORMAT_MAPPING,
-): string {
-  if (format && formatHints[format] && isCompatible(formatHints[format], type)) {
-    return formatHints[format];
+const hasNumericConstraint = (info: PropertyInfo): boolean =>
+  info.minimum !== undefined || info.maximum !== undefined;
+
+const hasLengthConstraint = (info: PropertyInfo): boolean =>
+  info.minLength !== undefined || info.maxLength !== undefined;
+
+export function resolveFakerCall(
+  info: PropertyInfo,
+  opts: ResolveOptions = {},
+): FakerCallSpec {
+  const fieldHints = opts.fieldHints ?? {};
+  const formatHints = opts.formatHints ?? (DEFAULT_FORMAT_MAPPING as FormatMapping);
+  const respect = opts.respectConstraints ?? false;
+
+  if (info.format && formatHints[info.format]) {
+    return { method: formatHints[info.format] };
   }
 
-  const normalized = fieldName.toLowerCase().replace(/[_-]/g, "");
-  if (fieldHints[normalized] && isCompatible(fieldHints[normalized], type)) {
-    return fieldHints[normalized];
-  }
-  for (const [hint, method] of Object.entries(fieldHints)) {
-    if (normalized.includes(hint) && isCompatible(method, type)) return method;
+  const normalized = info.name.toLowerCase().replace(/[_-]/g, "");
+  if (fieldHints[normalized]) {
+    return { method: fieldHints[normalized] };
   }
 
-  switch (type) {
+  switch (info.type) {
     case "integer":
-      return "number.int";
-    case "number":
-      return "number.float";
+    case "number": {
+      const method: FakerMethodPath = info.type === "integer" ? "number.int" : "number.float";
+      if (respect && hasNumericConstraint(info)) {
+        const args: Record<string, number> = {};
+        if (info.minimum !== undefined) args.min = info.minimum;
+        if (info.maximum !== undefined) args.max = info.maximum;
+        return { method, args };
+      }
+      return { method };
+    }
     case "boolean":
-      return "datatype.boolean";
+      return { method: "datatype.boolean" };
     case "null":
-      return "__null__";
-    default:
-      return "lorem.word";
+      return { method: NULL_METHOD };
+    default: {
+      if (respect && hasLengthConstraint(info)) {
+        const length = info.maxLength ?? info.minLength!;
+        return { method: "string.alpha", args: { length } };
+      }
+      return { method: "lorem.word" };
+    }
   }
 }

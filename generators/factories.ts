@@ -1,50 +1,118 @@
 import { $ } from "@hey-api/openapi-ts";
+import { buildGraph, type IR } from "@hey-api/shared";
 
-import { buildFakerExpression } from "../core/builders";
+import { buildFakerExpression, type FakerSymbol } from "../core/builders";
 import type { PropertyInfo } from "../core/types";
 import {
   schemaToBatchFactoryName,
   schemaToFactoryName,
   shouldIncludeSchema,
 } from "../utils/helpers";
-import type { GenerateFactoriesInput } from "./types";
+import type { FakerPluginInstance, GenerateFactoriesInput } from "./types";
+
+const schemaNameFromRef = (ref: string): string | null => {
+  const m = ref.match(/\/([^/]+)$/);
+  return m ? decodeURIComponent(m[1]!) : null;
+};
 
 /**
- * Converts an IR schema property to a PropertyInfo for the shared faker builder.
+ * IR walker. Produces a `PropertyInfo` tree from an `IR.SchemaObject`.
+ *
+ * Refs (`$ref`) are recorded but not followed — the builder emits a sibling
+ * factory call via `opts.resolveRef`. The exception is `allOf` composition,
+ * which must inline ref'd properties to merge them; for that path we resolve
+ * refs via `plugin.context.resolveIrRef` and guard cycles with `visited`.
  */
-function irToPropertyInfo(propName: string, propSchema: unknown): PropertyInfo {
-  const schema = propSchema as {
-    type?: string;
-    format?: string;
-    enum?: (string | number | boolean)[];
-    properties?: Record<string, unknown>;
-    items?: unknown;
-    [key: string]: unknown;
-  };
-
-  const info: PropertyInfo = {
-    type: schema.type ?? "string",
-    format: schema.format,
-    name: propName,
-  };
-
-  if (schema.enum && schema.enum.length > 0) {
-    info.enum = schema.enum;
+function irToPropertyInfo(
+  name: string,
+  schema: IR.SchemaObject,
+  plugin: FakerPluginInstance,
+  visited: ReadonlySet<string> = new Set(),
+): PropertyInfo {
+  if (schema.$ref) {
+    return { type: "ref", name, $ref: schema.$ref };
   }
 
-  if (schema.type === "object" && schema.properties) {
+  // IR encodes enums as { type: "enum", items: [{ const: value }, ...] }
+  if (schema.type === "enum" && schema.items?.length) {
+    const values = schema.items
+      .map((item) => item.const)
+      .filter((v): v is string | number | boolean => v !== undefined);
+    return {
+      type: "string",
+      format: schema.format,
+      name,
+      ...(values.length > 0 && { enum: values }),
+    };
+  }
+
+  // allOf — merge children. Resolve refs inline since merging requires the
+  // target's properties.
+  if (schema.logicalOperator === "and" && schema.items?.length) {
+    const merged: Record<string, PropertyInfo> = {};
+    for (const part of schema.items) {
+      const partInfo = mergePart(part, plugin, visited);
+      if (partInfo?.children) Object.assign(merged, partInfo.children);
+    }
+    return { type: "object", name, children: merged };
+  }
+
+  // oneOf / anyOf — record variants for runtime random pick.
+  if (schema.logicalOperator === "or" && schema.items?.length) {
+    return {
+      type: "union",
+      name,
+      variants: schema.items.map((variant, i) =>
+        irToPropertyInfo(`${name}_v${i}`, variant, plugin, visited),
+      ),
+    };
+  }
+
+  const type = Array.isArray(schema.type)
+    ? (schema.type.find((t) => t !== "null") ?? "string")
+    : (schema.type ?? "string");
+
+  const info: PropertyInfo = { type, format: schema.format, name };
+
+  if (schema.minimum !== undefined) info.minimum = schema.minimum;
+  if (schema.maximum !== undefined) info.maximum = schema.maximum;
+  if (schema.minLength !== undefined) info.minLength = schema.minLength;
+  if (schema.maxLength !== undefined) info.maxLength = schema.maxLength;
+  if (schema.minItems !== undefined) info.minItems = schema.minItems;
+  if (schema.maxItems !== undefined) info.maxItems = schema.maxItems;
+
+  if (type === "object" && schema.properties) {
     info.children = {};
     for (const [key, value] of Object.entries(schema.properties)) {
-      if (value) info.children[key] = irToPropertyInfo(key, value);
+      if (value) info.children[key] = irToPropertyInfo(key, value, plugin, visited);
     }
   }
 
-  if (schema.type === "array" && schema.items) {
-    info.items = irToPropertyInfo("item", schema.items);
+  if (type === "array" && schema.items?.length) {
+    info.items = irToPropertyInfo("item", schema.items[0], plugin, visited);
   }
 
   return info;
 }
+
+/** Resolve a part of an allOf composition into an object PropertyInfo. */
+function mergePart(
+  part: IR.SchemaObject,
+  plugin: FakerPluginInstance,
+  visited: ReadonlySet<string>,
+): PropertyInfo | null {
+  if (part.$ref) {
+    if (visited.has(part.$ref)) return null;
+    const next = new Set(visited);
+    next.add(part.$ref);
+    const target = plugin.context.resolveIrRef<IR.SchemaObject>(part.$ref);
+    if (!target) return null;
+    return irToPropertyInfo("merged", target, plugin, next);
+  }
+  return irToPropertyInfo("merged", part, plugin, visited);
+}
+
+const refToSchemaName = (ref: string): string | null => schemaNameFromRef(ref);
 
 export const generateFactories = ({
   plugin,
@@ -53,48 +121,60 @@ export const generateFactories = ({
   const config = plugin.config;
   const faker = plugin.external("@faker-js/faker.faker");
 
+  const { graph } = buildGraph(plugin.context.spec, plugin.context.logger);
+  const reaches = (fromName: string, toName: string): boolean => {
+    for (const [refKey, deps] of graph.transitiveDependencies) {
+      if (refToSchemaName(refKey) !== fromName) continue;
+      for (const dep of deps) {
+        if (refToSchemaName(dep) === toName) return true;
+      }
+    }
+    return false;
+  };
+
   const generatedFactories: string[] = [];
 
+  // Schemas we emit a factory for: plain objects + allOf composition + oneOf/
+  // anyOf unions. Skip raw scalars, top-level enums, and standalone arrays.
+  const isFactoryable = (s: IR.SchemaObject): boolean =>
+    s.type === "object" ||
+    s.logicalOperator === "and" ||
+    s.logicalOperator === "or";
+
+  // Pass 2: emit factories.
   plugin.forEach("schema", (event) => {
     const { schema, name } = event;
-
-    if (schema.type !== "object") return;
     if (!name) return;
     const schemaName = name;
 
+    if (!isFactoryable(schema)) return;
     if (!shouldIncludeSchema(schemaName, config.include, config.exclude)) {
       return;
     }
-
-    if (config.filter && !config.filter(schema)) {
-      return;
-    }
+    if (config.filter && !config.filter(schema)) return;
 
     const factoryName = schemaToFactoryName(schemaName);
-
     const factorySymbol = plugin.symbol(factoryName, {
       getFilePath: () => outputFile,
     });
 
-    const properties = schema.properties || {};
-    let factoryObj = $.object().pretty();
+    const rootInfo = irToPropertyInfo(schemaName, schema, plugin);
+    const body = buildFakerExpression(faker, rootInfo, {
+      fieldHints: config.fieldNameHints,
+      formatHints: config.formatMapping,
+      respectConstraints: config.respectConstraints,
+      resolveRef: (ref) => {
+        const target = refToSchemaName(ref);
+        if (!target) return null;
+        if (target === schemaName || reaches(target, schemaName)) {
+          return $.literal(null);
+        }
+        return $(schemaToFactoryName(target)).call();
+      },
+    });
 
-    for (const [propName, propSchema] of Object.entries(properties)) {
-      if (!propSchema) continue;
-
-      const propInfo = irToPropertyInfo(propName, propSchema);
-      const fakerExpr = buildFakerExpression(faker, propInfo);
-      factoryObj = factoryObj.prop(
-        propName,
-        fakerExpr as Parameters<typeof factoryObj.prop>[1],
-      );
-    }
-
-    const factoryFn = $.func().do($.return(factoryObj));
-
-    const statement = $.const(factorySymbol as Parameters<typeof $.const>[0])
-      .export()
-      .assign(factoryFn);
+    const factoryFn = $.func().do($.return(body));
+    const statement = $.const(factorySymbol).export().assign(factoryFn);
     plugin.node(statement);
 
     generatedFactories.push(schemaName);
@@ -105,7 +185,8 @@ export const generateFactories = ({
       plugin,
       outputFile,
       schemaNames: generatedFactories,
-      faker: faker as any,
+      faker,
+      defaultCount: config.defaultBatchCount,
     });
   }
 };
@@ -115,38 +196,33 @@ function generateBatchCreators({
   outputFile,
   schemaNames,
   faker,
+  defaultCount,
 }: {
-  plugin: unknown;
+  plugin: FakerPluginInstance;
   outputFile: string;
   schemaNames: string[];
-  faker: any;
+  faker: FakerSymbol;
+  defaultCount: number;
 }): void {
-  const pluginInstance = plugin as {
-    symbol: (name: string, opts: { getFilePath: () => string }) => unknown;
-    node: (node: unknown) => void;
-  };
-
   for (const schemaName of schemaNames) {
     const factoryName = schemaToFactoryName(schemaName);
     const batchFactoryName = schemaToBatchFactoryName(schemaName);
 
-    const batchSymbol = pluginInstance.symbol(batchFactoryName, {
+    const batchSymbol = plugin.symbol(batchFactoryName, {
       getFilePath: () => outputFile,
     });
 
-    const countParam = $.id("count");
+    const countExpr = $.binary($.id("count"), "??", $.literal(defaultCount));
     const batchCall = $(faker)
       .attr("helpers")
       .attr("multiple")
-      .call($.id(factoryName), $.object().prop("count", countParam));
+      .call($.id(factoryName), $.object().prop("count", countExpr));
 
     const batchFn = $.func()
-      .param("count", (p) => p.type($.type.expr("number")))
+      .param("count", (p) => p.type($.type.expr("number")).optional())
       .do($.return(batchCall));
 
-    const statement = $.const(batchSymbol as Parameters<typeof $.const>[0])
-      .export()
-      .assign(batchFn);
-    pluginInstance.node(statement);
+    const statement = $.const(batchSymbol).export().assign(batchFn);
+    plugin.node(statement);
   }
 }

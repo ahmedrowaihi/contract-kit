@@ -1,9 +1,21 @@
-export type { PropertyInfo, ResponseSchemaInfo } from "./types";
+export type {
+  PropertyInfo,
+  ResponseSchemaInfo,
+  FakerMethodPath,
+  FieldNameHints,
+  FormatMapping,
+} from "./types";
+export { DEFAULT_FORMAT_MAPPING, DATE_METHODS } from "./hints";
 export {
-  DEFAULT_FIELD_HINTS,
-  DEFAULT_FORMAT_MAPPING,
-  FAKER_RETURN_TYPE,
-  DATE_METHODS,
-} from "./hints";
-export { schemaTypeToJs, isCompatible, resolveFakerMethod } from "./resolve";
-export { buildFakerCall, buildFakerExpression } from "./builders";
+  resolveFakerCall,
+  type ResolvedFakerMethod,
+  type ResolveOptions,
+  type FakerCallSpec,
+} from "./resolve";
+export {
+  buildFakerCall,
+  buildFakerExpression,
+  type BuildFakerOptions,
+  type FakerSymbol,
+  type FakerExpr,
+} from "./builders";

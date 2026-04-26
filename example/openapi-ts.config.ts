@@ -12,9 +12,14 @@ export default defineConfig({
     defineFakerConfig({
       output: "factories.gen",
       generateBatchCreators: true,
-      defaultBatchCount: 10,
+      defaultBatchCount: 5,
       respectConstraints: true,
-      generateDocs: true,
+      fieldNameHints: {
+        email: "internet.email",
+        firstName: "person.firstName",
+        last_name: "person.lastName",
+        phone: "phone.number",
+      },
     }),
   ],
 });

@@ -56,15 +56,23 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@faker-js/faker": "^9.0.0 || ^8.0.0",
+    "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/openapi-ts": ">=0.92.0",
-    "@faker-js/faker": "^9.0.0 || ^8.0.0"
+    "@hey-api/shared": ">=0.2.0",
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.1",
     "@faker-js/faker": "^9.3.0",
-    "@hey-api/codegen-core": "^0.7.0",
-    "@hey-api/openapi-ts": "^0.92.0",
-    "@hey-api/shared": "^0.2.0",
+    "@hey-api/codegen-core": "^0.8.0",
+    "@hey-api/openapi-ts": "^0.96.1",
+    "@hey-api/shared": "^0.4.1",
     "typescript": "5.9.3"
   },
   "engines": {
