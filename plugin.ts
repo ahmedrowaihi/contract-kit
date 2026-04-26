@@ -102,6 +102,7 @@ export const handler: ORPCPlugin["Handler"] = ({ plugin }) => {
           plugin,
           routerStructure,
           responseSchemas,
+          config: handlersConfig.faker,
         });
 
         fakerFactoryNames = factoryNames;

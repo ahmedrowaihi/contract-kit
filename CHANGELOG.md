@@ -2,6 +2,21 @@
 
 All notable changes to `@ahmedrowaihi/openapi-ts-orpc` are documented here.
 
+## [2.4.1](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.4.1) — Faker fixes + handler options
+
+### Added
+
+- `handlers.faker.fieldNameHints` and `handlers.faker.formatMapping` — typed against `FakerMethodPath`.
+- `handlers.faker.respectConstraints` is now actually wired (was a no-op).
+
+### Fixed
+
+- Faker mode no longer emits empty `arrayElement()`. Inherits all fixes from `@ahmedrowaihi/openapi-ts-faker@^0.3.0` (refs as factory calls, `helpers.multiple` for arrays, `oneOf`/`anyOf`/`allOf`, cyclic-ref break).
+
+### Changed
+
+- `@hey-api/shared`, `@hey-api/codegen-core`, `@ahmedrowaihi/openapi-ts-faker` moved to `peerDependencies` to dedupe across ecosystem plugins.
+
 ## [2.4.0](https://github.com/ahmedrowaihi/openapi-ts-orpc-plugin/releases/tag/v2.4.0) — typia validator support
 
 ### Added

@@ -18,10 +18,23 @@ export type HandlerMode = "stub" | "faker" | "proxy";
  */
 export type FakerHandlerConfig = {
   /**
-   * Respect schema constraints (min/max, minLength/maxLength) when generating values.
+   * Respect schema constraints (`minimum`/`maximum`, `minLength`/`maxLength`,
+   * `minItems`/`maxItems`) when generating values.
    * @default true
    */
   respectConstraints?: boolean;
+  /**
+   * Map field names to faker method paths. Keys are case/separator-insensitive
+   * (`email`, `Email`, `user_email`, `userEmail` all normalize the same).
+   * Values must be valid faker methods callable with zero arguments.
+   * @example { email: "internet.email", firstName: "person.firstName" }
+   */
+  fieldNameHints?: import("@ahmedrowaihi/openapi-ts-faker/core").FieldNameHints;
+  /**
+   * Map OpenAPI `format` strings to faker method paths. Merged with the
+   * shipped defaults (`uuid`, `email`, `date-time`, `uri`, ...).
+   */
+  formatMapping?: import("@ahmedrowaihi/openapi-ts-faker/core").FormatMapping;
 };
 
 /**

@@ -28,7 +28,7 @@
   "devDependencies": {
     "@ahmedrowaihi/openapi-ts-orpc": "file:..",
     "@ahmedrowaihi/openapi-ts-typia": "^0.2.0",
-    "@hey-api/openapi-ts": "^0.95.0",
+    "@hey-api/openapi-ts": "^0.96.1",
     "@types/node": "24.10.10",
     "@types/react": "19.0.1",
     "@types/react-dom": "19.0.1",

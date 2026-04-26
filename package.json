@@ -56,8 +56,11 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
     "@faker-js/faker": "^9.0.0 || ^8.0.0",
+    "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/openapi-ts": ">=0.92.0",
+    "@hey-api/shared": ">=0.3.0",
     "@orpc/client": "^1.13",
     "@orpc/contract": "^1.13",
     "@orpc/openapi": "^1.13",
@@ -67,6 +70,9 @@
     "@orpc/zod": "^1.13"
   },
   "peerDependenciesMeta": {
+    "@ahmedrowaihi/openapi-ts-faker": {
+      "optional": true
+    },
     "@faker-js/faker": {
       "optional": true
     },
@@ -74,14 +80,12 @@
       "optional": true
     }
   },
-  "dependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.2.0",
-    "@hey-api/codegen-core": "^0.7.4",
-    "@hey-api/shared": "^0.3.0"
-  },
   "devDependencies": {
+    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
     "@biomejs/biome": "^2.4.1",
-    "@hey-api/openapi-ts": "^0.95.0",
+    "@hey-api/codegen-core": "^0.8.0",
+    "@hey-api/openapi-ts": "^0.96.1",
+    "@hey-api/shared": "^0.4.1",
     "@ryoppippi/unplugin-typia": "^2.6.5",
     "@types/node": "^22",
     "ts-patch": "^3.3.0",
