@@ -44,6 +44,7 @@
   },
   "files": [
     "dist",
+    "docs",
     "README.md",
     "LICENSE.md"
   ],
@@ -57,7 +58,7 @@
     "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
     "@faker-js/faker": "^9.0.0 || ^8.0.0",
     "@hey-api/codegen-core": ">=0.7.0",
-    "@hey-api/openapi-ts": ">=0.92.0",
+    "@hey-api/openapi-ts": ">=0.95.0",
     "@hey-api/shared": ">=0.3.0",
     "@orpc/client": "^1.13",
     "@orpc/contract": "^1.13",
