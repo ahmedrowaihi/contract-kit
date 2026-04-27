@@ -51,7 +51,7 @@
     "prepack": "pnpm build",
     "build": "tsc",
     "dev": "tsc --watch",
-    "sync-tags": "tsx scripts/sync-tags.ts",
+    "sync-tags": "jiti scripts/sync-tags.ts",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -79,7 +79,7 @@
     "@orpc/contract": "^1.13.14",
     "@orpc/openapi": "^1.13.14",
     "@types/node": "^22",
-    "tsx": "^4.19.0",
+    "jiti": "^2.6.1",
     "typia": "^12.0.0"
   },
   "engines": {

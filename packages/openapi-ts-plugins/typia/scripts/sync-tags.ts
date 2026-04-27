@@ -1,6 +1,6 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env jiti
 /**
- * Regenerates `shared/typia-tags.generated.ts` from `@typia/interface`.
+ * Regenerates `src/shared/typia-tags.generated.ts` from `@typia/interface`.
  * Run via `pnpm sync-tags` after bumping typia. Output is committed.
  */
 
@@ -22,6 +22,7 @@ const tagsDir = path.join(interfaceRoot, "lib", "tags");
 const outputPath = path.resolve(
   __dirname,
   "..",
+  "src",
   "shared",
   "typia-tags.generated.ts",
 );
