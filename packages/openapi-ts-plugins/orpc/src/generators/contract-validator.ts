@@ -89,7 +89,10 @@ export function buildValidatorOutput(
 
   // Typia plugin emits a flattened `role: 'response'` symbol per operation.
   // Zod/valibot/arktype emit the unflattened `role: 'responses'`.
-  const role = validatorName === "@ahmedrowaihi/openapi-ts-typia" ? "response" : "responses";
+  const role =
+    validatorName === "@ahmedrowaihi/openapi-ts-typia"
+      ? "response"
+      : "responses";
   return plugin.referenceSymbol({
     category: "schema",
     resource: "operation",

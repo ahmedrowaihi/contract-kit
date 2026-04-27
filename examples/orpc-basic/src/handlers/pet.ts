@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { os } from "../generated/@ahmedrowaihi/orpc/server.gen";
+
 const pet = {
   addPet: os.pet.addPet.handler(async () => {
     throw new ORPCError("NOT_IMPLEMENTED");

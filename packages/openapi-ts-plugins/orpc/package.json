@@ -12,9 +12,9 @@
     "type-safe",
     "plugin"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/openapi-ts",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/orpc",
   "bugs": {
-    "url": "https://github.com/ahmedrowaihi/openapi-ts/issues"
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
   "license": "MIT",
   "author": {

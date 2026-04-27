@@ -108,9 +108,7 @@ export const defaultConfig: ORPCPlugin["Config"] = {
     plugin.config.server ??= { implementation: false, handlers: false };
     plugin.config.server.handlers = resolveHandlers(plugin.config.server);
 
-    plugin.config.validator = resolveValidator(
-      plugin.config.validator,
-    );
+    plugin.config.validator = resolveValidator(plugin.config.validator);
 
     const { input, output } = plugin.config.validator;
     if (input) plugin.dependencies?.add(input);

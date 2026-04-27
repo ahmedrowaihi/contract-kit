@@ -1,6 +1,4 @@
 {
   "files": [],
-  "references": [
-    { "path": "./packages/openapi-ts-plugins/orpc" }
-  ]
+  "references": [{ "path": "./packages/openapi-ts-plugins/orpc" }]
 }

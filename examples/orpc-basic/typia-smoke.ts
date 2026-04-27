@@ -42,7 +42,8 @@ const addPetBad = {
   query: undefined,
 };
 assert(
-  !tAddPetData(addPetBad as unknown as Parameters<typeof tAddPetData>[0]).success,
+  !tAddPetData(addPetBad as unknown as Parameters<typeof tAddPetData>[0])
+    .success,
   "addPet rejects input missing body.name",
 );
 
@@ -57,7 +58,9 @@ assert(
   "getPetById accepts numeric petId",
 );
 assert(
-  !tGetPetByIdData({ params: { petId: "42" } } as unknown as Parameters<typeof tGetPetByIdData>[0]).success,
+  !tGetPetByIdData({ params: { petId: "42" } } as unknown as Parameters<
+    typeof tGetPetByIdData
+  >[0]).success,
   "getPetById rejects string petId without upstream coercion",
 );
 
@@ -89,19 +92,27 @@ assert(
 // ---------------------------------------------------------------------------
 
 const responsePet = { name: "Rex", photoUrls: ["a", "b"] };
-assert(tAddPetResponse(responsePet).success, "response validator accepts valid Pet");
 assert(
-  !tAddPetResponse({ name: "Rex", photoUrls: "not-an-array" } as unknown as Parameters<typeof tAddPetResponse>[0]).success,
+  tAddPetResponse(responsePet).success,
+  "response validator accepts valid Pet",
+);
+assert(
+  !tAddPetResponse({
+    name: "Rex",
+    photoUrls: "not-an-array",
+  } as unknown as Parameters<typeof tAddPetResponse>[0]).success,
   "response validator rejects non-array photoUrls",
 );
 
 // findPetsByStatus returns Array<Pet>
 assert(
-  tFindPetsByStatusResponse([responsePet, { ...responsePet, name: "Rex2" }]).success,
+  tFindPetsByStatusResponse([responsePet, { ...responsePet, name: "Rex2" }])
+    .success,
   "findPetsByStatus response accepts array of valid Pets",
 );
 assert(
-  !tFindPetsByStatusResponse([{ name: "Rex" } as unknown as typeof responsePet]).success,
+  !tFindPetsByStatusResponse([{ name: "Rex" } as unknown as typeof responsePet])
+    .success,
   "findPetsByStatus response rejects array with invalid Pet (missing photoUrls)",
 );
 
@@ -358,6 +369,9 @@ assert(
 
 const ssResult = tAddPetData["~standard"].validate({ body: {} });
 const ss = ssResult instanceof Promise ? null : ssResult;
-assert(ss !== null && "issues" in ss, "Standard Schema validate returns issues for bad input");
+assert(
+  ss !== null && "issues" in ss,
+  "Standard Schema validate returns issues for bad input",
+);
 
 console.log("\nAll typia runtime checks passed.");

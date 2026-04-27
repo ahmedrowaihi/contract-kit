@@ -20,8 +20,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
-    "format": "biome format --write .",
-    "format:check": "biome check --write .",
+    "format": "biome check --write .",
+    "format:check": "biome ci .",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "release": "turbo run build --filter=./packages/* && changeset publish"

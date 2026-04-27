@@ -164,7 +164,8 @@ export const generateContracts = ({
 
       if (hasOutput && outputValidator) {
         const outputExpr = buildValidatorOutput(plugin, operationId);
-        if (outputExpr) contractExpr = contractExpr.attr("output").call(outputExpr);
+        if (outputExpr)
+          contractExpr = contractExpr.attr("output").call(outputExpr);
       }
 
       if (inputValidator) {

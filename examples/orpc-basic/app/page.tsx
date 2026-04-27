@@ -9,7 +9,10 @@ import { Providers } from "./providers";
 
 // Absolute URL on the server (SSR), relative in the browser.
 const client = createOpenApiClient({
-  url: typeof window === "undefined" ? "http://localhost:3000/api/openapi" : "/api/openapi",
+  url:
+    typeof window === "undefined"
+      ? "http://localhost:3000/api/openapi"
+      : "/api/openapi",
 });
 
 const orpc = createOrpcUtils(client);
