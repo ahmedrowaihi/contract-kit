@@ -5,7 +5,13 @@
     { "repo": "ahmedrowaihi/contract-kit" }
   ],
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@ahmedrowaihi/openapi-ts-orpc",
+      "@ahmedrowaihi/openapi-ts-faker",
+      "@ahmedrowaihi/openapi-ts-typia"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

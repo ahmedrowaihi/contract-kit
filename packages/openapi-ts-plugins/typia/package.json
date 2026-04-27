@@ -1,18 +1,18 @@
 {
-  "name": "@ahmedrowaihi/openapi-ts-orpc",
-  "version": "2.4.1",
-  "description": "oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs",
+  "name": "@ahmedrowaihi/openapi-ts-typia",
+  "version": "0.2.1",
+  "description": "Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs",
   "keywords": [
     "openapi",
     "openapi-ts",
-    "orpc",
-    "rpc",
-    "typescript",
+    "typia",
+    "standard-schema",
+    "validator",
     "codegen",
     "type-safe",
     "plugin"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/orpc",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/typia",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
@@ -23,8 +23,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git",
-    "directory": "packages/openapi-ts-plugins/orpc"
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi-ts-plugins/typia"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -35,16 +35,15 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
-    "./tools": {
-      "types": "./dist/tools/index.d.ts",
-      "import": "./dist/tools/index.js",
-      "require": "./dist/tools/index.js"
+    "./orpc": {
+      "types": "./dist/orpc/index.d.ts",
+      "import": "./dist/orpc/index.js",
+      "require": "./dist/orpc/index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "docs",
     "README.md",
     "LICENSE.md"
   ],
@@ -52,42 +51,36 @@
     "prepack": "pnpm build",
     "build": "tsc",
     "dev": "tsc --watch",
+    "sync-tags": "jiti scripts/sync-tags.ts",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
-    "@faker-js/faker": "^9.0.0 || ^8.0.0",
     "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/openapi-ts": ">=0.95.0",
     "@hey-api/shared": ">=0.3.0",
-    "@orpc/client": "^1.13",
-    "@orpc/contract": "^1.13",
-    "@orpc/openapi": "^1.13",
-    "@orpc/openapi-client": "^1.13",
-    "@orpc/server": "^1.13",
-    "@orpc/tanstack-query": "^1.13",
-    "@orpc/zod": "^1.13"
+    "@orpc/contract": ">=1.13.0",
+    "@orpc/openapi": ">=1.13.0",
+    "@standard-schema/spec": "^1.0.0",
+    "typia": "^12.0.0"
   },
   "peerDependenciesMeta": {
-    "@ahmedrowaihi/openapi-ts-faker": {
+    "@orpc/contract": {
       "optional": true
     },
-    "@faker-js/faker": {
-      "optional": true
-    },
-    "@orpc/zod": {
+    "@orpc/openapi": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "workspace:*",
     "@contract-kit/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/openapi-ts": "catalog:",
     "@hey-api/shared": "catalog:",
-    "@ryoppippi/unplugin-typia": "^2.6.5",
+    "@orpc/contract": "^1.13.14",
+    "@orpc/openapi": "^1.13.14",
     "@types/node": "catalog:",
-    "ts-patch": "^3.3.0"
+    "jiti": "^2.6.1",
+    "typia": "^12.0.0"
   },
   "engines": {
     "node": ">=20.19.0"
