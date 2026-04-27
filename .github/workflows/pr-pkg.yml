@@ -1,0 +1,33 @@
+name: PR preview packages
+
+on:
+  pull_request:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  publish-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish preview to pkg.pr.new
+        run: pnpm dlx pkg-pr-new publish './packages/openapi-ts-plugins/*' './packages/openapi-tools' --pnpm

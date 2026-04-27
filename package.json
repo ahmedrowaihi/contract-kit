@@ -24,6 +24,7 @@
     "typecheck": "turbo run typecheck --filter=!./examples/*",
     "format": "biome check --write .",
     "format:check": "biome ci .",
+    "sync:readme": "node scripts/sync-readme.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "release": "turbo run build --filter=!./examples/* && changeset publish"

@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
     "directory": "packages/openapi-ts-plugins/orpc"
   },
   "type": "module",
@@ -43,6 +43,10 @@
     "README.md",
     "LICENSE.md"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

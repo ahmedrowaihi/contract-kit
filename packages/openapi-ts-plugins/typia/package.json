@@ -47,6 +47,10 @@
     "README.md",
     "LICENSE.md"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
