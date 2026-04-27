@@ -23,13 +23,14 @@ Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 | --- | --- |
 | [`@ahmedrowaihi/openapi-ts-faker`](./packages/openapi-ts-plugins/faker) | Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs |
 | [`@ahmedrowaihi/openapi-ts-orpc`](./packages/openapi-ts-plugins/orpc) | oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs |
+| [`@ahmedrowaihi/openapi-ts-paths`](./packages/openapi-ts-plugins/paths) | Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching |
 | [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi-ts-plugins/typia) | Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs |
 
 ### Standalone OpenAPI tools
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — spec diffing, parsing, and shared helpers built on hey-api/codegen-core |
+| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
 
 <!-- @packages-end -->
 
