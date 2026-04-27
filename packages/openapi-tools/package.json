@@ -79,14 +79,6 @@
     "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/shared": ">=0.3.0"
   },
-  "peerDependenciesMeta": {
-    "@hey-api/codegen-core": {
-      "optional": true
-    },
-    "@hey-api/shared": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@contract-kit/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",

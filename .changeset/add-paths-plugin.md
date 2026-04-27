@@ -3,15 +3,10 @@
 "@ahmedrowaihi/openapi-tools": minor
 ---
 
-**New plugin `@ahmedrowaihi/openapi-ts-paths`** — emits a `paths.gen.ts` file with:
-- `export type Paths = {...}` — structured type keyed by path + method, path params typed
-- `export const r_<method>_<path>` — one named const per route (tree-shakable per-route imports)
-- `export const ROUTES = [...]` — convenience aggregate
+**New plugin `@ahmedrowaihi/openapi-ts-paths`** — emits one runtime `const` per operation (named after the operationId, suffixed `Route`) holding `{ spec, pattern, method, operationId }`. Per-operation exports keep the codegen output tree-shakable: `import { getPetByIdRoute } from "./generated/paths.gen"` pulls just that route.
 
-**`@ahmedrowaihi/openapi-tools` adds request matching**, all pure functions, tree-shakable subpath exports, frontend + backend friendly:
-- `matchRequest(routes, req)` from `/match` — typed via `<TPaths>` generic
-- `matchPath(routes, url)` from `/match` — path-only check
-- `routesFromIR(ir)` from `/ir` — backend helper for dynamic specs
-- subpath exports `/match`, `/parse`, `/diff`, `/ir`, `/route` — bundlers tree-shake unused families
-- `sideEffects: false` — no top-level side effects, safe for frontend bundling
-- hey-api peers (`@hey-api/codegen-core`, `@hey-api/shared`) made optional — only the `/parse`, `/diff`, `/ir` subpaths need them
+**`@ahmedrowaihi/openapi-tools` adds runtime routing** — pure, tree-shakable, accepts standard `Request`. Subpath exports:
+- `/match` → `match(routes, request)` returns a discriminated union typed by the route array, `isInSpec(routes, request)` boolean check
+- `/router` → `createRouter().on(route, handler).handle(request)` for typed handler dispatch (no upfront array; routes accumulate as you register)
+- `/parse`, `/diff`, `/ir` for spec parsing, diffing, and extracting `Route[]` from a parsed IR (backend dynamic-spec flow)
+- `sideEffects: false` for clean tree-shaking
