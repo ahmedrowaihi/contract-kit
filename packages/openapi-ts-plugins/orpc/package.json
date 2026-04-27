@@ -1,0 +1,95 @@
+{
+  "name": "@ahmedrowaihi/openapi-ts-orpc",
+  "version": "2.4.1",
+  "description": "oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs",
+  "keywords": [
+    "openapi",
+    "openapi-ts",
+    "orpc",
+    "rpc",
+    "typescript",
+    "codegen",
+    "type-safe",
+    "plugin"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/orpc",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git",
+    "directory": "packages/openapi-ts-plugins/orpc"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "import": "./dist/tools/index.js",
+      "require": "./dist/tools/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "prepack": "pnpm build",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
+    "@faker-js/faker": "^9.0.0 || ^8.0.0",
+    "@hey-api/codegen-core": ">=0.7.0",
+    "@hey-api/openapi-ts": ">=0.95.0",
+    "@hey-api/shared": ">=0.3.0",
+    "@orpc/client": "^1.13",
+    "@orpc/contract": "^1.13",
+    "@orpc/openapi": "^1.13",
+    "@orpc/openapi-client": "^1.13",
+    "@orpc/server": "^1.13",
+    "@orpc/tanstack-query": "^1.13",
+    "@orpc/zod": "^1.13"
+  },
+  "peerDependenciesMeta": {
+    "@ahmedrowaihi/openapi-ts-faker": {
+      "optional": true
+    },
+    "@faker-js/faker": {
+      "optional": true
+    },
+    "@orpc/zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
+    "@contract-kit/tsconfig": "workspace:*",
+    "@hey-api/codegen-core": "^0.8.0",
+    "@hey-api/openapi-ts": "^0.96.1",
+    "@hey-api/shared": "^0.4.1",
+    "@ryoppippi/unplugin-typia": "^2.6.5",
+    "@types/node": "^22",
+    "ts-patch": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

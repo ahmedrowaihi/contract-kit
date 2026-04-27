@@ -1,7 +1,16 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.12/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
   "files": {
-    "includes": ["**", "!!**/globals.css", "!!**/.vscode/**", "!!**/cdk.out/**"]
+    "includes": [
+      "**",
+      "!!**/dist/**",
+      "!!**/node_modules/**",
+      "!!**/.next/**",
+      "!!**/.turbo/**",
+      "!!**/globals.css",
+      "!!**/.vscode/**",
+      "!!**/cdk.out/**"
+    ]
   },
   "formatter": {
     "enabled": true,

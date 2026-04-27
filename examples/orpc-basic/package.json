@@ -1,0 +1,45 @@
+{
+  "name": "@contract-kit/example-orpc-basic",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "openapi-ts": "openapi-ts",
+    "typia:smoke": "tspc -p tsconfig.typia.json && node .typia-smoke/typia-smoke.js",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "@orpc/client": "^1.13.14",
+    "@orpc/contract": "^1.13.14",
+    "@orpc/json-schema": "^1.13.14",
+    "@orpc/openapi": "^1.13.14",
+    "@orpc/openapi-client": "^1.13.14",
+    "@orpc/server": "^1.13.14",
+    "@orpc/tanstack-query": "^1.13.14",
+    "@standard-schema/spec": "^1.1.0",
+    "@tanstack/react-query": "^5.80.2",
+    "next": "15.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "typia": "12.0.2"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/openapi-ts-orpc": "workspace:*",
+    "@ahmedrowaihi/openapi-ts-typia": "^0.2.0",
+    "@hey-api/openapi-ts": "^0.96.1",
+    "@ryoppippi/unplugin-typia": "^2.6.5",
+    "@types/node": "24.10.10",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.1",
+    "autoprefixer": "^10.5.0",
+    "eslint": "9.17.0",
+    "eslint-config-next": "15.1.6",
+    "postcss": "8.4.41",
+    "tailwindcss": "3.4.9",
+    "ts-patch": "^3.3.0",
+    "typescript": "5.9.3"
+  }
+}
