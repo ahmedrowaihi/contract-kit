@@ -48,7 +48,6 @@
     "LICENSE.md"
   ],
   "scripts": {
-    "prepack": "pnpm build",
     "build": "tsc",
     "dev": "tsc --watch",
     "sync-tags": "jiti scripts/sync-tags.ts",

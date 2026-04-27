@@ -49,7 +49,6 @@
     "LICENSE.md"
   ],
   "scripts": {
-    "prepack": "pnpm build",
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit"
