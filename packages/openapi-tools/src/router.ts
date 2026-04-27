@@ -49,9 +49,7 @@ function key(method: string, spec: string): string {
  * ```
  */
 export function createRouter(): Router {
-  // Routes are reassigned (not mutated) on each `.on()` so the array reference
-  // changes — this invalidates the WeakMap cache in `match()` and forces a
-  // fresh URLPattern compile that includes the newly registered route.
+  // Reassign (not push) so the array identity changes and `match()`'s WeakMap cache busts.
   let routes: readonly Route[] = [];
   // biome-ignore lint/suspicious/noExplicitAny: handler stored generically
   const handlers = new Map<string, RouteHandler<Route, any>>();
