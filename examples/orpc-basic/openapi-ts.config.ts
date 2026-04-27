@@ -1,4 +1,5 @@
 import { defineConfig as defineORPCConfig } from "@ahmedrowaihi/openapi-ts-orpc";
+import { defineConfig as definePathsConfig } from "@ahmedrowaihi/openapi-ts-paths";
 import {
   defineConfig as defineTypiaConfig,
   typiaTypeTransformer,
@@ -34,6 +35,7 @@ export default defineConfig({
       typeTransformers: [typiaTypeTransformer],
     },
     defineTypiaConfig(),
+    definePathsConfig(),
     defineORPCConfig({
       group: "tags",
       comments: true,

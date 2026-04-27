@@ -89,9 +89,15 @@ importers:
         specifier: 12.0.2
         version: 12.0.2(@types/node@24.10.10)(typescript@5.9.3)
     devDependencies:
+      '@ahmedrowaihi/openapi-tools':
+        specifier: workspace:*
+        version: link:../../packages/openapi-tools
       '@ahmedrowaihi/openapi-ts-orpc':
         specifier: workspace:*
         version: link:../../packages/openapi-ts-plugins/orpc
+      '@ahmedrowaihi/openapi-ts-paths':
+        specifier: workspace:*
+        version: link:../../packages/openapi-ts-plugins/paths
       '@ahmedrowaihi/openapi-ts-typia':
         specifier: workspace:*
         version: link:../../packages/openapi-ts-plugins/typia
@@ -133,6 +139,10 @@ importers:
         version: 5.9.3
 
   packages/openapi-tools:
+    dependencies:
+      urlpattern-polyfill:
+        specifier: ^10.1.0
+        version: 10.1.0
     devDependencies:
       '@contract-kit/tsconfig':
         specifier: workspace:*
@@ -223,6 +233,24 @@ importers:
       ts-patch:
         specifier: ^3.3.0
         version: 3.3.0
+
+  packages/openapi-ts-plugins/paths:
+    devDependencies:
+      '@contract-kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../../tooling/tsconfig
+      '@hey-api/codegen-core':
+        specifier: 'catalog:'
+        version: 0.8.0
+      '@hey-api/openapi-ts':
+        specifier: 'catalog:'
+        version: 0.96.1(typescript@5.9.3)
+      '@hey-api/shared':
+        specifier: 'catalog:'
+        version: 0.4.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
 
   packages/openapi-ts-plugins/typia:
     dependencies:
@@ -2912,6 +2940,9 @@ packages:
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  urlpattern-polyfill@10.1.0:
+    resolution: {integrity: sha512-IGjKp/o0NL3Bso1PymYURCJxMPNAf/ILOpendP9f5B6e1rTJgdgiOvgfoT8VxCAdY+Wisb9uhGaJJf3yZ2V9nw==}
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -6036,6 +6067,8 @@ snapshots:
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  urlpattern-polyfill@10.1.0: {}
 
   util-deprecate@1.0.2: {}
 

@@ -1,9 +1,11 @@
 {
   "name": "@ahmedrowaihi/openapi-tools",
   "version": "1.0.0",
-  "description": "OpenAPI utilities — spec diffing, parsing, and shared helpers built on hey-api/codegen-core",
+  "description": "OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend",
   "keywords": [
     "openapi",
+    "matcher",
+    "url-pattern",
     "diff",
     "parser",
     "spec",
@@ -25,12 +27,37 @@
     "directory": "packages/openapi-tools"
   },
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./match": {
+      "types": "./dist/match.d.ts",
+      "import": "./dist/match.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
+    },
+    "./parse": {
+      "types": "./dist/parse.d.ts",
+      "import": "./dist/parse.js"
+    },
+    "./diff": {
+      "types": "./dist/diff.d.ts",
+      "import": "./dist/diff.js"
+    },
+    "./ir": {
+      "types": "./dist/ir.d.ts",
+      "import": "./dist/ir.js"
+    },
+    "./route": {
+      "types": "./dist/route.d.ts",
+      "import": "./dist/route.js"
     },
     "./package.json": "./package.json"
   },
@@ -52,11 +79,22 @@
     "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/shared": ">=0.3.0"
   },
+  "peerDependenciesMeta": {
+    "@hey-api/codegen-core": {
+      "optional": true
+    },
+    "@hey-api/shared": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@contract-kit/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/shared": "catalog:",
     "@types/node": "catalog:"
+  },
+  "dependencies": {
+    "urlpattern-polyfill": "^10.1.0"
   },
   "engines": {
     "node": ">=20.19.0"
