@@ -1,17 +1,7 @@
 {
-  "name": "@ahmedrowaihi/openapi-ts-orpc",
-  "version": "2.4.1",
-  "description": "oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs",
-  "keywords": [
-    "openapi",
-    "openapi-ts",
-    "orpc",
-    "rpc",
-    "typescript",
-    "codegen",
-    "type-safe",
-    "plugin"
-  ],
+  "name": "contract-kit",
+  "private": true,
+  "description": "Toolkit for OpenAPI / AsyncAPI / SDK contract codegen",
   "homepage": "https://github.com/ahmedrowaihi/openapi-ts",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/openapi-ts/issues"
@@ -23,75 +13,33 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git",
-    "directory": "openapi-ts-orpc-plugin"
+    "url": "git+https://github.com/ahmedrowaihi/openapi-ts.git"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    },
-    "./tools": {
-      "types": "./dist/tools/index.d.ts",
-      "import": "./dist/tools/index.js",
-      "require": "./dist/tools/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE.md"
-  ],
   "scripts": {
-    "prepack": "pnpm build",
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
     "format": "biome format --write .",
     "format:check": "biome check --write .",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
-    "@faker-js/faker": "^9.0.0 || ^8.0.0",
-    "@hey-api/codegen-core": ">=0.7.0",
-    "@hey-api/openapi-ts": ">=0.92.0",
-    "@hey-api/shared": ">=0.3.0",
-    "@orpc/client": "^1.13",
-    "@orpc/contract": "^1.13",
-    "@orpc/openapi": "^1.13",
-    "@orpc/openapi-client": "^1.13",
-    "@orpc/server": "^1.13",
-    "@orpc/tanstack-query": "^1.13",
-    "@orpc/zod": "^1.13"
-  },
-  "peerDependenciesMeta": {
-    "@ahmedrowaihi/openapi-ts-faker": {
-      "optional": true
-    },
-    "@faker-js/faker": {
-      "optional": true
-    },
-    "@orpc/zod": {
-      "optional": true
-    }
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "release": "turbo run build --filter=./packages/* && changeset publish"
   },
   "devDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
-    "@biomejs/biome": "^2.4.1",
-    "@hey-api/codegen-core": "^0.8.0",
-    "@hey-api/openapi-ts": "^0.96.1",
-    "@hey-api/shared": "^0.4.1",
-    "@ryoppippi/unplugin-typia": "^2.6.5",
-    "@types/node": "^22",
-    "ts-patch": "^3.3.0",
+    "@biomejs/biome": "^2.4.13",
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.31.0",
+    "turbo": "^2.9.6",
     "typescript": "5.9.3"
   },
+  "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=20.19.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@ryoppippi/unplugin-typia": "patches/@ryoppippi__unplugin-typia.patch"
+    }
   }
 }

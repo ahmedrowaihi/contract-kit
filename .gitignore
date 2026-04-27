@@ -6,6 +6,8 @@ yarn.lock
 # Build output
 dist
 *.tsbuildinfo
+.next
+.turbo
 
 # Logs
 *.log
