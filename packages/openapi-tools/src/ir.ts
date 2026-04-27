@@ -18,21 +18,7 @@ function specToPattern(spec: string): string {
   return spec.replace(/\{([^}]+)\}/g, ":$1");
 }
 
-/**
- * Extract a `Route[]` from a parsed OpenAPI IR. Use this on the backend when
- * the spec is loaded dynamically (from disk, a registry, a fetch, etc.) and
- * the codegen-emitted `ROUTES` array isn't available.
- *
- * @example
- * ```ts
- * import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
- * import { routesFromIR } from "@ahmedrowaihi/openapi-tools/ir";
- * import { matchRequest } from "@ahmedrowaihi/openapi-tools/match";
- *
- * const routes = routesFromIR(parseSpec(spec));
- * const result = matchRequest(routes, request);
- * ```
- */
+/** Extract `Route[]` from a parsed IR — for runtime-loaded specs without codegen. */
 export function routesFromIR(ir: IR.Model): Route[] {
   const out: Route[] = [];
   const paths =

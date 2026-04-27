@@ -8,21 +8,9 @@ type RouteHandler<R extends Route, TResult = unknown> = (
 ) => TResult | Promise<TResult>;
 
 export interface Router {
-  /**
-   * Register a handler for a route. Pass the route const directly — its
-   * `spec` literal types the `params` argument of the handler.
-   *
-   * @example
-   * ```ts
-   * router.on(getPetByIdRoute, (req, { petId }) => fetchPet(petId));
-   * ```
-   */
+  /** Register a handler for a route. Handler's `params` is typed from the route's `spec`. */
   on<R extends Route>(route: R, handler: RouteHandler<R>): Router;
-  /**
-   * Match the request against accumulated routes, dispatch to the registered
-   * handler. Returns the handler's return value, or `undefined` if no match
-   * or no handler.
-   */
+  /** Match + dispatch. Returns handler's return value, or `undefined` if unmatched. */
   handle(request: Request): Promise<unknown> | undefined;
 }
 
@@ -31,21 +19,13 @@ function key(method: string, spec: string): string {
 }
 
 /**
- * Create a router that dispatches matched requests to typed handlers. Routes
- * are accumulated as `.on()` is called — no need to pre-list them. Each route
- * appears only where it's actually handled, so unused routes drop from the
- * bundle.
+ * Create a router that dispatches matched requests to typed handlers.
  *
  * @example
  * ```ts
- * import { createRouter } from "@ahmedrowaihi/openapi-tools/router";
- * import { getPetByIdRoute, addPetRoute } from "./generated/paths.gen";
- *
- * const router = createRouter()
- *   .on(getPetByIdRoute, (req, { petId }) => ({ id: petId, name: "Fluffy" }))
- *   .on(addPetRoute,     (req, params)   => ({ ok: true }));
- *
- * await router.handle(request);
+ * createRouter()
+ *   .on(getPetByIdRoute, (req, { petId }) => fetchPet(petId))
+ *   .handle(request);
  * ```
  */
 export function createRouter(): Router {

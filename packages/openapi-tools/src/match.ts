@@ -2,17 +2,13 @@ import { URLPattern } from "urlpattern-polyfill";
 
 import type { Route } from "./route";
 
-/** Extract `{paramName}` placeholders from a path template. URL params are always strings at runtime. */
+/** `/users/{id}/posts/{postId}` → `{ id: string; postId: string }` (URL params are always strings). */
 export type ExtractParams<P extends string> =
   P extends `${string}{${infer Key}}${infer Rest}`
     ? { [K in Key | keyof ExtractParams<Rest>]: string }
     : Record<string, never>;
 
-/**
- * Discriminated union derived from the routes array. Each route in the array
- * contributes one variant. Narrow on `result.spec` + `result.method` to access
- * the per-route param shape.
- */
+/** Discriminated union; narrow on `spec` + `method` for typed `params`. */
 export type MatchResult<TRoute extends Route = Route> = TRoute extends Route
   ? {
       spec: TRoute["spec"];
@@ -27,7 +23,7 @@ interface CompiledRoute extends Route {
   score: number;
 }
 
-/** Higher = more specific. Literal segments outweigh parameterized ones. */
+/** Higher = more specific; literals outweigh `{param}` segments. */
 function scorePath(spec: string): number {
   let score = 0;
   for (const segment of spec.split("/").filter(Boolean)) {
@@ -51,23 +47,7 @@ function compile(routes: readonly Route[]): CompiledRoute[] {
   return compiled;
 }
 
-/**
- * Match an inbound `Request` against a list of routes. Returns the matched
- * route's spec, method, extracted path params (always strings — URL truth),
- * and operationId. Returns `null` if no route matches.
- *
- * The result type is a discriminated union derived from the routes array —
- * narrow on `result.spec` + `result.method` to access typed `params`.
- *
- * @example
- * ```ts
- * import { match } from "@ahmedrowaihi/openapi-tools/match";
- * import { getPetByIdRoute } from "./generated/paths.gen";
- *
- * const r = match([getPetByIdRoute], request);
- * if (r?.spec === "/pet/{petId}") r.params.petId; // typed as string
- * ```
- */
+/** Match a request against routes. Returns `MatchResult<R>` discriminated union or `null`. */
 export function match<R extends Route>(
   routes: readonly R[],
   request: Request,
@@ -92,10 +72,7 @@ export function match<R extends Route>(
   return null;
 }
 
-/**
- * Boolean check — does this request hit any route in the spec? Useful for
- * "is this URL part of my API surface" filters in interceptors and gateways.
- */
+/** Boolean: does this request hit any route? */
 export function isInSpec(routes: readonly Route[], request: Request): boolean {
   const url = new URL(request.url);
   const lower = request.method.toLowerCase();

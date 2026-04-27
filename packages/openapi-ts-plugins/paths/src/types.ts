@@ -3,16 +3,9 @@ import type { Casing, DefinePlugin, NamingRule, Plugin } from "@hey-api/shared";
 export type UserConfig = Plugin.Hooks &
   Plugin.UserExports & {
     name: "@ahmedrowaihi/paths";
-    /**
-     * Filename (without extension) for the emitted module.
-     * @default "paths"
-     */
+    /** Filename (no extension). @default "paths" */
     output?: string;
-    /**
-     * Naming rules for the emitted route consts. Names are derived from each
-     * operation's id with the configured casing, then concatenated with the
-     * configured suffix (e.g. `getPetById` + `Route` → `getPetByIdRoute`).
-     */
+    /** Route const naming: `applyNaming(operationId, casing) + suffix` (e.g. `getPetByIdRoute`). */
     naming?: {
       /** @default 'camelCase' */
       casing?: NamingRule | Casing;
