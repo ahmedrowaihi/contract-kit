@@ -27,7 +27,9 @@
     "typia": "12.0.2"
   },
   "devDependencies": {
+    "@ahmedrowaihi/openapi-tools": "workspace:*",
     "@ahmedrowaihi/openapi-ts-orpc": "workspace:*",
+    "@ahmedrowaihi/openapi-ts-paths": "workspace:*",
     "@ahmedrowaihi/openapi-ts-typia": "workspace:*",
     "@hey-api/openapi-ts": "^0.96.1",
     "@ryoppippi/unplugin-typia": "^2.6.5",

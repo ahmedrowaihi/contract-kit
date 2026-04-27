@@ -1,18 +1,20 @@
 {
-  "name": "@ahmedrowaihi/openapi-tools",
-  "version": "1.0.0",
-  "description": "OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend",
+  "name": "@ahmedrowaihi/openapi-ts-paths",
+  "version": "0.0.0",
+  "description": "Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching",
   "keywords": [
     "openapi",
+    "openapi-ts",
+    "routes",
+    "router",
     "matcher",
     "url-pattern",
-    "diff",
-    "parser",
-    "spec",
-    "tooling",
-    "typescript"
+    "typescript",
+    "codegen",
+    "type-safe",
+    "plugin"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-tools",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/paths",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
@@ -24,40 +26,16 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
-    "directory": "packages/openapi-tools"
+    "directory": "packages/openapi-ts-plugins/paths"
   },
   "type": "module",
-  "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./match": {
-      "types": "./dist/match.d.ts",
-      "import": "./dist/match.js"
-    },
-    "./router": {
-      "types": "./dist/router.d.ts",
-      "import": "./dist/router.js"
-    },
-    "./parse": {
-      "types": "./dist/parse.d.ts",
-      "import": "./dist/parse.js"
-    },
-    "./diff": {
-      "types": "./dist/diff.d.ts",
-      "import": "./dist/diff.js"
-    },
-    "./ir": {
-      "types": "./dist/ir.d.ts",
-      "import": "./dist/ir.js"
-    },
-    "./route": {
-      "types": "./dist/route.d.ts",
-      "import": "./dist/route.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -77,16 +55,15 @@
   },
   "peerDependencies": {
     "@hey-api/codegen-core": ">=0.7.0",
+    "@hey-api/openapi-ts": ">=0.95.0",
     "@hey-api/shared": ">=0.3.0"
   },
   "devDependencies": {
     "@contract-kit/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",
+    "@hey-api/openapi-ts": "catalog:",
     "@hey-api/shared": "catalog:",
     "@types/node": "catalog:"
-  },
-  "dependencies": {
-    "urlpattern-polyfill": "^10.1.0"
   },
   "engines": {
     "node": ">=20.19.0"
