@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-orpc",
-  "version": "2.4.1",
+  "version": "3.0.0",
   "description": "oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs",
   "keywords": [
     "openapi",
@@ -55,7 +55,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
+    "@ahmedrowaihi/openapi-ts-faker": "^3.0.0",
     "@faker-js/faker": "^9.0.0 || ^8.0.0",
     "@hey-api/codegen-core": ">=0.7.0",
     "@hey-api/openapi-ts": ">=0.95.0",
