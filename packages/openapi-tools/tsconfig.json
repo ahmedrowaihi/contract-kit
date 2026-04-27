@@ -1,0 +1,9 @@
+{
+  "extends": "@contract-kit/tsconfig/lib.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

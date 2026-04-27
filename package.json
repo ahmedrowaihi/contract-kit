@@ -18,14 +18,15 @@
   "type": "module",
   "scripts": {
     "prepare": "lefthook install",
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "typecheck": "turbo run typecheck",
+    "build": "turbo run build --filter=!./examples/*",
+    "build:examples": "turbo run build --filter=./examples/*",
+    "dev": "turbo run dev --filter=!./examples/*",
+    "typecheck": "turbo run typecheck --filter=!./examples/*",
     "format": "biome check --write .",
     "format:check": "biome ci .",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
-    "release": "turbo run build --filter=./packages/* && changeset publish"
+    "release": "turbo run build --filter=!./examples/* && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
