@@ -73,12 +73,12 @@
   },
   "devDependencies": {
     "@contract-kit/tsconfig": "workspace:*",
-    "@hey-api/codegen-core": "^0.8.0",
-    "@hey-api/openapi-ts": "^0.96.1",
-    "@hey-api/shared": "^0.4.1",
+    "@hey-api/codegen-core": "catalog:",
+    "@hey-api/openapi-ts": "catalog:",
+    "@hey-api/shared": "catalog:",
     "@orpc/contract": "^1.13.14",
     "@orpc/openapi": "^1.13.14",
-    "@types/node": "^22",
+    "@types/node": "catalog:",
     "jiti": "^2.6.1",
     "typia": "^12.0.0"
   },

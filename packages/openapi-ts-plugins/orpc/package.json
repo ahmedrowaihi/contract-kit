@@ -82,11 +82,11 @@
   "devDependencies": {
     "@ahmedrowaihi/openapi-ts-faker": "workspace:*",
     "@contract-kit/tsconfig": "workspace:*",
-    "@hey-api/codegen-core": "^0.8.0",
-    "@hey-api/openapi-ts": "^0.96.1",
-    "@hey-api/shared": "^0.4.1",
+    "@hey-api/codegen-core": "catalog:",
+    "@hey-api/openapi-ts": "catalog:",
+    "@hey-api/shared": "catalog:",
     "@ryoppippi/unplugin-typia": "^2.6.5",
-    "@types/node": "^22",
+    "@types/node": "catalog:",
     "ts-patch": "^3.3.0"
   },
   "engines": {
