@@ -1,5 +1,7 @@
 # contract-kit
 
+[![pkg.pr.new](https://pkg.pr.new/badge/ahmedrowaihi/contract-kit)](https://pkg.pr.new)
+
 Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 
 ## Naming convention
@@ -7,21 +9,33 @@ Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 | Prefix | Category | Example |
 | --- | --- | --- |
 | `openapi-ts-*` | `@hey-api/openapi-ts` plugins | `@ahmedrowaihi/openapi-ts-orpc` |
-| `openapi-*` | Standalone OpenAPI tools (planned) | `@ahmedrowaihi/openapi-diff` |
-| `asyncapi-*` | AsyncAPI family (planned) | `@ahmedrowaihi/asyncapi-rabbitmq` |
+| `openapi-*` | Standalone OpenAPI tools | `@ahmedrowaihi/openapi-tools` |
+| `asyncapi-*` | AsyncAPI family (planned) | `@ahmedrowaihi/asyncapi-tools` |
 | `sdk-*` | Client SDK generators (planned) | `@ahmedrowaihi/sdk-swift` |
 
 ## Packages
 
+<!-- @packages-start -->
+
 ### `@hey-api/openapi-ts` plugins
 
-| Package | Path |
+| Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/openapi-ts-orpc`](./packages/openapi-ts-plugins/orpc) | oRPC client/server codegen |
-| [`@ahmedrowaihi/openapi-ts-faker`](./packages/openapi-ts-plugins/faker) | Faker.js mock factories |
-| [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi-ts-plugins/typia) | Typia compile-time validators |
+| [`@ahmedrowaihi/openapi-ts-faker`](./packages/openapi-ts-plugins/faker) | Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs |
+| [`@ahmedrowaihi/openapi-ts-orpc`](./packages/openapi-ts-plugins/orpc) | oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs |
+| [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi-ts-plugins/typia) | Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs |
 
-All three ship in lockstep (`fixed` Changesets config) — bumping one bumps all to the same version.
+### Standalone OpenAPI tools
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — spec diffing, parsing, and shared helpers built on hey-api/codegen-core |
+
+<!-- @packages-end -->
+
+The `@hey-api/openapi-ts` plugins ship in lockstep (`fixed` Changesets config) — bumping one bumps all to the same version.
+
+> The package list above is auto-generated from each `package.json`'s `description` field. To regenerate manually run `pnpm sync:readme`. Otherwise the lefthook pre-commit hook keeps it current.
 
 ## Examples
 
@@ -48,3 +62,13 @@ pnpm release             # build + publish via changeset publish
 ```
 
 In CI: pushing a `.changeset/*.md` to `main` opens a "Version Packages" PR; merging that PR publishes to npm.
+
+## Preview packages (per PR)
+
+Every PR triggers a [pkg.pr.new](https://pkg.pr.new) preview build. The bot comments install commands on the PR; you can install any package at the PR's commit SHA without waiting for a release:
+
+```bash
+pnpm add https://pkg.pr.new/@ahmedrowaihi/openapi-tools@<commit-sha>
+```
+
+Useful for testing fixes downstream before they merge.
