@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-tools",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "OpenAPI utilities — spec diffing, parsing, and shared helpers built on hey-api/codegen-core",
   "keywords": [
     "openapi",
