@@ -1,10 +1,15 @@
-import type { Casing, DefinePlugin, NameTransformer, Plugin } from '@hey-api/shared';
+import type {
+  Casing,
+  DefinePlugin,
+  NameTransformer,
+  Plugin,
+} from "@hey-api/shared";
 
-import type { IApi } from './api';
+import type { IApi } from "./api";
 
 export type UserConfig = Plugin.Hooks &
   Plugin.UserExports & {
-    name: '@ahmedrowaihi/openapi-ts-typia';
+    name: "@ahmedrowaihi/openapi-ts-typia";
     /**
      * Casing convention for generated names.
      *
@@ -108,7 +113,7 @@ export type UserConfig = Plugin.Hooks &
 
 export type Config = Plugin.Hooks &
   Plugin.Exports & {
-    name: '@ahmedrowaihi/openapi-ts-typia';
+    name: "@ahmedrowaihi/openapi-ts-typia";
     case: Casing;
     comments: boolean;
     jsonSchema: boolean;

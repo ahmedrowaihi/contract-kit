@@ -1,22 +1,25 @@
-import type { Symbol } from '@hey-api/codegen-core';
-import { $ } from '@hey-api/openapi-ts';
-import { buildSymbolIn, type Casing, type NameTransformer } from '@hey-api/shared';
+import type { Symbol } from "@hey-api/codegen-core";
+import { $ } from "@hey-api/openapi-ts";
+import {
+  buildSymbolIn,
+  type Casing,
+  type NameTransformer,
+} from "@hey-api/shared";
+import type { TypiaPlugin } from "../types";
+import type { RequestInputType } from "./operation";
 
-import type { RequestInputType } from './operation';
-import type { TypiaPlugin } from '../types';
-
-const BULK_SCHEMAS_NAME = 'typiaSchemas';
+const BULK_SCHEMAS_NAME = "typiaSchemas";
 
 interface RegisterSymbolArgs {
   meta: {
-    resource: 'definition' | 'operation';
+    resource: "definition" | "operation";
     resourceId: string;
     role: string;
     tags?: ReadonlyArray<string>;
   };
   naming: { case: Casing; name: NameTransformer };
   namingAnchor: string;
-  plugin: TypiaPlugin['Instance'];
+  plugin: TypiaPlugin["Instance"];
 }
 
 /** Registers a symbol; caller owns node emission (bulk JSON index correlation). */
@@ -28,7 +31,11 @@ export function registerTypiaSymbol({
 }: RegisterSymbolArgs): Symbol {
   return plugin.registerSymbol(
     buildSymbolIn({
-      meta: { category: 'schema', tool: '@ahmedrowaihi/openapi-ts-typia', ...meta },
+      meta: {
+        category: "schema",
+        tool: "@ahmedrowaihi/openapi-ts-typia",
+        ...meta,
+      },
       name: namingAnchor,
       naming,
       plugin,
@@ -39,7 +46,7 @@ export function registerTypiaSymbol({
 
 interface EmitValidatorArgs {
   comment?: ReadonlyArray<string>;
-  plugin: TypiaPlugin['Instance'];
+  plugin: TypiaPlugin["Instance"];
   symbol: Symbol;
   typeExpr: RequestInputType;
 }
@@ -54,13 +61,15 @@ export function emitValidator({
   symbol,
   typeExpr,
 }: EmitValidatorArgs): void {
-  const createValidate = plugin.external('typia.createValidate');
-  const iValidation = plugin.external('typia.IValidation');
-  const standardSchema = plugin.external('@standard-schema/spec.StandardSchemaV1');
+  const createValidate = plugin.external("typia.createValidate");
+  const iValidation = plugin.external("typia.IValidation");
+  const standardSchema = plugin.external(
+    "@standard-schema/spec.StandardSchemaV1",
+  );
 
   const callable = $.type
     .func()
-    .param('input', (p) => p.type($.type('unknown')))
+    .param("input", (p) => p.type($.type("unknown")))
     .returns($.type(iValidation).generic(typeExpr));
 
   const annotation = $.type.and(
@@ -78,31 +87,34 @@ export function emitValidator({
 }
 
 interface EmitBulkJsonSchemasArgs {
-  plugin: TypiaPlugin['Instance'];
+  plugin: TypiaPlugin["Instance"];
   typeExprs: ReadonlyArray<RequestInputType>;
 }
 
 /** Emits `const __typiaSchemas = typia.json.schemas<[...]>()`; tuple order drives twin indexing. */
-export function emitBulkJsonSchemas({ plugin, typeExprs }: EmitBulkJsonSchemasArgs): Symbol {
-  const json = plugin.external('typia.json');
+export function emitBulkJsonSchemas({
+  plugin,
+  typeExprs,
+}: EmitBulkJsonSchemasArgs): Symbol {
+  const json = plugin.external("typia.json");
   const symbol = plugin.registerSymbol(
     buildSymbolIn({
       meta: {
-        category: 'schema',
-        resource: 'definition',
+        category: "schema",
+        resource: "definition",
         resourceId: BULK_SCHEMAS_NAME,
-        role: 'bulk-json',
-        tool: '@ahmedrowaihi/openapi-ts-typia',
+        role: "bulk-json",
+        tool: "@ahmedrowaihi/openapi-ts-typia",
       },
       name: BULK_SCHEMAS_NAME,
-      naming: { case: 'camelCase', name: BULK_SCHEMAS_NAME },
+      naming: { case: "camelCase", name: BULK_SCHEMAS_NAME },
       plugin,
       schema: {},
     }),
   );
 
   const value = $(json)
-    .attr('schemas')
+    .attr("schemas")
     .call()
     .generic($.type.tuple(...typeExprs));
 
@@ -113,7 +125,7 @@ export function emitBulkJsonSchemas({ plugin, typeExprs }: EmitBulkJsonSchemasAr
 interface EmitJsonSchemaTwinArgs {
   bulkSymbol: Symbol;
   index: number;
-  plugin: TypiaPlugin['Instance'];
+  plugin: TypiaPlugin["Instance"];
   symbol: Symbol;
 }
 
@@ -126,13 +138,13 @@ export function emitJsonSchemaTwin({
   plugin,
   symbol,
 }: EmitJsonSchemaTwinArgs): void {
-  const value = $(bulkSymbol).attr('schemas').attr(index).computed();
+  const value = $(bulkSymbol).attr("schemas").attr(index).computed();
   plugin.node($.const(symbol).export().assign(value));
 }
 
 interface EmitJsonComponentsArgs {
   bulkSymbol: Symbol;
-  plugin: TypiaPlugin['Instance'];
+  plugin: TypiaPlugin["Instance"];
 }
 
 /**
@@ -140,24 +152,27 @@ interface EmitJsonComponentsArgs {
  * consumers (e.g. an oRPC SmartCoercion converter) can resolve `$ref`s that
  * typia's JSON schemas point into `#/components/schemas/...`.
  */
-export function emitJsonComponents({ bulkSymbol, plugin }: EmitJsonComponentsArgs): Symbol {
-  const name = 'typiaJsonComponents';
+export function emitJsonComponents({
+  bulkSymbol,
+  plugin,
+}: EmitJsonComponentsArgs): Symbol {
+  const name = "typiaJsonComponents";
   const symbol = plugin.registerSymbol(
     buildSymbolIn({
       meta: {
-        category: 'schema',
-        resource: 'definition',
+        category: "schema",
+        resource: "definition",
         resourceId: name,
-        role: 'components',
-        tool: '@ahmedrowaihi/openapi-ts-typia',
+        role: "components",
+        tool: "@ahmedrowaihi/openapi-ts-typia",
       },
       name,
-      naming: { case: 'camelCase', name },
+      naming: { case: "camelCase", name },
       plugin,
       schema: {},
     }),
   );
-  const value = $(bulkSymbol).attr('components');
+  const value = $(bulkSymbol).attr("components");
   plugin.node($.const(symbol).export().assign(value));
   return symbol;
 }

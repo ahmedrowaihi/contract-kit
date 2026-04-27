@@ -1,22 +1,27 @@
-import { $ } from '@hey-api/openapi-ts';
-import { applyNaming, type Casing, type IR, type NameTransformer } from '@hey-api/shared';
+import { $ } from "@hey-api/openapi-ts";
+import {
+  applyNaming,
+  type Casing,
+  type IR,
+  type NameTransformer,
+} from "@hey-api/shared";
 import {
   emitBulkJsonSchemas,
   emitJsonComponents,
   emitJsonSchemaTwin,
   emitValidator,
   registerTypiaSymbol,
-} from '../shared/emit';
+} from "../shared/emit";
 import {
   buildRequestInputType,
   queryDataTypeSymbol,
   queryErrorsTypeSymbol,
   queryResponseTypeSymbol,
   type RequestInputType,
-} from '../shared/operation';
-import type { TypiaPlugin } from '../types';
+} from "../shared/operation";
+import type { TypiaPlugin } from "../types";
 
-type SlotRole = 'data' | 'response' | `error-${number}`;
+type SlotRole = "data" | "response" | `error-${number}`;
 
 type CollectedSlot = {
   comment?: ReadonlyArray<string>;
@@ -26,15 +31,18 @@ type CollectedSlot = {
   typeExpr: RequestInputType;
 };
 
-export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
-  plugin.symbol('createValidate', { external: 'typia' });
-  plugin.symbol('json', { external: 'typia' });
-  plugin.symbol('IValidation', { external: 'typia', kind: 'type' });
-  plugin.symbol('StandardSchemaV1', { external: '@standard-schema/spec', kind: 'type' });
+export const handlerV1: TypiaPlugin["Handler"] = ({ plugin }) => {
+  plugin.symbol("createValidate", { external: "typia" });
+  plugin.symbol("json", { external: "typia" });
+  plugin.symbol("IValidation", { external: "typia", kind: "type" });
+  plugin.symbol("StandardSchemaV1", {
+    external: "@standard-schema/spec",
+    kind: "type",
+  });
 
   const slots: Array<CollectedSlot> = [];
 
-  plugin.forEach('operation', (event) => {
+  plugin.forEach("operation", (event) => {
     const { operation, tags } = event;
 
     if (plugin.config.requests.enabled) {
@@ -43,7 +51,7 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
         slots.push({
           comment: buildOperationComment(operation),
           operationId: operation.id,
-          role: 'data',
+          role: "data",
           tags,
           typeExpr: buildRequestInputType(dataSymbol),
         });
@@ -55,7 +63,7 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
       if (responseSymbol) {
         slots.push({
           operationId: operation.id,
-          role: 'response',
+          role: "response",
           tags,
           typeExpr: $.type(responseSymbol),
         });
@@ -93,7 +101,7 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
 
     const validatorSymbol = registerTypiaSymbol({
       meta: {
-        resource: 'operation',
+        resource: "operation",
         resourceId: slot.operationId,
         role: slot.role,
         tags: slot.tags,
@@ -112,7 +120,7 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
     if (bulkSymbol) {
       const jsonSymbol = registerTypiaSymbol({
         meta: {
-          resource: 'operation',
+          resource: "operation",
           resourceId: slot.operationId,
           role: `${slot.role}-json-schema`,
           tags: slot.tags,
@@ -126,7 +134,9 @@ export const handlerV1: TypiaPlugin['Handler'] = ({ plugin }) => {
   });
 };
 
-function collectErrorStatuses(operation: IR.OperationObject): ReadonlyArray<number> {
+function collectErrorStatuses(
+  operation: IR.OperationObject,
+): ReadonlyArray<number> {
   const out: Array<number> = [];
   const responses = operation.responses;
   if (!responses) return out;
@@ -141,13 +151,13 @@ function collectErrorStatuses(operation: IR.OperationObject): ReadonlyArray<numb
 }
 
 function namingForRole(
-  plugin: TypiaPlugin['Instance'],
+  plugin: TypiaPlugin["Instance"],
   role: SlotRole,
 ): { case: Casing; jsonName: NameTransformer; name: NameTransformer } {
-  if (role === 'data') return plugin.config.requests;
-  if (role === 'response') return plugin.config.responses;
+  if (role === "data") return plugin.config.requests;
+  if (role === "response") return plugin.config.responses;
   // Errors derive naming from responses config but append `Error<code>` suffix.
-  const status = role.slice('error-'.length);
+  const status = role.slice("error-".length);
   const base = plugin.config.responses;
   return {
     case: base.case,
@@ -158,18 +168,21 @@ function namingForRole(
   };
 }
 
-function buildOperationComment(operation: IR.OperationObject): ReadonlyArray<string> | undefined {
-  if (!operation.summary && !operation.description && !operation.deprecated) return;
+function buildOperationComment(
+  operation: IR.OperationObject,
+): ReadonlyArray<string> | undefined {
+  if (!operation.summary && !operation.description && !operation.deprecated)
+    return;
 
   const parts: Array<string> = [];
   if (operation.summary) parts.push(operation.summary);
   if (operation.description) {
-    if (parts.length) parts.push('');
+    if (parts.length) parts.push("");
     parts.push(operation.description);
   }
   if (operation.deprecated) {
-    if (parts.length) parts.push('');
-    parts.push('@deprecated');
+    if (parts.length) parts.push("");
+    parts.push("@deprecated");
   }
   return parts;
 }

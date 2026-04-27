@@ -80,7 +80,7 @@
     }
   },
   "devDependencies": {
-    "@ahmedrowaihi/openapi-ts-faker": "^0.3.0",
+    "@ahmedrowaihi/openapi-ts-faker": "workspace:*",
     "@contract-kit/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "^0.8.0",
     "@hey-api/openapi-ts": "^0.96.1",

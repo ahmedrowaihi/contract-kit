@@ -1,12 +1,12 @@
-import { $, type TsDsl } from "@hey-api/openapi-ts";
 import type { Symbol as CodegenSymbol } from "@hey-api/codegen-core";
+import { $, type TsDsl } from "@hey-api/openapi-ts";
 import type ts from "typescript";
 
 import { DATE_METHODS } from "./hints";
 import {
-  resolveFakerCall,
   type FakerCallSpec,
   type ResolveOptions,
+  resolveFakerCall,
 } from "./resolve";
 import type { PropertyInfo } from "./types";
 
@@ -24,7 +24,10 @@ export interface BuildFakerOptions extends ResolveOptions {
   resolveRef?: (ref: string) => FakerExpr | null;
 }
 
-export function buildFakerCall(faker: FakerSymbol, spec: FakerCallSpec): FakerExpr {
+export function buildFakerCall(
+  faker: FakerSymbol,
+  spec: FakerCallSpec,
+): FakerExpr {
   if (spec.method === "__null__") return $.literal(null);
 
   const [mod, fn] = spec.method.split(".");
@@ -37,7 +40,10 @@ export function buildFakerCall(faker: FakerSymbol, spec: FakerCallSpec): FakerEx
     args.push(argObj);
   }
 
-  const call = $(faker).attr(mod!).attr(fn!).call(...args);
+  const call = $(faker)
+    .attr(mod!)
+    .attr(fn!)
+    .call(...args);
   if (DATE_METHODS.has(spec.method)) {
     return call.attr("toISOString").call();
   }

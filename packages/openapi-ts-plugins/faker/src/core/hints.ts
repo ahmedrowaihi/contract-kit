@@ -19,4 +19,8 @@ export const DEFAULT_FORMAT_MAPPING: FormatMapping = {
   int64: "number.int",
 };
 
-export const DATE_METHODS = new Set(["date.past", "date.recent", "date.birthdate"]);
+export const DATE_METHODS = new Set([
+  "date.past",
+  "date.recent",
+  "date.birthdate",
+]);

@@ -15,9 +15,9 @@
     "type-safe",
     "plugin"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/openapi-ts-addon-hub",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-ts-plugins/faker",
   "bugs": {
-    "url": "https://github.com/ahmedrowaihi/openapi-ts-addon-hub/issues"
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
   "license": "MIT",
   "author": {
@@ -26,8 +26,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahmedrowaihi/openapi-ts-addon-hub.git",
-    "directory": "plugins/faker"
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi-ts-plugins/faker"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -49,16 +49,15 @@
     "LICENSE.md"
   ],
   "scripts": {
+    "prepack": "pnpm build",
     "build": "tsc",
     "dev": "tsc --watch",
-    "format": "biome format --write .",
-    "format:check": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "@faker-js/faker": "^9.0.0 || ^8.0.0",
     "@hey-api/codegen-core": ">=0.7.0",
-    "@hey-api/openapi-ts": ">=0.92.0",
+    "@hey-api/openapi-ts": ">=0.95.0",
     "@hey-api/shared": ">=0.2.0",
     "typescript": ">=5.0.0"
   },
@@ -68,12 +67,12 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.1",
+    "@contract-kit/tsconfig": "workspace:*",
     "@faker-js/faker": "^9.3.0",
+    "@types/node": "^22",
     "@hey-api/codegen-core": "^0.8.0",
     "@hey-api/openapi-ts": "^0.96.1",
-    "@hey-api/shared": "^0.4.1",
-    "typescript": "5.9.3"
+    "@hey-api/shared": "^0.4.1"
   },
   "engines": {
     "node": ">=20.19.0"

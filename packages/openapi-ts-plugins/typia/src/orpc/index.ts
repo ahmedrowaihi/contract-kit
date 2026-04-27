@@ -1,13 +1,13 @@
-import type { AnySchema } from '@orpc/contract';
+import type { AnySchema } from "@orpc/contract";
 import type {
   ConditionalSchemaConverter,
   JSONSchema,
   SchemaConvertOptions,
-} from '@orpc/openapi';
+} from "@orpc/openapi";
 
-const TWIN_SUFFIX = 'JsonSchema';
-const COMPONENTS_EXPORT_NAME = 'typiaJsonComponents';
-const REF_PREFIX = '#/components/schemas/';
+const TWIN_SUFFIX = "JsonSchema";
+const COMPONENTS_EXPORT_NAME = "typiaJsonComponents";
+const REF_PREFIX = "#/components/schemas/";
 
 interface TypiaJsonComponents {
   readonly schemas?: Readonly<Record<string, unknown>>;
@@ -26,24 +26,28 @@ export function createTypiaSchemaConverter(
   options: CreateTypiaSchemaConverterOptions = {},
 ): ConditionalSchemaConverter {
   const twinSuffix = options.twinSuffix ?? TWIN_SUFFIX;
-  const componentSchemas = (generatedModule[COMPONENTS_EXPORT_NAME]?.schemas ?? {}) as Record<
-    string,
-    unknown
-  >;
+  const componentSchemas = (generatedModule[COMPONENTS_EXPORT_NAME]?.schemas ??
+    {}) as Record<string, unknown>;
 
   // SmartCoercionPlugin's coercer doesn't forward a components map,
   // so $refs must be inlined at build time.
   const twinByValidator = new WeakMap<object, JSONSchema>();
   for (const [key, value] of Object.entries(generatedModule)) {
     if (key.endsWith(twinSuffix)) continue;
-    if (typeof value !== 'function') continue;
+    if (typeof value !== "function") continue;
     const twin = generatedModule[`${key}${twinSuffix}`];
     if (twin === undefined) continue;
-    twinByValidator.set(value as object, inlineRefs(twin, componentSchemas) as JSONSchema);
+    twinByValidator.set(
+      value as object,
+      inlineRefs(twin, componentSchemas) as JSONSchema,
+    );
   }
 
   return {
-    condition(schema: AnySchema | undefined, _options: SchemaConvertOptions): boolean {
+    condition(
+      schema: AnySchema | undefined,
+      _options: SchemaConvertOptions,
+    ): boolean {
       return isTypiaValidator(schema) && twinByValidator.has(schema as object);
     },
     convert(
@@ -52,7 +56,9 @@ export function createTypiaSchemaConverter(
     ): [required: boolean, jsonSchema: JSONSchema] {
       const twin = twinByValidator.get(schema as object);
       if (twin === undefined) {
-        throw new Error('createTypiaSchemaConverter: missing JSON schema twin for validator');
+        throw new Error(
+          "createTypiaSchemaConverter: missing JSON schema twin for validator",
+        );
       }
       return [true, twin];
     },
@@ -61,9 +67,9 @@ export function createTypiaSchemaConverter(
 
 function isTypiaValidator(schema: unknown): schema is object {
   if (schema === null) return false;
-  if (typeof schema !== 'object' && typeof schema !== 'function') return false;
-  const std = (schema as { '~standard'?: { vendor?: string } })['~standard'];
-  return std?.vendor === 'typia';
+  if (typeof schema !== "object" && typeof schema !== "function") return false;
+  const std = (schema as { "~standard"?: { vendor?: string } })["~standard"];
+  return std?.vendor === "typia";
 }
 
 function inlineRefs(
@@ -71,12 +77,13 @@ function inlineRefs(
   components: Record<string, unknown>,
   seen: ReadonlySet<string> = new Set(),
 ): unknown {
-  if (Array.isArray(node)) return node.map((item) => inlineRefs(item, components, seen));
-  if (node === null || typeof node !== 'object') return node;
+  if (Array.isArray(node))
+    return node.map((item) => inlineRefs(item, components, seen));
+  if (node === null || typeof node !== "object") return node;
 
   const obj = node as Record<string, unknown>;
   const ref = obj.$ref;
-  if (typeof ref === 'string' && ref.startsWith(REF_PREFIX)) {
+  if (typeof ref === "string" && ref.startsWith(REF_PREFIX)) {
     const name = ref.slice(REF_PREFIX.length);
     if (seen.has(name)) return { ...obj };
     const target = components[name];
@@ -85,6 +92,7 @@ function inlineRefs(
   }
 
   const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) out[k] = inlineRefs(v, components, seen);
+  for (const [k, v] of Object.entries(obj))
+    out[k] = inlineRefs(v, components, seen);
   return out;
 }

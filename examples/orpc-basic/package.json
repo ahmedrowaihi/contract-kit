@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@ahmedrowaihi/openapi-ts-orpc": "workspace:*",
-    "@ahmedrowaihi/openapi-ts-typia": "^0.2.0",
+    "@ahmedrowaihi/openapi-ts-typia": "workspace:*",
     "@hey-api/openapi-ts": "^0.96.1",
     "@ryoppippi/unplugin-typia": "^2.6.5",
     "@types/node": "24.10.10",

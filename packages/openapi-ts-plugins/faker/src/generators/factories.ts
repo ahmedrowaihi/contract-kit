@@ -84,7 +84,8 @@ function irToPropertyInfo(
   if (type === "object" && schema.properties) {
     info.children = {};
     for (const [key, value] of Object.entries(schema.properties)) {
-      if (value) info.children[key] = irToPropertyInfo(key, value, plugin, visited);
+      if (value)
+        info.children[key] = irToPropertyInfo(key, value, plugin, visited);
     }
   }
 

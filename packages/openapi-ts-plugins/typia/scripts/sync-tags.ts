@@ -4,22 +4,27 @@
  * Run via `pnpm sync-tags` after bumping typia. Output is committed.
  */
 
-import fs from 'node:fs';
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import ts from 'typescript';
+import ts from "typescript";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
-const interfacePkgJson = require.resolve('@typia/interface/package.json');
+const interfacePkgJson = require.resolve("@typia/interface/package.json");
 const interfaceRoot = path.dirname(interfacePkgJson);
-const tagsDir = path.join(interfaceRoot, 'lib', 'tags');
+const tagsDir = path.join(interfaceRoot, "lib", "tags");
 
-const outputPath = path.resolve(__dirname, '..', 'shared', 'typia-tags.generated.ts');
+const outputPath = path.resolve(
+  __dirname,
+  "..",
+  "shared",
+  "typia-tags.generated.ts",
+);
 
 interface TagMetadata {
   kind: string | null;
@@ -29,7 +34,7 @@ interface TagMetadata {
 function parseFile(file: string): ts.SourceFile {
   return ts.createSourceFile(
     file,
-    fs.readFileSync(file, 'utf8'),
+    fs.readFileSync(file, "utf8"),
     ts.ScriptTarget.Latest,
     true,
   );
@@ -37,13 +42,13 @@ function parseFile(file: string): ts.SourceFile {
 
 /** Tag names come from the barrel's `export * from './<TagName>'` filenames. */
 function readTagNames(): ReadonlyArray<string> {
-  const src = parseFile(path.join(tagsDir, 'index.d.ts'));
+  const src = parseFile(path.join(tagsDir, "index.d.ts"));
   const names: Array<string> = [];
   for (const stmt of src.statements) {
     if (!ts.isExportDeclaration(stmt) || !stmt.moduleSpecifier) continue;
     if (!ts.isStringLiteral(stmt.moduleSpecifier)) continue;
     const basename = path.basename(stmt.moduleSpecifier.text);
-    if (basename === 'index') continue;
+    if (basename === "index") continue;
     names.push(basename);
   }
   return names.sort();
@@ -55,7 +60,8 @@ function readTagMetadata(tagName: string): TagMetadata {
 
   let tagTypeBody: ts.TypeLiteralNode | null = null;
   for (const stmt of src.statements) {
-    if (!ts.isTypeAliasDeclaration(stmt) || stmt.name.text !== tagName) continue;
+    if (!ts.isTypeAliasDeclaration(stmt) || stmt.name.text !== tagName)
+      continue;
     const body = extractTagBaseArgument(stmt.type);
     if (body) tagTypeBody = body;
     break;
@@ -63,8 +69,8 @@ function readTagMetadata(tagName: string): TagMetadata {
 
   if (!tagTypeBody) return { kind: null, targets: [] };
 
-  const kind = extractPropertyLiteral(tagTypeBody, 'kind');
-  const targetMember = findPropertyType(tagTypeBody, 'target');
+  const kind = extractPropertyLiteral(tagTypeBody, "kind");
+  const targetMember = findPropertyType(tagTypeBody, "target");
   const targets = targetMember ? extractTargetMembers(targetMember) : [];
 
   return { kind, targets };
@@ -72,13 +78,17 @@ function readTagMetadata(tagName: string): TagMetadata {
 
 function extractTagBaseArgument(node: ts.TypeNode): ts.TypeLiteralNode | null {
   if (!ts.isTypeReferenceNode(node)) return null;
-  if (!ts.isIdentifier(node.typeName) || node.typeName.text !== 'TagBase') return null;
+  if (!ts.isIdentifier(node.typeName) || node.typeName.text !== "TagBase")
+    return null;
   const arg = node.typeArguments?.[0];
   if (!arg || !ts.isTypeLiteralNode(arg)) return null;
   return arg;
 }
 
-function findPropertyType(literal: ts.TypeLiteralNode, name: string): ts.TypeNode | null {
+function findPropertyType(
+  literal: ts.TypeLiteralNode,
+  name: string,
+): ts.TypeNode | null {
   for (const member of literal.members) {
     if (!ts.isPropertySignature(member)) continue;
     if (!member.name || !ts.isIdentifier(member.name)) continue;
@@ -88,10 +98,14 @@ function findPropertyType(literal: ts.TypeLiteralNode, name: string): ts.TypeNod
   return null;
 }
 
-function extractPropertyLiteral(literal: ts.TypeLiteralNode, name: string): string | null {
+function extractPropertyLiteral(
+  literal: ts.TypeLiteralNode,
+  name: string,
+): string | null {
   const type = findPropertyType(literal, name);
   if (!type) return null;
-  if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal)) return null;
+  if (!ts.isLiteralTypeNode(type) || !ts.isStringLiteral(type.literal))
+    return null;
   return type.literal.text;
 }
 
@@ -120,21 +134,21 @@ function collectLiteralLeaves(node: ts.TypeNode, out: Set<string>): void {
 
 function readFormatValues(): ReadonlyArray<string> {
   return readLiteralUnionFromNamespaceTypeAlias({
-    file: path.join(tagsDir, 'Format.d.ts'),
-    namespace: 'Format',
-    typeAlias: 'Value',
+    file: path.join(tagsDir, "Format.d.ts"),
+    namespace: "Format",
+    typeAlias: "Value",
   });
 }
 
 function readIntegerFormats(): ReadonlyArray<string> {
-  const src = parseFile(path.join(tagsDir, 'Type.d.ts'));
+  const src = parseFile(path.join(tagsDir, "Type.d.ts"));
   for (const stmt of src.statements) {
-    if (!ts.isTypeAliasDeclaration(stmt) || stmt.name.text !== 'Type') continue;
+    if (!ts.isTypeAliasDeclaration(stmt) || stmt.name.text !== "Type") continue;
     const constraint = stmt.typeParameters?.[0]?.constraint;
     if (!constraint) continue;
     return extractLiteralUnion(constraint);
   }
-  throw new Error('Could not extract Type<V> constraint');
+  throw new Error("Could not extract Type<V> constraint");
 }
 
 function readLiteralUnionFromNamespaceTypeAlias({
@@ -166,7 +180,9 @@ function extractLiteralUnion(node: ts.TypeNode): ReadonlyArray<string> {
     return [node.literal.text];
   }
   if (!ts.isUnionTypeNode(node)) {
-    throw new Error(`Expected literal or union, got ${ts.SyntaxKind[node.kind]}`);
+    throw new Error(
+      `Expected literal or union, got ${ts.SyntaxKind[node.kind]}`,
+    );
   }
   const out: Array<string> = [];
   for (const member of node.types) {
@@ -179,22 +195,26 @@ function extractLiteralUnion(node: ts.TypeNode): ReadonlyArray<string> {
 }
 
 function emitArray(name: string, values: ReadonlyArray<string>): string {
-  const body = values.map((v) => `  ${JSON.stringify(v)},`).join('\n');
+  const body = values.map((v) => `  ${JSON.stringify(v)},`).join("\n");
   return `export const ${name} = [\n${body}\n] as const;`;
 }
 
-function emitTagMetadata(entries: ReadonlyArray<[string, TagMetadata]>): string {
+function emitTagMetadata(
+  entries: ReadonlyArray<[string, TagMetadata]>,
+): string {
   const lines = entries.map(([name, meta]) => {
-    const kind = meta.kind === null ? 'null' : JSON.stringify(meta.kind);
-    const targets = meta.targets.map((t) => JSON.stringify(t)).join(', ');
+    const kind = meta.kind === null ? "null" : JSON.stringify(meta.kind);
+    const targets = meta.targets.map((t) => JSON.stringify(t)).join(", ");
     return `  ${name}: { kind: ${kind}, targets: [${targets}] as const },`;
   });
-  return `export const TYPIA_TAG_META = {\n${lines.join('\n')}\n} as const;`;
+  return `export const TYPIA_TAG_META = {\n${lines.join("\n")}\n} as const;`;
 }
 
 function readTypiaVersion(): string {
-  const typiaPkgJson = require.resolve('typia/package.json');
-  return (JSON.parse(fs.readFileSync(typiaPkgJson, 'utf8')) as { version: string }).version;
+  const typiaPkgJson = require.resolve("typia/package.json");
+  return (
+    JSON.parse(fs.readFileSync(typiaPkgJson, "utf8")) as { version: string }
+  ).version;
 }
 
 function run(): void {
@@ -214,13 +234,13 @@ function run(): void {
  * Source: @typia/interface v${typiaVersion}
  */
 
-${emitArray('TYPIA_TAGS', tagNames)}
+${emitArray("TYPIA_TAGS", tagNames)}
 
 ${emitTagMetadata(tagEntries)}
 
-${emitArray('TYPIA_FORMAT_VALUES', formatValues)}
+${emitArray("TYPIA_FORMAT_VALUES", formatValues)}
 
-${emitArray('TYPIA_INTEGER_FORMATS', integerFormats)}
+${emitArray("TYPIA_INTEGER_FORMATS", integerFormats)}
 
 export type TypiaTagName = (typeof TYPIA_TAGS)[number];
 export type TypiaFormatValue = (typeof TYPIA_FORMAT_VALUES)[number];

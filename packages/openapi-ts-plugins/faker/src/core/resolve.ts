@@ -31,7 +31,8 @@ export function resolveFakerCall(
   opts: ResolveOptions = {},
 ): FakerCallSpec {
   const fieldHints = opts.fieldHints ?? {};
-  const formatHints = opts.formatHints ?? (DEFAULT_FORMAT_MAPPING as FormatMapping);
+  const formatHints =
+    opts.formatHints ?? (DEFAULT_FORMAT_MAPPING as FormatMapping);
   const respect = opts.respectConstraints ?? false;
 
   if (info.format && formatHints[info.format]) {
@@ -46,7 +47,8 @@ export function resolveFakerCall(
   switch (info.type) {
     case "integer":
     case "number": {
-      const method: FakerMethodPath = info.type === "integer" ? "number.int" : "number.float";
+      const method: FakerMethodPath =
+        info.type === "integer" ? "number.int" : "number.float";
       if (respect && hasNumericConstraint(info)) {
         const args: Record<string, number> = {};
         if (info.minimum !== undefined) args.min = info.minimum;

@@ -2,7 +2,11 @@ import type { DefinePlugin, IR, Plugin } from "@hey-api/shared";
 
 import type { FieldNameHints, FormatMapping } from "./core/types";
 
-export type { FakerMethodPath, FieldNameHints, FormatMapping } from "./core/types";
+export type {
+  FakerMethodPath,
+  FieldNameHints,
+  FormatMapping,
+} from "./core/types";
 
 export type SchemaFilter = (schema: IR.SchemaObject) => boolean;
 
