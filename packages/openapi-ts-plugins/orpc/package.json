@@ -35,11 +35,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
-    "./tools": {
-      "types": "./dist/tools/index.d.ts",
-      "import": "./dist/tools/index.js",
-      "require": "./dist/tools/index.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [

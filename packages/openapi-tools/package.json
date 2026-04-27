@@ -1,0 +1,60 @@
+{
+  "name": "@ahmedrowaihi/openapi-tools",
+  "version": "0.0.0",
+  "description": "OpenAPI utilities — spec diffing, parsing, and shared helpers built on hey-api/codegen-core",
+  "keywords": [
+    "openapi",
+    "diff",
+    "parser",
+    "spec",
+    "tooling",
+    "typescript"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-tools",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi-tools"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hey-api/codegen-core": ">=0.7.0",
+    "@hey-api/shared": ">=0.3.0"
+  },
+  "devDependencies": {
+    "@contract-kit/tsconfig": "workspace:*",
+    "@hey-api/codegen-core": "catalog:",
+    "@hey-api/shared": "catalog:",
+    "@types/node": "catalog:"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
