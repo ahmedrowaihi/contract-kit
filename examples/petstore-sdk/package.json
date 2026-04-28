@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@ahmedrowaihi/openapi-kotlin": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "jiti": "^2.6.1",
-    "yaml": "^2.5.0"
+    "jiti": "^2.6.1"
   }
 }

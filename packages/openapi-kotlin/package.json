@@ -55,6 +55,9 @@
   "peerDependencies": {
     "@hey-api/spec-types": ">=0.2.0"
   },
+  "dependencies": {
+    "@hey-api/json-schema-ref-parser": "^1.4.1"
+  },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",
     "@hey-api/spec-types": "^0.2.0",

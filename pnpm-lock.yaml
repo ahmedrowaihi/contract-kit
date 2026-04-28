@@ -183,17 +183,21 @@ importers:
       '@ahmedrowaihi/openapi-kotlin':
         specifier: workspace:*
         version: link:../../packages/openapi-kotlin
+      '@ahmedrowaihi/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
-      yaml:
-        specifier: ^2.5.0
-        version: 2.8.3
 
   packages/openapi-kotlin:
+    dependencies:
+      '@hey-api/json-schema-ref-parser':
+        specifier: ^1.4.1
+        version: 1.4.1
     devDependencies:
       '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
