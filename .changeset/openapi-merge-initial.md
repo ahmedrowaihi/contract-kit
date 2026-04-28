@@ -1,5 +1,5 @@
 ---
-"@ahmedrowaihi/openapi-merge": minor
+"@ahmedrowaihi/openapi-tools": minor
 ---
 
-Initial release. Folds N OpenAPI 3.x specs into one with policy-driven conflict resolution for paths, components, tags, and servers; rewrites `$ref` consistently so the output is a self-contained 3.1 doc.
+Add `/merge` subpath: folds N OpenAPI 3.x specs into one with policy-driven conflict resolution for paths, components, tags, and servers; rewrites `$ref`s consistently so the output is a self-contained 3.1 doc.

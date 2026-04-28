@@ -5,10 +5,6 @@ const DEFAULTS: Required<PathPolicy> = {
   prefix: (label) => `/${label}`,
 };
 
-/**
- * Reduce `sources` into a single `paths` object. Returns the merged paths plus
- * a per-source path-prefix map (only populated when `prefix` is in effect).
- */
 export function mergePaths(
   sources: MergeSource[],
   policy: PathPolicy = {},
@@ -45,8 +41,6 @@ export function mergePaths(
           out[fullPath] = item as PathItem;
           continue;
         case "prefix":
-          // Even prefixed paths can collide if two sources share `label` —
-          // treat as a configuration mistake.
           throw new MergeConflictError(
             `path collision after prefixing at "${fullPath}" — duplicate label "${label}"?`,
           );

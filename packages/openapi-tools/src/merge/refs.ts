@@ -1,11 +1,5 @@
 import type { RenameMap } from "./types.js";
 
-/**
- * Walk an arbitrary OpenAPI fragment and rewrite every internal `$ref`
- * (`#/components/<section>/<name>`) according to `renames`. References to
- * sections that aren't in the rename map are left alone. External `$ref`s
- * (anything not starting with `#/components/`) are also untouched.
- */
 export function rewriteRefs<T>(node: T, renames: RenameMap): T {
   if (node === null || typeof node !== "object") return node;
   if (Array.isArray(node)) {

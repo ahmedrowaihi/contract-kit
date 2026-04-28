@@ -23,14 +23,6 @@ const HTTP_METHODS = [
   "trace",
 ] as const;
 
-/**
- * Merge multiple OpenAPI 3.1 documents into one.
- *
- * Conflicts in `paths`, `components`, `operationId`s, `tags`, and `servers`
- * are resolved by the supplied policies (or sensible defaults). Whenever a
- * component is renamed, every internal `$ref` in that source is rewritten to
- * point at the new name, so the output stays self-consistent.
- */
 export function merge(
   sources: MergeSource[],
   opts: MergeOptions = {},
@@ -150,11 +142,6 @@ function mergeServers(
   return out;
 }
 
-/**
- * Merge top-level `security` requirements as a union. Order of first
- * appearance is preserved; exact-equal duplicate requirement objects are
- * dropped.
- */
 function mergeSecurity(
   sources: MergeSource[],
 ): OpenAPIV3_1.SecurityRequirementObject[] {
@@ -183,11 +170,6 @@ function mergeWebhooks(
   return out;
 }
 
-/**
- * Detect operationId collisions across sources and renames according to
- * policy. Mutates the source path items in place. Default policy is
- * `namespace`, prefixing every operationId with the source label.
- */
 function resolveOperationIdConflicts(
   sources: MergeSource[],
   policy: OperationIdPolicy = {},
@@ -225,9 +207,6 @@ function resolveOperationIdConflicts(
             delete op.operationId;
             continue;
           case "last-wins":
-            // Strip from the previous owner — but we've moved past it.
-            // For simplicity, keep the latter and accept duplicates may
-            // briefly coexist if a third source reuses the id.
             claimed.set(id, label);
             continue;
         }

@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-
-import { MergeConflictError, merge } from "../dist/index.js";
-import type { Document } from "../dist/types.js";
+import type { Document } from "../dist/merge.js";
+import { MergeConflictError, merge } from "../dist/merge.js";
 
 const minimal = (overrides: Partial<Document> = {}): Document => ({
   openapi: "3.1.0",

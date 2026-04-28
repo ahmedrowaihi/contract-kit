@@ -25,11 +25,6 @@ const COMPONENT_SECTIONS = [
   "pathItems",
 ] as const;
 
-/**
- * Reduce per-source `components` into a single `components` object. Renames
- * conflicting entries according to the policy and returns a per-source
- * rename map so callers can rewrite `$ref`s in the source's paths.
- */
 export function mergeComponents(
   sources: MergeSource[],
   policy: ComponentPolicy = {},
@@ -80,8 +75,6 @@ export function mergeComponents(
               sectionOut[finalName] = value;
               continue;
             case "namespace":
-              // Same source providing two equally-namespaced entries is bizarre
-              // — fall through to last-wins so we don't crash on retries.
               sectionOut[finalName] = value;
               continue;
           }
@@ -97,7 +90,6 @@ export function mergeComponents(
     }
   }
 
-  // Rewrite refs in the components themselves so cross-section refs stay valid.
   for (const section of COMPONENT_SECTIONS) {
     const sectionOut = (out as Record<string, unknown>)[section];
     if (!sectionOut) continue;
@@ -110,12 +102,6 @@ export function mergeComponents(
   return { components: out, renames };
 }
 
-/**
- * Flatten per-source rename maps into a single `RenameMap` for `rewriteRefs`.
- * If two sources rename the same `(section, name)` pair to different values,
- * the last wins — but in practice that only happens when both sources had a
- * collision, in which case the namespaced names already differ.
- */
 export function flattenRenames(
   perSource: Record<string, RenameMap>,
 ): RenameMap {
