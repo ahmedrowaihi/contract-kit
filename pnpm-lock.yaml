@@ -138,6 +138,21 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/openapi-recon:
+    devDependencies:
+      '@contract-kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@hey-api/shared':
+        specifier: 'catalog:'
+        version: 0.4.1
+      '@hey-api/spec-types':
+        specifier: ^0.2.0
+        version: 0.2.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+
   packages/openapi-tools:
     dependencies:
       urlpattern-polyfill:

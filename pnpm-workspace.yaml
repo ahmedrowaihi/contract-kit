@@ -1,6 +1,7 @@
 packages:
   - "packages/openapi-ts-plugins/*"
   - "packages/openapi-tools"
+  - "packages/openapi-recon"
   - "examples/*"
   - "tooling/*"
 

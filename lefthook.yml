@@ -2,8 +2,7 @@ pre-commit:
   jobs:
     - name: sync-readme
       glob: "packages/**/package.json"
-      run: pnpm sync:readme
-      stage_fixed: true
+      run: pnpm sync:readme && git add README.md
     - name: format
       glob: "*.{ts,tsx,js,jsx,json,jsonc,md,yml,yaml,css}"
       run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
