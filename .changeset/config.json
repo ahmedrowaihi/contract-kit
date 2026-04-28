@@ -13,5 +13,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@ahmedrowaihi/example-orpc-basic"]
+  "ignore": ["@ahmedrowaihi/example-orpc-basic", "@ahmedrowaihi/glean"]
 }
