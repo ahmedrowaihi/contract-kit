@@ -70,7 +70,7 @@
     }
   },
   "devDependencies": {
-    "@contract-kit/tsconfig": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
     "@faker-js/faker": "^9.3.0",
     "@types/node": "catalog:",
     "@hey-api/codegen-core": "catalog:",

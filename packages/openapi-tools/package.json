@@ -80,7 +80,7 @@
     "@hey-api/shared": ">=0.3.0"
   },
   "devDependencies": {
-    "@contract-kit/tsconfig": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/shared": "catalog:",
     "@types/node": "catalog:"

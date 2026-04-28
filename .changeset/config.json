@@ -13,5 +13,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@contract-kit/example-orpc-basic"]
+  "ignore": ["@ahmedrowaihi/example-orpc-basic"]
 }

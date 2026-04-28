@@ -43,7 +43,7 @@ The `@hey-api/openapi-ts` plugins ship in lockstep (`fixed` Changesets config) â
 
 | Example | Path |
 | --- | --- |
-| `@contract-kit/example-orpc-basic` | `examples/orpc-basic` |
+| `@ahmedrowaihi/example-orpc-basic` | `examples/orpc-basic` |
 
 ## Develop
 
