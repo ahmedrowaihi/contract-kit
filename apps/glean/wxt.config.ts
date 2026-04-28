@@ -10,6 +10,10 @@ export default defineConfig({
       "Reverse-engineer OpenAPI 3.1 specs from traffic observed in DevTools.",
     permissions: ["storage", "unlimitedStorage"],
   },
+  zip: {
+    name: "glean",
+    artifactTemplate: "{{name}}-{{version}}-{{browser}}.zip",
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),
