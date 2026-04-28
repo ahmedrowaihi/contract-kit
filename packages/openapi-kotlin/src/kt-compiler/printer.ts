@@ -4,6 +4,9 @@ import type {
   KtDecl,
   KtEnum,
   KtFile,
+  KtFun,
+  KtFunParam,
+  KtInterface,
   KtProp,
   KtType,
   KtTypeAlias,
@@ -76,6 +79,53 @@ export function printTypeAlias(a: KtTypeAlias): string {
   return `typealias ${a.name} = ${printType(a.type)}`;
 }
 
+export function printFunParam(p: KtFunParam): string {
+  const annotations = p.annotations.map(printAnnotation).join(" ");
+  const head = annotations ? `${annotations} ` : "";
+  const def = p.default !== undefined ? ` = ${p.default}` : "";
+  return `${head}${p.name}: ${printType(p.type)}${def}`;
+}
+
+export function printFun(fn: KtFun, indent: string = ""): string {
+  const lines: string[] = [];
+  for (const a of fn.annotations) lines.push(`${indent}${printAnnotation(a)}`);
+  const mods = fn.modifiers.length > 0 ? `${fn.modifiers.join(" ")} ` : "";
+  const head = `${indent}${mods}fun ${fn.name}`;
+  const ret =
+    fn.returnType.kind === "primitive" && fn.returnType.name === "Unit"
+      ? ""
+      : `: ${printType(fn.returnType)}`;
+  const tail = fn.body !== undefined ? ` = ${fn.body}` : "";
+
+  if (fn.params.length === 0) {
+    lines.push(`${head}()${ret}${tail}`);
+    return lines.join("\n");
+  }
+
+  // Always multi-line params for readability — matches Retrofit conventions.
+  lines.push(`${head}(`);
+  for (const p of fn.params)
+    lines.push(`${indent}${INDENT}${printFunParam(p)},`);
+  lines.push(`${indent})${ret}${tail}`);
+  return lines.join("\n");
+}
+
+export function printInterface(iface: KtInterface): string {
+  const lines: string[] = [];
+  for (const a of iface.annotations) lines.push(printAnnotation(a));
+  if (iface.funs.length === 0) {
+    lines.push(`interface ${iface.name}`);
+    return lines.join("\n");
+  }
+  lines.push(`interface ${iface.name} {`);
+  for (let i = 0; i < iface.funs.length; i++) {
+    if (i > 0) lines.push("");
+    lines.push(printFun(iface.funs[i]!, INDENT));
+  }
+  lines.push("}");
+  return lines.join("\n");
+}
+
 export function printDecl(d: KtDecl): string {
   switch (d.kind) {
     case "dataClass":
@@ -84,6 +134,8 @@ export function printDecl(d: KtDecl): string {
       return printEnum(d);
     case "typeAlias":
       return printTypeAlias(d);
+    case "interface":
+      return printInterface(d);
   }
 }
 

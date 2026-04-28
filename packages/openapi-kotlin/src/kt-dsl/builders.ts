@@ -5,6 +5,10 @@ import type {
   KtEnum,
   KtEnumVariant,
   KtFile,
+  KtFun,
+  KtFunModifier,
+  KtFunParam,
+  KtInterface,
   KtPrimitive,
   KtProp,
   KtType,
@@ -100,6 +104,53 @@ export function ktEnum(opts: {
 
 export function ktTypeAlias(name: string, type: KtType): KtTypeAlias {
   return { kind: "typeAlias", name, type };
+}
+
+export function ktFunParam(opts: {
+  name: string;
+  type: KtType;
+  default?: string;
+  annotations?: KtAnnotation[];
+}): KtFunParam {
+  return {
+    kind: "funParam",
+    name: opts.name,
+    type: opts.type,
+    default: opts.default,
+    annotations: opts.annotations ?? [],
+  };
+}
+
+export function ktFun(opts: {
+  name: string;
+  params: KtFunParam[];
+  returnType: KtType;
+  modifiers?: KtFunModifier[];
+  annotations?: KtAnnotation[];
+  body?: string;
+}): KtFun {
+  return {
+    kind: "fun",
+    name: opts.name,
+    params: opts.params,
+    returnType: opts.returnType,
+    modifiers: opts.modifiers ?? [],
+    annotations: opts.annotations ?? [],
+    body: opts.body,
+  };
+}
+
+export function ktInterface(opts: {
+  name: string;
+  funs: KtFun[];
+  annotations?: KtAnnotation[];
+}): KtInterface {
+  return {
+    kind: "interface",
+    name: opts.name,
+    annotations: opts.annotations ?? [],
+    funs: opts.funs,
+  };
 }
 
 export function ktFile(opts: {

@@ -67,7 +67,35 @@ export interface KtTypeAlias {
   type: KtType;
 }
 
-export type KtDecl = KtDataClass | KtEnum | KtTypeAlias;
+export type KtFunModifier = "suspend" | "abstract" | "open" | "override";
+
+export interface KtFunParam {
+  kind: "funParam";
+  name: string;
+  type: KtType;
+  default?: string;
+  annotations: KtAnnotation[];
+}
+
+export interface KtFun {
+  kind: "fun";
+  name: string;
+  params: KtFunParam[];
+  returnType: KtType;
+  modifiers: KtFunModifier[];
+  annotations: KtAnnotation[];
+  /** Raw expression body. Omit for abstract / interface members. */
+  body?: string;
+}
+
+export interface KtInterface {
+  kind: "interface";
+  name: string;
+  annotations: KtAnnotation[];
+  funs: KtFun[];
+}
+
+export type KtDecl = KtDataClass | KtEnum | KtInterface | KtTypeAlias;
 
 export interface KtFile {
   kind: "file";
