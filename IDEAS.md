@@ -11,11 +11,11 @@ Loose roadmap. Not a commitment — order shifts with whatever's actually useful
 - **`@ahmedrowaihi/openapi-tools`** — runtime helpers (`/match`, `/parse`, `/diff`, `/ir`, `/router`, `/merge`).
 - **`@ahmedrowaihi/openapi-recon`** — reverse-engineer an OpenAPI 3.1 spec from observed `Request`/`Response` traffic.
 - **`@ahmedrowaihi/glean`** — DevTools extension that uses `openapi-recon` to emit live specs from browsing.
+- **`@ahmedrowaihi/openapi-kotlin`** — Android Kotlin SDK generator: Retrofit + kotlinx-serialization + suspend, with multipart/form/binary body support. Walks the hey-api IR so 2.0/3.0/3.1 inputs all produce the same output. Plan: [docs/plans/native-clients.md](docs/plans/native-clients.md).
 
 ## Planned
 
-- **`@ahmedrowaihi/openapi-kotlin`** — generates Retrofit + kotlinx-serialization client SDK from an OpenAPI spec. Built on `@hey-api/codegen-core` with a custom `kt-dsl` + printer. Plan: [docs/plans/native-clients.md](docs/plans/native-clients.md).
-- **`@ahmedrowaihi/openapi-swift`** — generates URLSession + Codable async-throws client SDK from an OpenAPI spec. Same plan, Phase 2.
+- **`@ahmedrowaihi/openapi-swift`** — iOS Swift SDK generator: URLSession + Codable + async throws. Same plan as openapi-kotlin, Phase 2.
 
 ## Deferred
 
