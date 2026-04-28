@@ -1,0 +1,50 @@
+name: Release Glean
+
+on:
+  push:
+    tags: ["glean-v*"]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + zip
+        run: pnpm --filter @ahmedrowaihi/glean zip
+
+      - name: Locate artifacts
+        id: artifacts
+        run: |
+          set -euo pipefail
+          chrome_zip=$(ls apps/glean/.output/*-chrome.zip 2>/dev/null | head -n1 || true)
+          firefox_zip=$(ls apps/glean/.output/*-firefox.zip 2>/dev/null | head -n1 || true)
+          [ -n "$chrome_zip" ] || { echo "no chrome zip produced" >&2; exit 1; }
+          {
+            echo "chrome=$chrome_zip"
+            echo "firefox=$firefox_zip"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.artifacts.outputs.chrome }}
+            ${{ steps.artifacts.outputs.firefox }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false

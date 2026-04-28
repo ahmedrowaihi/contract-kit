@@ -1,5 +1,3 @@
-import { applyNaming } from "@hey-api/shared";
-
 /**
  * Templating heuristic — given multiple concrete paths observed for the same
  * operation, produce an OpenAPI path template (`{paramName}`) and infer the
@@ -103,10 +101,7 @@ function paramNameFromContext(
     if (!seg || seg.startsWith("{")) continue;
     const cleaned = seg.replace(/[^a-zA-Z0-9]/g, "");
     if (!cleaned) continue;
-    const candidate = applyNaming(singularize(cleaned), {
-      casing: "camelCase",
-      name: "{{name}}Id",
-    });
+    const candidate = `${toCamelCase(singularize(cleaned))}Id`;
     if (!used.has(candidate)) return candidate;
     let n = 2;
     while (used.has(`${candidate}${n}`)) n++;
@@ -123,4 +118,24 @@ function singularize(word: string): string {
     return word.slice(0, -1);
   }
   return word;
+}
+
+/**
+ * Lowercase camelCase. Splits on case transitions and non-alphanumeric chars,
+ * then joins with a leading-lowercase / Title-cased word pattern. Pure JS —
+ * no external dep so the package stays browser-clean.
+ */
+function toCamelCase(s: string): string {
+  if (!s) return s;
+  const words = s
+    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean);
+  return words
+    .map((w, i) => {
+      const lower = w.toLowerCase();
+      return i === 0 ? lower : lower[0].toUpperCase() + lower.slice(1);
+    })
+    .join("");
 }

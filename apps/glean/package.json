@@ -1,0 +1,34 @@
+{
+  "name": "@ahmedrowaihi/glean",
+  "description": "Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools.",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wxt prepare",
+    "icons": "for s in 16 32 48 96 128; do rsvg-convert -w $s -h $s branding/icon.svg -o public/icon/$s.png; done"
+  },
+  "dependencies": {
+    "@ahmedrowaihi/openapi-recon": "workspace:*",
+    "@scalar/api-reference-react": "^0.9.29",
+    "comctx": "^1.6.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/chrome": "^0.0.290",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.1.5",
+    "tailwindcss": "^4.2.4",
+    "wxt": "^0.20.25"
+  }
+}

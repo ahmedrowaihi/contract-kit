@@ -103,6 +103,12 @@ export class Store {
     this.groups.clear();
   }
 
+  clearOrigin(origin: string): void {
+    for (const [k, g] of this.groups) {
+      if (g.origin === origin) this.groups.delete(k);
+    }
+  }
+
   /** Total raw observations across all groups (for diagnostics / UI counters). */
   size(): number {
     let n = 0;
@@ -110,6 +116,17 @@ export class Store {
       for (const o of g.observations.values()) n += o.sampleCount;
     }
     return n;
+  }
+
+  /** Per-origin sample counts. Sorted by origin for stable UI. */
+  originStats(): Map<string, number> {
+    const out = new Map<string, number>();
+    for (const g of this.groups.values()) {
+      let n = 0;
+      for (const o of g.observations.values()) n += o.sampleCount;
+      out.set(g.origin, (out.get(g.origin) ?? 0) + n);
+    }
+    return new Map([...out].sort(([a], [b]) => a.localeCompare(b)));
   }
 }
 

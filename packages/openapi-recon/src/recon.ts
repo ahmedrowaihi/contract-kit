@@ -1,4 +1,4 @@
-import { assembleDocument } from "./assemble";
+import { assembleDocument, type GroupSnapshot } from "./assemble";
 import { type DetectedAuth, detectAuthScheme } from "./infer/auth";
 import { sanitizeHeaders } from "./sanitize";
 import { Store } from "./store";
@@ -17,6 +17,14 @@ const HTTP_METHODS = new Set<HttpMethod>([
 
 const JSON_RE = /^application\/(.*\+)?json(;.*)?$/i;
 
+export interface ToOpenAPIOptions {
+  /**
+   * Restrict the output to a single observed origin (e.g. `https://api.example.com`).
+   * Useful when traffic spans many origins and you want one spec per backend.
+   */
+  origin?: string;
+}
+
 export interface Recon {
   /**
    * Feed an observation. Accepts standard Web Fetch `Request` + `Response`.
@@ -26,10 +34,16 @@ export interface Recon {
   observe(request: Request, response: Response): Promise<void>;
   /** Number of samples folded so far (across all groups). */
   sampleCount(): number;
+  /** Per-origin sample counts, sorted by origin. */
+  originStats(): ReadonlyMap<string, number>;
   /** Build the current OpenAPI 3.1 document from accumulated observations. */
-  toOpenAPI(): import("@hey-api/spec-types").OpenAPIV3_1.Document;
+  toOpenAPI(
+    opts?: ToOpenAPIOptions,
+  ): import("@hey-api/spec-types").OpenAPIV3_1.Document;
   /** Drop everything. */
   clear(): void;
+  /** Drop observations for a single origin only. */
+  clearOrigin(origin: string): void;
 }
 
 /** Create a new reconnaissance session. Pure — no global state. */
@@ -77,8 +91,14 @@ export function createRecon(config: ReconConfig = {}): Recon {
     sampleCount() {
       return store.size();
     },
-    toOpenAPI() {
-      return assembleDocument(store.snapshot(), {
+    originStats() {
+      return store.originStats();
+    },
+    toOpenAPI(opts) {
+      const snapshot = opts?.origin
+        ? filterByOrigin(store.snapshot(), opts.origin)
+        : store.snapshot();
+      return assembleDocument(snapshot, {
         pathTemplating: config.pathTemplating ?? true,
         title,
         version,
@@ -89,11 +109,28 @@ export function createRecon(config: ReconConfig = {}): Recon {
       store.clear();
       detectedAuthSchemes.clear();
     },
+    clearOrigin(origin) {
+      store.clearOrigin(origin);
+    },
   };
 }
 
 function isHttpMethod(s: string): s is HttpMethod {
   return HTTP_METHODS.has(s as HttpMethod);
+}
+
+function filterByOrigin(
+  snapshot: GroupSnapshot,
+  origin: string,
+): GroupSnapshot {
+  const out = new Map<
+    string,
+    GroupSnapshot extends ReadonlyMap<string, infer V> ? V : never
+  >();
+  for (const [k, g] of snapshot) {
+    if (g.origin === origin) out.set(k, g);
+  }
+  return out;
 }
 
 function headersToObject(r: Request | Response): Record<string, string> {
