@@ -42,6 +42,8 @@ export interface Recon {
   ): import("@hey-api/spec-types").OpenAPIV3_1.Document;
   /** Drop everything. */
   clear(): void;
+  /** Drop observations for a single origin only. */
+  clearOrigin(origin: string): void;
 }
 
 /** Create a new reconnaissance session. Pure — no global state. */
@@ -106,6 +108,9 @@ export function createRecon(config: ReconConfig = {}): Recon {
     clear() {
       store.clear();
       detectedAuthSchemes.clear();
+    },
+    clearOrigin(origin) {
+      store.clearOrigin(origin);
     },
   };
 }

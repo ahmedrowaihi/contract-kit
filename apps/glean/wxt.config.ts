@@ -7,7 +7,7 @@ export default defineConfig({
     name: "Glean",
     description:
       "Reverse-engineer an OpenAPI 3.1 spec from traffic observed in DevTools.",
-    permissions: ["storage"],
+    permissions: ["storage", "unlimitedStorage"],
   },
   vite: () => ({
     plugins: [tailwindcss()],

@@ -103,6 +103,12 @@ export class Store {
     this.groups.clear();
   }
 
+  clearOrigin(origin: string): void {
+    for (const [k, g] of this.groups) {
+      if (g.origin === origin) this.groups.delete(k);
+    }
+  }
+
   /** Total raw observations across all groups (for diagnostics / UI counters). */
   size(): number {
     let n = 0;
