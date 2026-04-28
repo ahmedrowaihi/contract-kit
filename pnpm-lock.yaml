@@ -178,18 +178,6 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/openapi-merge:
-    devDependencies:
-      '@ahmedrowaihi/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@hey-api/spec-types':
-        specifier: ^0.2.0
-        version: 0.2.0
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.19.17
-
   packages/openapi-recon:
     devDependencies:
       '@ahmedrowaihi/tsconfig':
