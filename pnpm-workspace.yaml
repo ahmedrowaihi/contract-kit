@@ -9,8 +9,10 @@ packages:
 
 catalog:
   "@hey-api/codegen-core": "^0.8.1"
+  "@hey-api/json-schema-ref-parser": "^1.4.1"
   "@hey-api/openapi-ts": "^0.97.0"
   "@hey-api/shared": "^0.4.2"
+  "@hey-api/spec-types": "^0.2.0"
   "@types/node": "^22"
 
 patchedDependencies:

@@ -14,7 +14,7 @@ import {
   printFile,
 } from "../dist/index.js";
 
-describe("printer — M1", () => {
+describe("printer", () => {
   it("emits @Serializable data class with required + nullable props", () => {
     const file = ktFile({
       packageName: "com.example.api.model",
@@ -31,7 +31,9 @@ describe("printer — M1", () => {
       ],
     });
 
-    const expected = `package com.example.api.model
+    assert.equal(
+      printFile(file),
+      `package com.example.api.model
 
 import kotlinx.serialization.Serializable
 
@@ -40,15 +42,13 @@ data class User(
     val id: String,
     val name: String?,
 )
-`;
-
-    assert.equal(printFile(file), expected);
+`,
+    );
   });
 
-  it("supports list, ref, primitive composition", () => {
+  it("composes list, ref, primitive types", () => {
     const file = ktFile({
-      packageName: "com.example.api.model",
-      imports: [],
+      packageName: "x",
       decls: [
         ktDataClass({
           name: "Page",
@@ -62,7 +62,9 @@ data class User(
       ],
     });
 
-    const expected = `package com.example.api.model
+    assert.equal(
+      printFile(file),
+      `package x
 
 @Serializable
 data class Page(
@@ -70,9 +72,8 @@ data class Page(
     val total: Int,
     val next: String?,
 )
-`;
-
-    assert.equal(printFile(file), expected);
+`,
+    );
   });
 
   it("emits empty data class when no properties", () => {
@@ -86,17 +87,17 @@ data class Page(
         }),
       ],
     });
-
-    const expected = `package x
+    assert.equal(
+      printFile(file),
+      `package x
 
 @Serializable
 data class Empty()
-`;
-
-    assert.equal(printFile(file), expected);
+`,
+    );
   });
 
-  it("emits annotation args verbatim", () => {
+  it("emits annotation args verbatim on properties", () => {
     const file = ktFile({
       packageName: "x",
       imports: [
@@ -120,7 +121,9 @@ data class Empty()
       ],
     });
 
-    const expected = `package x
+    assert.equal(
+      printFile(file),
+      `package x
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -129,8 +132,7 @@ import kotlinx.serialization.Serializable
 data class Foo(
     @SerialName("raw_field") val raw: String,
 )
-`;
-
-    assert.equal(printFile(file), expected);
+`,
+    );
   });
 });

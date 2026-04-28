@@ -8,6 +8,7 @@ export function parseSpec(spec: Record<string, unknown>): IR.Model {
   const context = new Context({
     config: {
       dryRun: true,
+      input: [],
       parser: getParser({}),
       plugins: {},
       pluginOrder: [],
