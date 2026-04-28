@@ -11,12 +11,10 @@ import {
   RECON_NAMESPACE,
   type ReconService,
 } from "./recon-service";
+import ReconWorker from "./recon-worker.ts?worker";
 
 class WorkerInjectAdapter implements Adapter {
-  worker: Worker;
-  constructor(url: URL) {
-    this.worker = new Worker(url, { type: "module" });
-  }
+  constructor(public worker: Worker) {}
   sendMessage: SendMessage = (message) => this.worker.postMessage(message);
   onMessage: OnMessage = (callback) => {
     const handler = (event: MessageEvent) => callback(event.data);
@@ -29,9 +27,7 @@ const [, injectRecon] = defineProxy(() => ({}) as ReconService, {
   namespace: RECON_NAMESPACE,
 });
 
-const recon = injectRecon(
-  new WorkerInjectAdapter(new URL("./recon-worker.ts", import.meta.url)),
-);
+const recon = injectRecon(new WorkerInjectAdapter(new ReconWorker()));
 
 let stats: OriginStats = { totalSamples: 0, origins: [] };
 let capturing = true;

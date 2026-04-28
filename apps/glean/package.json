@@ -2,7 +2,7 @@
   "name": "@ahmedrowaihi/glean",
   "description": "Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools.",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
