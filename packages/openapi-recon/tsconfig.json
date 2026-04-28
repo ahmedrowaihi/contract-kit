@@ -1,5 +1,5 @@
 {
-  "extends": "@contract-kit/tsconfig/lib.json",
+  "extends": "@ahmedrowaihi/tsconfig/lib.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src"

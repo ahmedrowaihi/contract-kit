@@ -140,7 +140,7 @@ importers:
 
   packages/openapi-recon:
     devDependencies:
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@hey-api/shared':
@@ -159,7 +159,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
     devDependencies:
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@hey-api/codegen-core':
@@ -178,7 +178,7 @@ importers:
         specifier: '>=5.0.0'
         version: 5.9.3
     devDependencies:
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../../tooling/tsconfig
       '@faker-js/faker':
@@ -227,7 +227,7 @@ importers:
       '@ahmedrowaihi/openapi-ts-faker':
         specifier: workspace:*
         version: link:../faker
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':
@@ -251,7 +251,7 @@ importers:
 
   packages/openapi-ts-plugins/paths:
     devDependencies:
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':
@@ -273,7 +273,7 @@ importers:
         specifier: ^1.0.0
         version: 1.1.0
     devDependencies:
-      '@contract-kit/tsconfig':
+      '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':

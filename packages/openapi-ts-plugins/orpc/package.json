@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@ahmedrowaihi/openapi-ts-faker": "workspace:*",
-    "@contract-kit/tsconfig": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/openapi-ts": "catalog:",
     "@hey-api/shared": "catalog:",

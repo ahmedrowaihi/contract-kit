@@ -8,6 +8,8 @@ dist
 *.tsbuildinfo
 .next
 .turbo
+.wxt
+.output
 
 # Logs
 *.log
