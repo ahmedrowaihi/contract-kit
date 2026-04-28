@@ -30,6 +30,7 @@ Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 
 | Package | Description |
 | --- | --- |
+| [`@ahmedrowaihi/openapi-merge`](./packages/openapi-merge) | Fold multiple OpenAPI 3.x specs into one with policy-driven conflict resolution — paths, components, tags, servers — with $ref rewriting kept consistent |
 | [`@ahmedrowaihi/openapi-recon`](./packages/openapi-recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
 | [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
 
