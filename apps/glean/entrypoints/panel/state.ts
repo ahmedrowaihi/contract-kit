@@ -10,14 +10,20 @@ function notify() {
 }
 
 export interface PanelState {
-  sampleCount: number;
+  totalSamples: number;
   capturing: boolean;
+  /** Sorted [origin, sampleCount] pairs. */
+  origins: Array<[string, number]>;
 }
 
 let capturing = true;
 
 function snapshot(): PanelState {
-  return { sampleCount: recon.sampleCount(), capturing };
+  return {
+    totalSamples: recon.sampleCount(),
+    capturing,
+    origins: [...recon.originStats()],
+  };
 }
 
 /** React hook: subscribe to capture state. Re-renders on every observation. */
@@ -43,8 +49,9 @@ export function clear() {
   notify();
 }
 
-export function exportSpec() {
-  return recon.toOpenAPI();
+/** Build the OpenAPI doc — for one origin if given, otherwise all. */
+export function exportSpec(origin?: string) {
+  return recon.toOpenAPI(origin ? { origin } : undefined);
 }
 
 let bound = false;

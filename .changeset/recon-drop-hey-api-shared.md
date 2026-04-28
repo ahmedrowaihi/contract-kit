@@ -1,5 +1,5 @@
 ---
-"@ahmedrowaihi/openapi-recon": patch
+"@ahmedrowaihi/openapi-recon": minor
 ---
 
-Drop `@hey-api/shared` peer dep — `applyNaming` was the only call site and was inlined as a tiny camelCase helper. Removes a Node-only `process.env` access at module load, so the package now works in browsers / extension contexts without shims.
+Add `Recon.originStats()` and `toOpenAPI({ origin })` so consumers can produce one spec per backend instead of a single multi-origin doc. Also drop the `@hey-api/shared` peer dep (inlined the one helper used) — package now works in browsers without shims.
