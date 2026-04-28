@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-recon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes",
   "keywords": [
     "openapi",
