@@ -2,9 +2,11 @@ import type {
   KtAnnotation,
   KtDataClass,
   KtDecl,
+  KtEnum,
   KtFile,
   KtProp,
   KtType,
+  KtTypeAlias,
 } from "../kt-dsl/types.js";
 
 const INDENT = "    ";
@@ -51,10 +53,37 @@ export function printDataClass(c: KtDataClass): string {
   return lines.join("\n");
 }
 
+export function printEnum(e: KtEnum): string {
+  const lines: string[] = [];
+  for (const a of e.annotations) lines.push(printAnnotation(a));
+  if (e.variants.length === 0) {
+    lines.push(`enum class ${e.name}`);
+    return lines.join("\n");
+  }
+  lines.push(`enum class ${e.name} {`);
+  for (let i = 0; i < e.variants.length; i++) {
+    const v = e.variants[i]!;
+    const last = i === e.variants.length - 1;
+    const prefix = v.annotations.map(printAnnotation).join(" ");
+    const head = prefix ? `${prefix} ` : "";
+    lines.push(`${INDENT}${head}${v.name}${last ? "," : ","}`);
+  }
+  lines.push("}");
+  return lines.join("\n");
+}
+
+export function printTypeAlias(a: KtTypeAlias): string {
+  return `typealias ${a.name} = ${printType(a.type)}`;
+}
+
 export function printDecl(d: KtDecl): string {
   switch (d.kind) {
     case "dataClass":
       return printDataClass(d);
+    case "enum":
+      return printEnum(d);
+    case "typeAlias":
+      return printTypeAlias(d);
   }
 }
 

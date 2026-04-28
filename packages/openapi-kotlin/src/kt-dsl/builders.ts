@@ -2,10 +2,13 @@ import type {
   KtAnnotation,
   KtDataClass,
   KtDecl,
+  KtEnum,
+  KtEnumVariant,
   KtFile,
   KtPrimitive,
   KtProp,
   KtType,
+  KtTypeAlias,
 } from "./types.js";
 
 const prim = (name: KtPrimitive): KtType => ({ kind: "primitive", name });
@@ -73,6 +76,30 @@ export function ktDataClass(opts: {
     annotations: opts.annotations ?? [],
     properties: opts.properties,
   };
+}
+
+export function ktEnumVariant(
+  name: string,
+  annotations: KtAnnotation[] = [],
+): KtEnumVariant {
+  return { name, annotations };
+}
+
+export function ktEnum(opts: {
+  name: string;
+  variants: KtEnumVariant[];
+  annotations?: KtAnnotation[];
+}): KtEnum {
+  return {
+    kind: "enum",
+    name: opts.name,
+    annotations: opts.annotations ?? [],
+    variants: opts.variants,
+  };
+}
+
+export function ktTypeAlias(name: string, type: KtType): KtTypeAlias {
+  return { kind: "typeAlias", name, type };
 }
 
 export function ktFile(opts: {

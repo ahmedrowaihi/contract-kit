@@ -49,7 +49,25 @@ export interface KtDataClass {
   properties: KtProp[];
 }
 
-export type KtDecl = KtDataClass;
+export interface KtEnumVariant {
+  name: string;
+  annotations: KtAnnotation[];
+}
+
+export interface KtEnum {
+  kind: "enum";
+  name: string;
+  annotations: KtAnnotation[];
+  variants: KtEnumVariant[];
+}
+
+export interface KtTypeAlias {
+  kind: "typeAlias";
+  name: string;
+  type: KtType;
+}
+
+export type KtDecl = KtDataClass | KtEnum | KtTypeAlias;
 
 export interface KtFile {
   kind: "file";
