@@ -49,7 +49,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.test.json",
     "test": "tsc && node --test tests/*.test.ts"
   },
   "peerDependencies": {
