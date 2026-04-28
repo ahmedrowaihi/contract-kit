@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/glean",
-  "description": "Browser devtools panel that reverse-engineers an OpenAPI spec from observed traffic.",
+  "description": "Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "typecheck": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "icons": "for s in 16 32 48 96 128; do rsvg-convert -w $s -h $s branding/icon.svg -o public/icon/$s.png; done"
   },
   "dependencies": {
     "@ahmedrowaihi/openapi-recon": "workspace:*",

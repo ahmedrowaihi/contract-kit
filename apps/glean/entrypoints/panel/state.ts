@@ -35,7 +35,6 @@ const recon = injectRecon(
 
 let stats: OriginStats = { totalSamples: 0, origins: [] };
 let capturing = true;
-let entriesSeen = 0;
 const listeners = new Set<() => void>();
 
 void recon.subscribe((next) => {
@@ -45,17 +44,15 @@ void recon.subscribe((next) => {
 
 export interface PanelState extends OriginStats {
   capturing: boolean;
-  entriesSeen: number;
 }
 
 export function usePanelState(): PanelState {
   const [state, setState] = useState<PanelState>(() => ({
     ...stats,
     capturing,
-    entriesSeen,
   }));
   useEffect(() => {
-    const fn = () => setState({ ...stats, capturing, entriesSeen });
+    const fn = () => setState({ ...stats, capturing });
     listeners.add(fn);
     return () => {
       listeners.delete(fn);
@@ -99,11 +96,9 @@ export function bindNetworkCapture() {
   if (bound) return;
   bound = true;
   browser.devtools.network.onRequestFinished.addListener(async (entry) => {
+    if (!capturing) return;
     if (SKIPPED_METHODS.has(entry.request.method.toUpperCase())) return;
     if (isStaticAsset(entry.request.url)) return;
-    entriesSeen++;
-    for (const fn of listeners) fn();
-    if (!capturing) return;
     try {
       const payload = await harToSerialized(entry);
       void recon.observe(payload);

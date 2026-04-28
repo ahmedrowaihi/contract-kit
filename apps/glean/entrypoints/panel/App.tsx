@@ -35,7 +35,7 @@ export function App() {
   }, [selected, totalSamples]);
 
   return (
-    <div className="flex h-full flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex h-full flex-col bg-slate-950 text-slate-100">
       <Header
         totalSamples={totalSamples}
         capturing={capturing}
@@ -52,7 +52,7 @@ export function App() {
       />
       <main className="flex-1 overflow-hidden">
         {origins.length === 0 ? (
-          <Empty />
+          <Empty capturing={capturing} />
         ) : !selected ? (
           <OriginPicker
             origins={origins}
@@ -102,9 +102,9 @@ function Header({
   onClearOrigin,
 }: HeaderProps) {
   return (
-    <header className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-900 px-4 py-2 text-sm">
-      <span className="font-semibold text-emerald-400">Glean</span>
-      <span className="text-zinc-500">
+    <header className="flex h-11 shrink-0 items-center gap-3 border-b border-white/5 bg-slate-900/60 px-3 text-xs backdrop-blur">
+      <span className="font-medium tracking-tight text-slate-200">Glean</span>
+      <span className="text-[11px] tabular-nums text-slate-500">
         {totalSamples} sample{totalSamples === 1 ? "" : "s"}
       </span>
       {selected && (
@@ -115,26 +115,28 @@ function Header({
           onClearOrigin={onClearOrigin}
         />
       )}
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1.5">
         <button
           type="button"
           onClick={onToggle}
-          className={`rounded px-2 py-1 text-xs font-medium ${
-            capturing
-              ? "bg-emerald-600 hover:bg-emerald-500"
-              : "bg-zinc-700 hover:bg-zinc-600"
-          }`}
+          className="flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-800/60 px-2 py-1 text-slate-300 hover:bg-slate-800"
+          title={capturing ? "Pause capture" : "Resume capture"}
         >
-          {capturing ? "● Capturing" : "○ Paused"}
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              capturing ? "bg-sky-400" : "bg-slate-500"
+            }`}
+          />
+          {capturing ? "Capturing" : "Paused"}
         </button>
         {spec && selected && <DownloadButton spec={spec} origin={selected} />}
         <button
           type="button"
           onClick={onClearAll}
-          className="rounded bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
+          className="rounded-md border border-white/10 bg-slate-800/60 px-2 py-1 text-slate-300 hover:bg-slate-800"
           title="Clear all data"
         >
-          Clear all
+          Clear
         </button>
       </div>
     </header>
@@ -180,27 +182,35 @@ function OriginDropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded bg-zinc-800 px-2 py-1 font-mono text-xs hover:bg-zinc-700"
+        className="flex items-center gap-2 rounded-md border border-white/10 bg-slate-800/60 px-2 py-1 font-mono text-[11px] text-slate-200 hover:bg-slate-800"
       >
         <span className="truncate">{stripScheme(selected)}</span>
-        <span className="text-zinc-500">{selectedCount}</span>
-        <span className="text-zinc-500">▾</span>
+        <span className="tabular-nums text-slate-500">{selectedCount}</span>
+        <svg
+          aria-hidden="true"
+          width="8"
+          height="8"
+          viewBox="0 0 8 8"
+          className="fill-current text-slate-500"
+        >
+          <path d="M1 2 L4 6 L7 2 Z" />
+        </svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-80 rounded border border-zinc-800 bg-zinc-900 shadow-xl">
-          <div className="border-b border-zinc-800 p-2">
+        <div className="absolute left-0 top-full z-20 mt-1.5 w-80 overflow-hidden rounded-lg border border-white/10 bg-slate-900 shadow-2xl shadow-black/60">
+          <div className="border-b border-white/5 p-2">
             <input
               autoFocus
               type="search"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter origins…"
-              className="w-full rounded bg-zinc-950 px-2 py-1 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-md bg-slate-950 px-2 py-1 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50"
             />
           </div>
-          <ul className="max-h-80 overflow-y-auto">
+          <ul className="max-h-80 overflow-y-auto py-1">
             {visible.length === 0 && (
-              <li className="px-3 py-2 text-xs text-zinc-600">No matches.</li>
+              <li className="px-3 py-2 text-xs text-slate-600">No matches.</li>
             )}
             {visible.map(([o, n]) => (
               <OriginRow
@@ -239,20 +249,20 @@ function OriginRow({
 }: OriginRowProps) {
   return (
     <li
-      className={`group flex items-stretch ${
-        isSelected ? "bg-zinc-950" : "hover:bg-zinc-950"
+      className={`group mx-1 flex items-stretch rounded-md ${
+        isSelected ? "bg-slate-800/80" : "hover:bg-slate-800/50"
       }`}
     >
       <button
         type="button"
         onClick={onSelect}
-        className={`flex-1 truncate px-3 py-1.5 text-left font-mono text-xs ${
-          isSelected ? "text-emerald-400" : ""
+        className={`flex-1 truncate px-2.5 py-1.5 text-left font-mono text-[11px] ${
+          isSelected ? "text-sky-300" : "text-slate-300"
         }`}
       >
         {stripScheme(origin)}
       </button>
-      <span className="flex items-center px-2 text-xs text-zinc-500">
+      <span className="flex items-center px-2 text-[11px] tabular-nums text-slate-500">
         {count}
       </span>
       <button
@@ -262,9 +272,9 @@ function OriginRow({
           onClear();
         }}
         title={`Drop ${origin}`}
-        className="px-2 text-xs text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-red-400"
+        className="px-2 text-xs text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 hover:text-rose-400"
       >
-        🗑
+        ✕
       </button>
     </li>
   );
@@ -285,11 +295,13 @@ function OriginPicker({ origins, onSelect, onClearOrigin }: OriginPickerProps) {
   );
 
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col gap-3 px-6 py-8">
+    <div className="mx-auto flex h-full max-w-xl flex-col gap-4 px-6 py-10">
       <div>
-        <h2 className="text-lg font-semibold">Pick an origin to inspect</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          Each origin builds its own OpenAPI spec from observed traffic.
+        <h2 className="text-base font-medium tracking-tight text-slate-100">
+          Pick an origin to inspect
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Each origin builds its own OpenAPI 3.1 spec from observed traffic.
         </p>
       </div>
       <input
@@ -297,11 +309,11 @@ function OriginPicker({ origins, onSelect, onClearOrigin }: OriginPickerProps) {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         placeholder="Filter origins…"
-        className="rounded bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        className="rounded-md border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-sky-500/50"
       />
-      <ul className="flex flex-1 flex-col gap-1 overflow-y-auto">
+      <ul className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
         {visible.length === 0 && (
-          <li className="text-xs text-zinc-600">No matches.</li>
+          <li className="text-xs text-slate-600">No matches.</li>
         )}
         {visible.map(([o, n]) => (
           <OriginRow
@@ -318,13 +330,24 @@ function OriginPicker({ origins, onSelect, onClearOrigin }: OriginPickerProps) {
   );
 }
 
-function Empty() {
-  return <Centered>Browse the page to start capturing JSON traffic.</Centered>;
+function Empty({ capturing }: { capturing: boolean }) {
+  return (
+    <Centered>
+      <div className="text-center">
+        <p className="text-slate-300">
+          {capturing ? "Listening for traffic…" : "Capture is paused."}
+        </p>
+        <p className="mt-1 text-slate-600">
+          Browse the page to start building a spec.
+        </p>
+      </div>
+    </Centered>
+  );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-full items-center justify-center text-xs text-zinc-500">
+    <div className="flex h-full items-center justify-center text-xs text-slate-500">
       {children}
     </div>
   );
@@ -346,7 +369,7 @@ function DownloadButton({ spec, origin }: { spec: object; origin: string }) {
     <button
       type="button"
       onClick={onClick}
-      className="rounded bg-blue-600 px-2 py-1 text-xs font-medium hover:bg-blue-500"
+      className="rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-sky-300 hover:bg-sky-500/20"
     >
       Download
     </button>
