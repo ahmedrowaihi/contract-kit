@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-kotlin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Generate idiomatic Kotlin (Retrofit + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec.",
   "keywords": [
     "openapi",
