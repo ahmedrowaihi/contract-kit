@@ -1,131 +1,155 @@
 /// <reference lib="webworker" />
 /// <reference types="chrome" />
 import { createRecon, type Recon } from "@ahmedrowaihi/openapi-recon";
+import {
+  type Adapter,
+  defineProxy,
+  type OnMessage,
+  type SendMessage,
+} from "comctx";
 import type { SerializedObservation } from "./network";
+import {
+  type OriginStats,
+  RECON_NAMESPACE,
+  type ReconService,
+} from "./recon-service";
 
 const STORAGE_KEY = "glean:samples:v1";
-const FLUSH_DELAY_MS = 2000;
-
-const recon: Recon = createRecon({ title: "Captured API" });
-let samples: SerializedObservation[] = [];
-let ready = false;
-const queued: SerializedObservation[] = [];
-
-type IncomingMessage =
-  | { type: "observe"; payload: SerializedObservation }
-  | { type: "export"; id: number; origin?: string }
-  | { type: "clear" }
-  | { type: "clearOrigin"; origin: string };
-
-type OutgoingMessage =
-  | { type: "stats"; totalSamples: number; origins: Array<[string, number]> }
-  | { type: "spec"; id: number; spec: object };
+const PERSIST_DEBOUNCE_MS = 2000;
+const STATS_DEBOUNCE_MS = 0;
 
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
-let statsPending = false;
-function scheduleStatsFlush() {
-  if (statsPending) return;
-  statsPending = true;
-  setTimeout(() => {
-    statsPending = false;
-    const msg: OutgoingMessage = {
-      type: "stats",
-      totalSamples: recon.sampleCount(),
-      origins: [...recon.originStats()],
+class WorkerProvideAdapter implements Adapter {
+  sendMessage: SendMessage = (message) => {
+    ctx.postMessage(message);
+  };
+  onMessage: OnMessage = (callback) => {
+    const handler = (event: MessageEvent) => callback(event.data);
+    ctx.addEventListener("message", handler);
+    return () => ctx.removeEventListener("message", handler);
+  };
+}
+
+class ReconImpl implements ReconService {
+  private recon: Recon = createRecon({ title: "Captured API" });
+  private samples: SerializedObservation[] = [];
+  private subscribers = new Set<(s: OriginStats) => void>();
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private statsTimer: ReturnType<typeof setTimeout> | null = null;
+  private ready = false;
+  private queued: SerializedObservation[] = [];
+
+  constructor() {
+    this.rehydrate();
+  }
+
+  async observe(payload: SerializedObservation): Promise<void> {
+    if (!this.ready) {
+      this.queued.push(payload);
+      return;
+    }
+    await this.ingest(payload);
+  }
+
+  async exportSpec(origin?: string): Promise<object> {
+    return this.recon.toOpenAPI(origin ? { origin } : undefined);
+  }
+
+  async clear(): Promise<void> {
+    this.recon.clear();
+    this.samples = [];
+    if (this.persistTimer != null) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    chrome.storage.local.remove(STORAGE_KEY);
+    this.scheduleStatsFlush();
+  }
+
+  async clearOrigin(origin: string): Promise<void> {
+    this.recon.clearOrigin(origin);
+    this.samples = this.samples.filter((s) => {
+      try {
+        return new URL(s.request.url).origin !== origin;
+      } catch {
+        return true;
+      }
+    });
+    this.schedulePersist();
+    this.scheduleStatsFlush();
+  }
+
+  async subscribe(cb: (stats: OriginStats) => void): Promise<() => void> {
+    this.subscribers.add(cb);
+    cb(this.snapshot());
+    return () => {
+      this.subscribers.delete(cb);
     };
-    ctx.postMessage(msg);
-  }, 0);
-}
-
-let persistTimer: ReturnType<typeof setTimeout> | null = null;
-function schedulePersist() {
-  if (persistTimer != null) return;
-  persistTimer = setTimeout(() => {
-    persistTimer = null;
-    chrome.storage.local.set({ [STORAGE_KEY]: samples });
-  }, FLUSH_DELAY_MS);
-}
-
-async function ingest(payload: SerializedObservation) {
-  try {
-    const { request, response } = rebuild(payload);
-    await recon.observe(request, response);
-    samples.push(payload);
-    schedulePersist();
-    scheduleStatsFlush();
-  } catch {}
-}
-
-async function rehydrate() {
-  try {
-    const stored = await chrome.storage.local.get(STORAGE_KEY);
-    const prior = stored[STORAGE_KEY] as SerializedObservation[] | undefined;
-    if (prior?.length) {
-      for (const p of prior) {
-        try {
-          const { request, response } = rebuild(p);
-          await recon.observe(request, response);
-          samples.push(p);
-        } catch {}
-      }
-      scheduleStatsFlush();
-    }
-  } catch {}
-  ready = true;
-  while (queued.length) {
-    const p = queued.shift();
-    if (p) await ingest(p);
   }
-}
 
-ctx.addEventListener("message", async (e: MessageEvent<IncomingMessage>) => {
-  const msg = e.data;
-  switch (msg.type) {
-    case "observe": {
-      if (!ready) {
-        queued.push(msg.payload);
-        return;
-      }
-      await ingest(msg.payload);
-      return;
-    }
-    case "export": {
-      const spec = recon.toOpenAPI(
-        msg.origin ? { origin: msg.origin } : undefined,
-      );
-      const out: OutgoingMessage = { type: "spec", id: msg.id, spec };
-      ctx.postMessage(out);
-      return;
-    }
-    case "clear": {
-      recon.clear();
-      samples = [];
-      if (persistTimer != null) {
-        clearTimeout(persistTimer);
-        persistTimer = null;
-      }
-      chrome.storage.local.remove(STORAGE_KEY);
-      scheduleStatsFlush();
-      return;
-    }
-    case "clearOrigin": {
-      recon.clearOrigin(msg.origin);
-      samples = samples.filter((s) => {
-        try {
-          return new URL(s.request.url).origin !== msg.origin;
-        } catch {
-          return true;
+  private snapshot(): OriginStats {
+    return {
+      totalSamples: this.recon.sampleCount(),
+      origins: [...this.recon.originStats()],
+    };
+  }
+
+  private async ingest(payload: SerializedObservation): Promise<void> {
+    try {
+      const { request, response } = rebuild(payload);
+      await this.recon.observe(request, response);
+      this.samples.push(payload);
+      this.schedulePersist();
+      this.scheduleStatsFlush();
+    } catch {}
+  }
+
+  private async rehydrate(): Promise<void> {
+    try {
+      const stored = await chrome.storage.local.get(STORAGE_KEY);
+      const prior = stored[STORAGE_KEY] as SerializedObservation[] | undefined;
+      if (prior?.length) {
+        for (const p of prior) {
+          try {
+            const { request, response } = rebuild(p);
+            await this.recon.observe(request, response);
+            this.samples.push(p);
+          } catch {}
         }
-      });
-      schedulePersist();
-      scheduleStatsFlush();
-      return;
+        this.scheduleStatsFlush();
+      }
+    } catch {}
+    this.ready = true;
+    while (this.queued.length) {
+      const p = this.queued.shift();
+      if (p) await this.ingest(p);
     }
   }
+
+  private scheduleStatsFlush() {
+    if (this.statsTimer != null) return;
+    this.statsTimer = setTimeout(() => {
+      this.statsTimer = null;
+      const stats = this.snapshot();
+      for (const cb of this.subscribers) cb(stats);
+    }, STATS_DEBOUNCE_MS);
+  }
+
+  private schedulePersist() {
+    if (this.persistTimer != null) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      chrome.storage.local.set({ [STORAGE_KEY]: this.samples });
+    }, PERSIST_DEBOUNCE_MS);
+  }
+}
+
+const [provideRecon] = defineProxy(() => new ReconImpl(), {
+  namespace: RECON_NAMESPACE,
 });
 
-rehydrate();
+provideRecon(new WorkerProvideAdapter());
 
 function rebuild(p: SerializedObservation) {
   const request = new Request(p.request.url, {

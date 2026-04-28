@@ -52,6 +52,9 @@ importers:
       '@scalar/api-reference-react':
         specifier: ^0.9.29
         version: 0.9.29(@vue/compiler-sfc@3.5.33)(react@19.2.5)(tailwindcss@4.2.4)(typescript@5.9.3)
+      comctx:
+        specifier: ^1.6.1
+        version: 1.6.1
       react:
         specifier: ^19.2.4
         version: 19.2.5
@@ -2399,6 +2402,9 @@ packages:
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
+
+  comctx@1.6.1:
+    resolution: {integrity: sha512-ZMRGAYASYRdVfEoB7oxH8Nqu5Ay8I+YvAsQni+td0pYV9eww/PrtSFVyvc2JkNQyHXGDknCB4wJfxFYP6fuqZg==}
 
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
@@ -7924,6 +7930,8 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
     optional: true
+
+  comctx@1.6.1: {}
 
   comma-separated-tokens@2.0.3: {}
 

@@ -1,46 +1,50 @@
+import {
+  type Adapter,
+  defineProxy,
+  type OnMessage,
+  type SendMessage,
+} from "comctx";
 import { useEffect, useState } from "react";
 import { harToSerialized } from "./network";
+import {
+  type OriginStats,
+  RECON_NAMESPACE,
+  type ReconService,
+} from "./recon-service";
 
-const worker = new Worker(new URL("./recon-worker.ts", import.meta.url), {
-  type: "module",
+class WorkerInjectAdapter implements Adapter {
+  worker: Worker;
+  constructor(url: URL) {
+    this.worker = new Worker(url, { type: "module" });
+  }
+  sendMessage: SendMessage = (message) => this.worker.postMessage(message);
+  onMessage: OnMessage = (callback) => {
+    const handler = (event: MessageEvent) => callback(event.data);
+    this.worker.addEventListener("message", handler);
+    return () => this.worker.removeEventListener("message", handler);
+  };
+}
+
+const [, injectRecon] = defineProxy(() => ({}) as ReconService, {
+  namespace: RECON_NAMESPACE,
 });
 
-let stats = { totalSamples: 0, origins: [] as Array<[string, number]> };
+const recon = injectRecon(
+  new WorkerInjectAdapter(new URL("./recon-worker.ts", import.meta.url)),
+);
+
+let stats: OriginStats = { totalSamples: 0, origins: [] };
 let capturing = true;
 let entriesSeen = 0;
 const listeners = new Set<() => void>();
 
-worker.addEventListener("error", (e) => {
-  console.error("[glean] worker error", e.message, e);
-});
-worker.addEventListener("messageerror", (e) => {
-  console.error("[glean] worker messageerror", e);
+void recon.subscribe((next) => {
+  stats = next;
+  for (const fn of listeners) fn();
 });
 
-let pendingId = 0;
-const pending = new Map<number, (spec: object) => void>();
-
-worker.addEventListener("message", (e) => {
-  const msg = e.data as
-    | { type: "stats"; totalSamples: number; origins: Array<[string, number]> }
-    | { type: "spec"; id: number; spec: object };
-
-  if (msg.type === "stats") {
-    stats = { totalSamples: msg.totalSamples, origins: msg.origins };
-    for (const fn of listeners) fn();
-  } else if (msg.type === "spec") {
-    const fn = pending.get(msg.id);
-    if (fn) {
-      pending.delete(msg.id);
-      fn(msg.spec);
-    }
-  }
-});
-
-export interface PanelState {
-  totalSamples: number;
+export interface PanelState extends OriginStats {
   capturing: boolean;
-  origins: Array<[string, number]>;
   entriesSeen: number;
 }
 
@@ -66,19 +70,15 @@ export function setCapturing(next: boolean) {
 }
 
 export function clear() {
-  worker.postMessage({ type: "clear" });
+  void recon.clear();
 }
 
 export function clearOrigin(origin: string) {
-  worker.postMessage({ type: "clearOrigin", origin });
+  void recon.clearOrigin(origin);
 }
 
 export function exportSpec(origin?: string): Promise<object> {
-  const id = ++pendingId;
-  return new Promise((resolve) => {
-    pending.set(id, resolve);
-    worker.postMessage({ type: "export", id, origin });
-  });
+  return recon.exportSpec(origin);
 }
 
 let bound = false;
@@ -106,7 +106,7 @@ export function bindNetworkCapture() {
     if (!capturing) return;
     try {
       const payload = await harToSerialized(entry);
-      worker.postMessage({ type: "observe", payload });
+      void recon.observe(payload);
     } catch (e) {
       console.error("[glean] HAR serialize failed", e);
     }
