@@ -1,0 +1,17 @@
+{
+  "name": "@ahmedrowaihi/example-petstore-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One OpenAPI spec → multiple platform SDKs (Kotlin now; Swift, etc. later). Demonstrates the contract-kit native client codegen story end-to-end.",
+  "scripts": {
+    "gen:kotlin": "jiti kotlin.gen.ts",
+    "gen": "pnpm gen:kotlin"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/openapi-kotlin": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "jiti": "^2.6.1"
+  }
+}

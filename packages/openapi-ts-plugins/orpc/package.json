@@ -80,9 +80,17 @@
   "devDependencies": {
     "@ahmedrowaihi/openapi-ts-faker": "workspace:*",
     "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@faker-js/faker": "^10.4.0",
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/openapi-ts": "catalog:",
     "@hey-api/shared": "catalog:",
+    "@orpc/client": "^1.13.14",
+    "@orpc/contract": "^1.13.14",
+    "@orpc/openapi": "^1.13.14",
+    "@orpc/openapi-client": "^1.13.14",
+    "@orpc/server": "^1.13.14",
+    "@orpc/tanstack-query": "^1.13.14",
+    "@orpc/zod": "^1.13",
     "@ryoppippi/unplugin-typia": "^2.6.5",
     "@types/node": "catalog:",
     "ts-patch": "^3.3.0"

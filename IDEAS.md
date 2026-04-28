@@ -8,13 +8,14 @@ Loose roadmap. Not a commitment — order shifts with whatever's actually useful
 - **`@ahmedrowaihi/openapi-ts-faker`** — `@hey-api/openapi-ts` plugin emitting `@faker-js/faker` mock factories from schemas.
 - **`@ahmedrowaihi/openapi-ts-typia`** — `@hey-api/openapi-ts` plugin emitting typia validators.
 - **`@ahmedrowaihi/openapi-ts-paths`** — `@hey-api/openapi-ts` plugin emitting per-operation route consts.
-- **`@ahmedrowaihi/openapi-tools`** — runtime helpers (`/match`, `/parse`, `/diff`, `/ir`, `/router`).
+- **`@ahmedrowaihi/openapi-tools`** — runtime helpers (`/match`, `/parse`, `/diff`, `/ir`, `/router`, `/merge`).
 - **`@ahmedrowaihi/openapi-recon`** — reverse-engineer an OpenAPI 3.1 spec from observed `Request`/`Response` traffic.
 - **`@ahmedrowaihi/glean`** — DevTools extension that uses `openapi-recon` to emit live specs from browsing.
+- **`@ahmedrowaihi/openapi-kotlin`** — Android Kotlin SDK generator: Retrofit + kotlinx-serialization + suspend, with multipart/form/binary body support. Walks the hey-api IR so 2.0/3.0/3.1 inputs all produce the same output. Plan: [docs/plans/native-clients.md](docs/plans/native-clients.md).
 
 ## Planned
 
-- **`@ahmedrowaihi/openapi-merge`** — fold multiple OpenAPI specs into one with policy-driven conflict resolution (prefer-source-X, prefer-larger-schema, custom JS rules). Most existing tools are dumb concat — this is the differentiation.
+- **`@ahmedrowaihi/openapi-swift`** — iOS Swift SDK generator: URLSession + Codable + async throws. Same plan as openapi-kotlin, Phase 2.
 
 ## Deferred
 
