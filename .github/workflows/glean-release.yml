@@ -25,7 +25,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build + zip
+      - name: Build workspace deps of glean
+        run: pnpm turbo run build --filter "@ahmedrowaihi/glean^..."
+
+      - name: Zip extension
         run: pnpm --filter @ahmedrowaihi/glean zip
 
       - name: Locate artifacts
