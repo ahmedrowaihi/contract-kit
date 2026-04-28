@@ -249,6 +249,41 @@ interface UsersApi {
     assert.match(out, /interface UsersRemoteDS \{/);
   });
 
+  it("required params precede optional params (Kotlin convention)", () => {
+    const decls = operationsToDecls({
+      "/x/{id}": {
+        delete: {
+          tags: ["X"],
+          operationId: "deleteX",
+          // Spec order: optional header first, then required path. Generator
+          // must reorder so required-first.
+          parameters: [
+            {
+              name: "api_key",
+              in: "header",
+              required: false,
+              schema: { type: "string" },
+            },
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: { 204: { description: "ok" } },
+        },
+      },
+    } as never);
+    const out = printFile(ktFile({ packageName: "x", decls }));
+    const idLine = out.indexOf("@Path");
+    const apiKeyLine = out.indexOf("@Header");
+    assert.ok(
+      idLine < apiKeyLine,
+      "required @Path must come before optional @Header",
+    );
+  });
+
   it("inline body schema → promoted to synthetic data class", () => {
     const decls = operationsToDecls({
       "/things": {

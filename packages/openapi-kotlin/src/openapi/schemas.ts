@@ -17,11 +17,10 @@ import {
 } from "./types.js";
 
 /**
- * Translate an OpenAPI components.schemas record into a flat list of Kotlin
- * declarations. Top-level object schemas become data classes; string enums
- * become enum classes; primitives and arrays become typealiases. Inline
- * nested objects and inline enums are promoted to top-level decls with a
- * synthesized name (`Owner_Path` / `Owner_PropertyName`).
+ * Translate `components.schemas` to Kotlin decls. Object schemas become
+ * data classes; string enums become `enum class`es; primitives and
+ * arrays become typealiases. Inline objects and inline enums are
+ * promoted to synthetic top-level decls (`Owner_PropertyName`).
  */
 export function schemasToDecls(schemas: Record<string, SchemaOrRef>): KtDecl[] {
   const decls: KtDecl[] = [];

@@ -43,7 +43,6 @@ const RETROFIT_ANNOTATION: Record<HttpMethod, string> = {
   delete: "DELETE",
   patch: "PATCH",
   head: "HEAD",
-  // OPTIONS isn't a built-in Retrofit annotation — emit @HTTP(method = "OPTIONS").
   options: "OPTIONS",
 };
 
@@ -51,16 +50,16 @@ type ParameterObject = OpenAPIV3_1.ParameterObject;
 type Operation = OpenAPIV3_1.OperationObject;
 
 export interface OperationsOptions {
-  /** Tag for operations with no `tags`. Default: `"Default"`. */
+  /** Default: `"Default"`. */
   defaultTag?: string;
-  /** Tag → interface name. Default: `(tag) => `${PascalCase(tag)}Api``. */
+  /** Default: `(tag) => `${PascalCase(tag)}Api``. */
   interfaceName?: (tag: string) => string;
 }
 
 /**
  * Translate an OpenAPI `paths` object into Retrofit interfaces grouped by
- * the first tag of each operation. Returns a flat decl list including the
- * generated interfaces and any synthesized inline-schema decls.
+ * each operation's first tag. Inline body/response/param schemas are
+ * promoted to synthetic top-level decls and included in the output.
  */
 export function operationsToDecls(
   paths: OpenAPIV3_1.PathsObject | undefined,
@@ -72,7 +71,6 @@ export function operationsToDecls(
 
   const decls: KtDecl[] = [];
   const emit = (d: KtDecl) => decls.push(d);
-  // Preserve insertion order of tags as encountered while walking paths.
   const byTag = new Map<string, KtFun[]>();
 
   for (const [pathStr, pathItem] of Object.entries(paths ?? {})) {
@@ -91,12 +89,22 @@ export function operationsToDecls(
 
       const fnParams: KtFunParam[] = [];
 
-      const allParams = [
+      // Required params lead so trailing `= null` optionals don't break
+      // positional calls.
+      const sortedParams = [
         ...pathLevelParams,
         ...((op.parameters ?? []) as typeof pathLevelParams),
-      ];
-      for (const rawParam of allParams) {
-        if (isRef(rawParam as SchemaOrRef)) continue; // skip param refs for M3
+      ]
+        .map((p, i) => ({ p, i }))
+        .sort((a, b) => {
+          const ra = (a.p as ParameterObject).required ? 0 : 1;
+          const rb = (b.p as ParameterObject).required ? 0 : 1;
+          return ra === rb ? a.i - b.i : ra - rb;
+        })
+        .map(({ p }) => p);
+
+      for (const rawParam of sortedParams) {
+        if (isRef(rawParam as SchemaOrRef)) continue;
         const param = rawParam as ParameterObject;
         const ann = paramAnnotation(param);
         if (!ann) continue;
@@ -169,7 +177,6 @@ export function operationsToDecls(
 
 function pickFnName(op: Operation, method: HttpMethod, path: string): string {
   if (op.operationId) return op.operationId;
-  // Synthesize: method_segment_segment ; preserves casing source for camel().
   const segments = path
     .split("/")
     .filter(Boolean)
@@ -195,7 +202,6 @@ function paramAnnotation(p: ParameterObject): KtAnnotation | undefined {
         args: [JSON.stringify(p.name)],
       });
     default:
-      // cookie: Retrofit has no built-in annotation. Skip.
       return undefined;
   }
 }
@@ -227,14 +233,9 @@ function stripLeadingSlash(s: string): string {
   return s.startsWith("/") ? s.slice(1) : s;
 }
 
-/**
- * Convert an arbitrary parameter name into a Kotlin-safe camelCase
- * identifier. `user-id` → `userId`; `2fa_token` → `_2faToken`.
- */
 function identifier(name: string): string {
   const camelLike = name.replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) =>
     c.toUpperCase(),
   );
-  // Kotlin identifiers cannot start with a digit.
   return /^[0-9]/.test(camelLike) ? `_${camelLike}` : camelLike;
 }

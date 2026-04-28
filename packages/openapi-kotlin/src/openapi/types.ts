@@ -52,14 +52,12 @@ export function readType(s: Schema): TypeInfo {
   }
   return {
     primary: typeof t === "string" ? t : undefined,
-    // 3.0 holdover; 3.1 prefers `type: [..., "null"]`
     nullable: Boolean((s as { nullable?: boolean }).nullable),
   };
 }
 
 export interface TypeCtx {
   emit: (d: KtDecl) => void;
-  /** Used to synthesize names for inline objects/enums: `Owner_Path`. */
   ownerName: string;
   propPath: string[];
 }

@@ -7,7 +7,7 @@ import {
 import { defineConfig } from "@hey-api/openapi-ts";
 
 export default defineConfig({
-  input: "./petstore.yaml",
+  input: "../../fixtures/petstore.yaml",
   logs: {
     path: "./logs",
   },

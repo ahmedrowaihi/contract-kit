@@ -8,21 +8,16 @@ export interface BuildOptions {
   /** Root Kotlin package, e.g. `com.example.api`. */
   packageName: string;
   /**
-   * `split` (default): interfaces in `<packageName>`, everything else in
-   * `<packageName>.model`. `flat`: everything in `<packageName>`.
+   * `split` (default) → interfaces in `<packageName>`, everything else in
+   * `<packageName>.model`. `flat` → everything in `<packageName>`.
    */
   layout?: LayoutKind;
-  /**
-   * Per-decl override. Returning `undefined` falls back to the layout default.
-   * `dir` is relative to the output root and must use `/` separators.
-   */
+  /** Per-decl override. Returning `undefined` falls back to layout default. */
   fileLocation?: (decl: KtDecl) => { pkg: string; dir: string } | undefined;
 }
 
 export interface BuiltFile {
-  /** Path relative to the output root, using `/` separators. */
   path: string;
-  /** Kotlin source. */
   content: string;
 }
 
@@ -33,8 +28,9 @@ interface PlacedDecl {
 }
 
 /**
- * Walks every type position in a decl to collect external symbol
- * references (refs to other generated decls + annotation pkg pointers).
+ * Project assembler: places each decl in a file, walks types/annotations
+ * to compute imports, and prints. Imports stay sorted and deduped; refs
+ * inside the same package are not imported.
  */
 export function buildKotlinProject(
   decls: KtDecl[],
@@ -104,12 +100,10 @@ function collectTypeImports(
       collectTypeImports(t.inner, fqn, currentPkg, refImports);
       return;
     case "ref": {
-      // External package on the ref wins (e.g., kotlinx.datetime.Instant).
       if (t.pkg) {
         refImports.add(`${t.pkg}.${t.name}`);
         return;
       }
-      // Otherwise look up in the project's symbol table.
       const target = fqn.get(t.name);
       if (!target) return;
       const targetPkg = target.slice(0, target.lastIndexOf("."));
@@ -118,10 +112,6 @@ function collectTypeImports(
   }
 }
 
-/**
- * Visit every annotation site within a decl. Used to collect imports for
- * built-in framework annotations (kotlinx.serialization.*, retrofit2.http.*).
- */
 function walkAnnotations(decl: KtDecl, visit: (a: KtAnnotation) => void): void {
   switch (decl.kind) {
     case "dataClass":
@@ -144,10 +134,6 @@ function walkAnnotations(decl: KtDecl, visit: (a: KtAnnotation) => void): void {
   }
 }
 
-/**
- * Visit every `KtType` position within a decl. Used to collect imports for
- * cross-decl `KtRef` and externally-packaged refs.
- */
 function walkTypes(decl: KtDecl, visit: (t: KtType) => void): void {
   switch (decl.kind) {
     case "dataClass":

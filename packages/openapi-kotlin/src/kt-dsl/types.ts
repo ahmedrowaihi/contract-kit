@@ -1,8 +1,3 @@
-/**
- * Kotlin AST node types — minimal subset for OpenAPI codegen.
- * Grows as new milestones add interfaces, funs, expressions, etc.
- */
-
 export type KtPrimitive =
   | "String"
   | "Int"
@@ -27,7 +22,6 @@ export interface KtAnnotation {
   kind: "annotation";
   name: string;
   pkg?: string;
-  /** Raw Kotlin expressions, joined with `, ` inside the parens. */
   args?: string[];
 }
 
@@ -35,9 +29,7 @@ export interface KtProp {
   kind: "prop";
   name: string;
   type: KtType;
-  /** `var` when true, `val` otherwise. */
   mutable: boolean;
-  /** Raw Kotlin expression for the default value, if any. */
   default?: string;
   annotations: KtAnnotation[];
 }
@@ -84,7 +76,6 @@ export interface KtFun {
   returnType: KtType;
   modifiers: KtFunModifier[];
   annotations: KtAnnotation[];
-  /** Raw expression body. Omit for abstract / interface members. */
   body?: string;
 }
 

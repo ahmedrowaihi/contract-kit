@@ -102,7 +102,6 @@ export function printFun(fn: KtFun, indent: string = ""): string {
     return lines.join("\n");
   }
 
-  // Always multi-line params for readability — matches Retrofit conventions.
   lines.push(`${head}(`);
   for (const p of fn.params)
     lines.push(`${indent}${INDENT}${printFunParam(p)},`);
