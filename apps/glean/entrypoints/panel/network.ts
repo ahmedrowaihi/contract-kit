@@ -1,47 +1,60 @@
-/**
- * Adapter: turn a `chrome.devtools.network` HAR entry into the standard
- * `Request` / `Response` pair that `@ahmedrowaihi/openapi-recon` accepts.
- *
- * HAR response bodies arrive asynchronously via `entry.getContent(cb)`,
- * so this is a Promise.
- */
-
-type HARHeader = { name: string; value: string };
-type HAREntry = chrome.devtools.network.Request;
-
-export interface ObservedPair {
-  request: Request;
-  response: Response;
+interface HARHeader {
+  name: string;
+  value: string;
 }
 
-export function harToObservation(entry: HAREntry): Promise<ObservedPair> {
+interface HAREntry {
+  request: {
+    method: string;
+    url: string;
+    headers: HARHeader[];
+    postData?: { text?: string };
+  };
+  response: {
+    status: number;
+    headers: HARHeader[];
+  };
+  getContent(callback: (content: string, encoding: string) => void): void;
+}
+
+export interface SerializedObservation {
+  request: {
+    method: string;
+    url: string;
+    headers: Array<[string, string]>;
+    body: string | null;
+  };
+  response: {
+    status: number;
+    headers: Array<[string, string]>;
+    body: string | null;
+  };
+}
+
+export function harToSerialized(
+  entry: HAREntry,
+): Promise<SerializedObservation> {
   return new Promise((resolve) => {
     entry.getContent((body, encoding) => {
-      const responseBody = decodeBody(body, encoding);
-      const response = new Response(responseBody, {
-        status: entry.response.status,
-        headers: harHeaders(entry.response.headers),
+      resolve({
+        request: {
+          method: entry.request.method,
+          url: entry.request.url,
+          headers: entry.request.headers.map(toTuple),
+          body: requestBody(entry),
+        },
+        response: {
+          status: entry.response.status,
+          headers: entry.response.headers.map(toTuple),
+          body: decodeBody(body, encoding),
+        },
       });
-      const request = new Request(entry.request.url, {
-        method: entry.request.method,
-        headers: harHeaders(entry.request.headers),
-        body: requestBody(entry),
-      });
-      resolve({ request, response });
     });
   });
 }
 
-function harHeaders(headers: HARHeader[]): Headers {
-  const h = new Headers();
-  for (const { name, value } of headers) {
-    try {
-      h.append(name, value);
-    } catch {
-      // Forbidden header names (e.g. `cookie`) — drop silently.
-    }
-  }
-  return h;
+function toTuple(h: HARHeader): [string, string] {
+  return [h.name, h.value];
 }
 
 function decodeBody(content: string, encoding: string): string | null {
@@ -56,10 +69,9 @@ function decodeBody(content: string, encoding: string): string | null {
   return content;
 }
 
-function requestBody(entry: HAREntry): BodyInit | null {
+function requestBody(entry: HAREntry): string | null {
   if (entry.request.method === "GET" || entry.request.method === "HEAD") {
     return null;
   }
-  const text = entry.request.postData?.text;
-  return text ?? null;
+  return entry.request.postData?.text ?? null;
 }

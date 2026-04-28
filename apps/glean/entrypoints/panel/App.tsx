@@ -1,3 +1,5 @@
+import { ApiReferenceReact } from "@scalar/api-reference-react";
+import "@scalar/api-reference-react/style.css";
 import { useEffect, useMemo, useState } from "react";
 import {
   bindNetworkCapture,
@@ -10,23 +12,44 @@ import {
 export function App() {
   useEffect(bindNetworkCapture, []);
   const { totalSamples, capturing, origins } = usePanelState();
+
   const [selected, setSelected] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const [filter, setFilter] = useState("");
+  const [spec, setSpec] = useState<object | null>(null);
 
-  // Auto-select first origin once one shows up.
-  useEffect(() => {
-    if (selected === null && origins.length > 0)
-      setSelected(origins[0][0] ?? null);
-  }, [origins, selected]);
-
-  // Drop the selection if its origin is cleared.
-  useEffect(() => {
-    if (selected && !origins.some(([o]) => o === selected)) setSelected(null);
-  }, [origins, selected]);
-
-  const spec = useMemo(
-    () => (selected ? exportSpec(selected) : null),
-    [selected, totalSamples],
+  const visibleOrigins = useMemo(
+    () =>
+      origins.filter(
+        ([o]) =>
+          !hidden.has(o) && o.toLowerCase().includes(filter.toLowerCase()),
+      ),
+    [origins, hidden, filter],
   );
+
+  useEffect(() => {
+    if (visibleOrigins.length === 0) {
+      setSelected(null);
+      return;
+    }
+    if (!selected || !visibleOrigins.some(([o]) => o === selected)) {
+      setSelected(visibleOrigins[0][0] ?? null);
+    }
+  }, [visibleOrigins, selected]);
+
+  useEffect(() => {
+    if (!selected) {
+      setSpec(null);
+      return;
+    }
+    let stale = false;
+    exportSpec(selected).then((doc) => {
+      if (!stale) setSpec(doc);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [selected, totalSamples]);
 
   return (
     <div className="flex h-full flex-col">
@@ -39,7 +62,22 @@ export function App() {
         selected={selected}
       />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar origins={origins} selected={selected} onSelect={setSelected} />
+        <Sidebar
+          origins={visibleOrigins}
+          selected={selected}
+          filter={filter}
+          onFilter={setFilter}
+          onSelect={setSelected}
+          onHide={(o) =>
+            setHidden((prev) => {
+              const next = new Set(prev);
+              next.add(o);
+              return next;
+            })
+          }
+          hiddenCount={hidden.size}
+          onClearHidden={() => setHidden(new Set())}
+        />
         <Main spec={spec} selected={selected} totalSamples={totalSamples} />
       </div>
     </div>
@@ -97,34 +135,83 @@ function Header({
 interface SidebarProps {
   origins: Array<[string, number]>;
   selected: string | null;
+  filter: string;
+  onFilter: (s: string) => void;
   onSelect: (origin: string) => void;
+  onHide: (origin: string) => void;
+  hiddenCount: number;
+  onClearHidden: () => void;
 }
 
-function Sidebar({ origins, selected, onSelect }: SidebarProps) {
+function Sidebar({
+  origins,
+  selected,
+  filter,
+  onFilter,
+  onSelect,
+  onHide,
+  hiddenCount,
+  onClearHidden,
+}: SidebarProps) {
   return (
-    <aside className="w-64 shrink-0 overflow-y-auto border-r border-zinc-800 bg-zinc-950">
-      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-500">
-        Origins
+    <aside className="flex w-64 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950">
+      <div className="border-b border-zinc-800 px-3 py-2">
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => onFilter(e.target.value)}
+          placeholder="Filter origins…"
+          className="w-full rounded bg-zinc-900 px-2 py-1 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        />
       </div>
-      {origins.length === 0 && (
-        <p className="px-3 py-2 text-xs text-zinc-600">Waiting for traffic…</p>
-      )}
-      <ul>
+      <ul className="flex-1 overflow-y-auto">
+        {origins.length === 0 && (
+          <li className="px-3 py-2 text-xs text-zinc-600">
+            {filter ? "No matches." : "Waiting for traffic…"}
+          </li>
+        )}
         {origins.map(([origin, count]) => (
-          <li key={origin}>
+          <li
+            key={origin}
+            className={`group flex items-stretch ${
+              selected === origin ? "bg-zinc-900" : "hover:bg-zinc-900"
+            }`}
+          >
             <button
               type="button"
               onClick={() => onSelect(origin)}
-              className={`flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-xs hover:bg-zinc-900 ${
-                selected === origin ? "bg-zinc-900 text-emerald-400" : ""
+              className={`flex-1 truncate px-3 py-1.5 text-left font-mono text-xs ${
+                selected === origin ? "text-emerald-400" : ""
               }`}
             >
-              <span className="truncate font-mono">{stripScheme(origin)}</span>
-              <span className="shrink-0 text-zinc-500">{count}</span>
+              {stripScheme(origin)}
+            </button>
+            <span className="flex items-center px-2 text-xs text-zinc-500">
+              {count}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onHide(origin);
+              }}
+              title="Hide this origin"
+              className="px-2 text-xs text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-zinc-300"
+            >
+              ✕
             </button>
           </li>
         ))}
       </ul>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={onClearHidden}
+          className="border-t border-zinc-800 px-3 py-2 text-left text-xs text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+        >
+          Show {hiddenCount} hidden
+        </button>
+      )}
     </aside>
   );
 }
@@ -138,23 +225,28 @@ interface MainProps {
 function Main({ spec, selected, totalSamples }: MainProps) {
   if (totalSamples === 0) {
     return (
-      <main className="flex-1 overflow-auto p-4 text-xs text-zinc-500">
+      <main className="flex flex-1 items-center justify-center text-xs text-zinc-500">
         Browse the page to start capturing JSON traffic.
       </main>
     );
   }
   if (!selected || !spec) {
     return (
-      <main className="flex-1 overflow-auto p-4 text-xs text-zinc-500">
-        Pick an origin from the sidebar to see its inferred OpenAPI spec.
+      <main className="flex flex-1 items-center justify-center text-xs text-zinc-500">
+        Pick an origin from the sidebar.
       </main>
     );
   }
   return (
-    <main className="flex-1 overflow-auto p-4 text-xs">
-      <pre className="rounded bg-zinc-900 p-3 font-mono text-zinc-200">
-        {JSON.stringify(spec, null, 2)}
-      </pre>
+    <main className="flex-1 overflow-auto">
+      <ApiReferenceReact
+        configuration={{
+          content: spec,
+          theme: "deepSpace",
+          layout: "modern",
+          hideDarkModeToggle: true,
+        }}
+      />
     </main>
   );
 }

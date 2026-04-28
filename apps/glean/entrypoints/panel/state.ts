@@ -1,36 +1,47 @@
-import { createRecon, type Recon } from "@ahmedrowaihi/openapi-recon";
 import { useEffect, useState } from "react";
-import { harToObservation } from "./network";
+import { harToSerialized } from "./network";
 
-const recon: Recon = createRecon({ title: "Captured API" });
+const worker = new Worker(new URL("./recon-worker.ts", import.meta.url), {
+  type: "module",
+});
+
+let stats = { totalSamples: 0, origins: [] as Array<[string, number]> };
+let capturing = true;
 const listeners = new Set<() => void>();
 
-function notify() {
-  for (const fn of listeners) fn();
-}
+let pendingId = 0;
+const pending = new Map<number, (spec: object) => void>();
+
+worker.addEventListener("message", (e) => {
+  const msg = e.data as
+    | { type: "stats"; totalSamples: number; origins: Array<[string, number]> }
+    | { type: "spec"; id: number; spec: object };
+
+  if (msg.type === "stats") {
+    stats = { totalSamples: msg.totalSamples, origins: msg.origins };
+    for (const fn of listeners) fn();
+  } else if (msg.type === "spec") {
+    const fn = pending.get(msg.id);
+    if (fn) {
+      pending.delete(msg.id);
+      fn(msg.spec);
+    }
+  }
+});
 
 export interface PanelState {
   totalSamples: number;
   capturing: boolean;
-  /** Sorted [origin, sampleCount] pairs. */
   origins: Array<[string, number]>;
 }
 
-let capturing = true;
-
-function snapshot(): PanelState {
-  return {
-    totalSamples: recon.sampleCount(),
-    capturing,
-    origins: [...recon.originStats()],
-  };
-}
-
-/** React hook: subscribe to capture state. Re-renders on every observation. */
 export function usePanelState(): PanelState {
-  const [state, setState] = useState<PanelState>(snapshot);
+  const [state, setState] = useState<PanelState>(() => ({
+    ...stats,
+    capturing,
+  }));
   useEffect(() => {
-    const fn = () => setState(snapshot());
+    const fn = () => setState({ ...stats, capturing });
     listeners.add(fn);
     return () => {
       listeners.delete(fn);
@@ -41,36 +52,31 @@ export function usePanelState(): PanelState {
 
 export function setCapturing(next: boolean) {
   capturing = next;
-  notify();
+  for (const fn of listeners) fn();
 }
 
 export function clear() {
-  recon.clear();
-  notify();
+  worker.postMessage({ type: "clear" });
 }
 
-/** Build the OpenAPI doc — for one origin if given, otherwise all. */
-export function exportSpec(origin?: string) {
-  return recon.toOpenAPI(origin ? { origin } : undefined);
+export function exportSpec(origin?: string): Promise<object> {
+  const id = ++pendingId;
+  return new Promise((resolve) => {
+    pending.set(id, resolve);
+    worker.postMessage({ type: "export", id, origin });
+  });
 }
 
 let bound = false;
 
-/**
- * Wire the panel to `chrome.devtools.network`. Idempotent — safe to call
- * from a `useEffect` that may run twice in React StrictMode.
- */
 export function bindNetworkCapture() {
   if (bound) return;
   bound = true;
   browser.devtools.network.onRequestFinished.addListener(async (entry) => {
     if (!capturing) return;
     try {
-      const { request, response } = await harToObservation(entry);
-      await recon.observe(request, response);
-      notify();
-    } catch {
-      // Skip entries we can't decode (binary, opaque, redirected, etc.)
-    }
+      const payload = await harToSerialized(entry);
+      worker.postMessage({ type: "observe", payload });
+    } catch {}
   });
 }

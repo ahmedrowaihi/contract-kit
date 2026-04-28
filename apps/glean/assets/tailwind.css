@@ -1,1 +1,8 @@
+@layer scalar-base,
+  scalar-theme,
+  scalar-config,
+  theme,
+  base,
+  components,
+  utilities;
 @import "tailwindcss";
