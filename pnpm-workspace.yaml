@@ -7,9 +7,9 @@ packages:
   - "tooling/*"
 
 catalog:
-  "@hey-api/codegen-core": "^0.8.0"
-  "@hey-api/openapi-ts": "^0.96.1"
-  "@hey-api/shared": "^0.4.1"
+  "@hey-api/codegen-core": "^0.8.1"
+  "@hey-api/openapi-ts": "^0.97.0"
+  "@hey-api/shared": "^0.4.2"
   "@types/node": "^22"
 
 patchedDependencies:

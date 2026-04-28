@@ -7,14 +7,14 @@ settings:
 catalogs:
   default:
     '@hey-api/codegen-core':
-      specifier: ^0.8.0
-      version: 0.8.0
+      specifier: ^0.8.1
+      version: 0.8.1
     '@hey-api/openapi-ts':
-      specifier: ^0.96.1
-      version: 0.96.1
+      specifier: ^0.97.0
+      version: 0.97.0
     '@hey-api/shared':
-      specifier: ^0.4.1
-      version: 0.4.1
+      specifier: ^0.4.2
+      version: 0.4.2
     '@types/node':
       specifier: ^22
       version: 22.19.17
@@ -201,10 +201,10 @@ importers:
         version: link:../../tooling/tsconfig
       '@hey-api/codegen-core':
         specifier: 'catalog:'
-        version: 0.8.0(magicast@0.5.2)
+        version: 0.8.1(magicast@0.5.2)
       '@hey-api/shared':
         specifier: 'catalog:'
-        version: 0.4.1(magicast@0.5.2)
+        version: 0.4.2(magicast@0.5.2)
       '@hey-api/spec-types':
         specifier: ^0.2.0
         version: 0.2.0
@@ -226,13 +226,13 @@ importers:
         version: 9.9.0
       '@hey-api/codegen-core':
         specifier: 'catalog:'
-        version: 0.8.0(magicast@0.5.2)
+        version: 0.8.1(magicast@0.5.2)
       '@hey-api/openapi-ts':
         specifier: 'catalog:'
-        version: 0.96.1(magicast@0.5.2)(typescript@5.9.3)
+        version: 0.97.0(magicast@0.5.2)(typescript@5.9.3)
       '@hey-api/shared':
         specifier: 'catalog:'
-        version: 0.4.1(magicast@0.5.2)
+        version: 0.4.2(magicast@0.5.2)
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17
@@ -272,13 +272,13 @@ importers:
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':
         specifier: 'catalog:'
-        version: 0.8.0(magicast@0.5.2)
+        version: 0.8.1(magicast@0.5.2)
       '@hey-api/openapi-ts':
         specifier: 'catalog:'
-        version: 0.96.1(magicast@0.5.2)(typescript@5.9.3)
+        version: 0.97.0(magicast@0.5.2)(typescript@5.9.3)
       '@hey-api/shared':
         specifier: 'catalog:'
-        version: 0.4.1(magicast@0.5.2)
+        version: 0.4.2(magicast@0.5.2)
       '@ryoppippi/unplugin-typia':
         specifier: ^2.6.5
         version: 2.6.5(patch_hash=ce5cb0c0f7a9f33ba9053a8a8a397f6732be617308edb27971485fb95f55cddd)(typescript@5.9.3)(typia@12.0.2(@types/node@22.19.17)(typescript@5.9.3))(vite@8.0.10(@types/node@22.19.17)(esbuild@0.27.7)(jiti@2.6.1)(yaml@2.8.3))
@@ -296,13 +296,13 @@ importers:
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':
         specifier: 'catalog:'
-        version: 0.8.0(magicast@0.5.2)
+        version: 0.8.1(magicast@0.5.2)
       '@hey-api/openapi-ts':
         specifier: 'catalog:'
-        version: 0.96.1(magicast@0.5.2)(typescript@5.9.3)
+        version: 0.97.0(magicast@0.5.2)(typescript@5.9.3)
       '@hey-api/shared':
         specifier: 'catalog:'
-        version: 0.4.1(magicast@0.5.2)
+        version: 0.4.2(magicast@0.5.2)
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17
@@ -318,13 +318,13 @@ importers:
         version: link:../../../tooling/tsconfig
       '@hey-api/codegen-core':
         specifier: 'catalog:'
-        version: 0.8.0(magicast@0.5.2)
+        version: 0.8.1(magicast@0.5.2)
       '@hey-api/openapi-ts':
         specifier: 'catalog:'
-        version: 0.96.1(magicast@0.5.2)(typescript@5.9.3)
+        version: 0.97.0(magicast@0.5.2)(typescript@5.9.3)
       '@hey-api/shared':
         specifier: 'catalog:'
-        version: 0.4.1(magicast@0.5.2)
+        version: 0.4.2(magicast@0.5.2)
       '@orpc/contract':
         specifier: ^1.13.14
         version: 1.14.0(@opentelemetry/api@1.9.0)
@@ -823,6 +823,10 @@ packages:
     resolution: {integrity: sha512-OuF/jenX9wz7AWHRBfb37v+jLkrfCt0FJXQuALNH2UsW6+bdZBmoibHl0K778SiHwneotJbAaEvX2S05wEqUQw==}
     engines: {node: '>=22.13.0'}
 
+  '@hey-api/codegen-core@0.8.1':
+    resolution: {integrity: sha512-Iciv2vUCJTW9lWM/ROvyZLblmcbYJHPuXfzb1SzeDVVn4xEXu2ilLU1pq3fn+09FZ/Y0P7VyvRE47UDU6om8xA==}
+    engines: {node: '>=22.13.0'}
+
   '@hey-api/json-schema-ref-parser@1.4.1':
     resolution: {integrity: sha512-DoPJGxVApDlktP1yYLjmOrF0YBEqb32ieCbx1S1i09n8TyCgdoh4yQaQ3kp0sMTauH+bwNKPsFh7S8qiWCoKZA==}
     engines: {node: '>=22.13.0'}
@@ -834,8 +838,19 @@ packages:
     peerDependencies:
       typescript: '>=5.5.3 || >=6.0.0 || 6.0.1-rc'
 
+  '@hey-api/openapi-ts@0.97.0':
+    resolution: {integrity: sha512-WZkKgrDlZpxKlDv2HkBCzaAYeuM+EtZKFmKGBv9/JblAKpX3JQTROi7PzlCZE3eisetRPSakbcRgn+LGyB7EiQ==}
+    engines: {node: '>=22.13.0'}
+    hasBin: true
+    peerDependencies:
+      typescript: '>=5.5.3 || >=6.0.0 || 6.0.1-rc'
+
   '@hey-api/shared@0.4.1':
     resolution: {integrity: sha512-EDAjvGpEamn2fOB7W87ZStyDSv5mEpnQCciVbiZ+Ll4EfawwIjHMMtDtRQOYol0YjTkAeEm274GFPAtg3xfPGA==}
+    engines: {node: '>=22.13.0'}
+
+  '@hey-api/shared@0.4.2':
+    resolution: {integrity: sha512-4fconS10E0Xr4/acV8G+BkApxaIStxrT0GhB9BDTQWvrFTy5/nV933SyFk8qImcbpKvgv9hpn3N+7bV8oFrbjA==}
     engines: {node: '>=22.13.0'}
 
   '@hey-api/spec-types@0.2.0':
@@ -1041,6 +1056,10 @@ packages:
 
   '@lezer/yaml@1.0.4':
     resolution: {integrity: sha512-2lrrHqxalACEbxIbsjhqGpSW8kWpUKuY6RHgnSAFZa6qK62wvnPxA8hGOwOoDbwHcOFs5M4o27mjGu+P7TvBmw==}
+
+  '@lukeed/ms@2.0.2':
+    resolution: {integrity: sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA==}
+    engines: {node: '>=8'}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -6098,6 +6117,15 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
+  '@hey-api/codegen-core@0.8.1(magicast@0.5.2)':
+    dependencies:
+      '@hey-api/types': 0.1.4
+      ansi-colors: 4.1.3
+      c12: 3.3.4(magicast@0.5.2)
+      color-support: 1.1.3
+    transitivePeerDependencies:
+      - magicast
+
   '@hey-api/json-schema-ref-parser@1.4.1':
     dependencies:
       '@jsdevtools/ono': 7.1.3
@@ -6119,9 +6147,38 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
+  '@hey-api/openapi-ts@0.97.0(magicast@0.5.2)(typescript@5.9.3)':
+    dependencies:
+      '@hey-api/codegen-core': 0.8.1(magicast@0.5.2)
+      '@hey-api/json-schema-ref-parser': 1.4.1
+      '@hey-api/shared': 0.4.2(magicast@0.5.2)
+      '@hey-api/spec-types': 0.2.0
+      '@hey-api/types': 0.1.4
+      '@lukeed/ms': 2.0.2
+      ansi-colors: 4.1.3
+      color-support: 1.1.3
+      commander: 14.0.3
+      get-tsconfig: 4.14.0
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - magicast
+
   '@hey-api/shared@0.4.1(magicast@0.5.2)':
     dependencies:
       '@hey-api/codegen-core': 0.8.0(magicast@0.5.2)
+      '@hey-api/json-schema-ref-parser': 1.4.1
+      '@hey-api/spec-types': 0.2.0
+      '@hey-api/types': 0.1.4
+      ansi-colors: 4.1.3
+      cross-spawn: 7.0.6
+      open: 11.0.0
+      semver: 7.7.4
+    transitivePeerDependencies:
+      - magicast
+
+  '@hey-api/shared@0.4.2(magicast@0.5.2)':
+    dependencies:
+      '@hey-api/codegen-core': 0.8.1(magicast@0.5.2)
       '@hey-api/json-schema-ref-parser': 1.4.1
       '@hey-api/spec-types': 0.2.0
       '@hey-api/types': 0.1.4
@@ -6317,6 +6374,8 @@ snapshots:
       '@lezer/common': 1.5.2
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.10
+
+  '@lukeed/ms@2.0.2': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:
@@ -8345,8 +8404,8 @@ snapshots:
       '@typescript-eslint/parser': 8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.17.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.17.0(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.17.0(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.17.0(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.17.0(jiti@2.6.1))
       eslint-plugin-react-hooks: 5.2.0(eslint@9.17.0(jiti@2.6.1))
@@ -8365,7 +8424,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.17.0(jiti@2.6.1)):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -8376,22 +8435,22 @@ snapshots:
       tinyglobby: 0.2.16
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.17.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.17.0(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.17.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.17.0(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.17.0(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -8402,7 +8461,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.17.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.17.0(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1)))(eslint@9.17.0(jiti@2.6.1))
       hasown: 2.0.3
       is-core-module: 2.16.1
       is-glob: 4.0.3
