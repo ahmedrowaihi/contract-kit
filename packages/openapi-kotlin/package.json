@@ -1,0 +1,62 @@
+{
+  "name": "@ahmedrowaihi/openapi-kotlin",
+  "version": "0.0.0",
+  "description": "Generate idiomatic Kotlin (Retrofit + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec.",
+  "keywords": [
+    "openapi",
+    "kotlin",
+    "android",
+    "retrofit",
+    "kotlinx-serialization",
+    "codegen",
+    "sdk",
+    "client"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi-kotlin",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi-kotlin"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc && node --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@types/node": "catalog:"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
