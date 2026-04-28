@@ -28,9 +28,10 @@ Two standalone packages, each mirroring `@hey-api/openapi-python`:
 
 Reuse and split:
 
-- **Reuse `@hey-api/codegen-core`** — already supports `'kotlin'` and `'swift'` as first-class `Language` values. Provides `Project`, `File`, `Symbol`, `Ref`, name-conflict resolution, and a pluggable `Renderer` interface (`render(ctx) → string` + `supports(ctx)`).
-- **Build per language** — minimal DSL (AST types) + printer (AST → source string), wired in as a `Renderer`. Modeled on hey-api's `py-dsl/` + `py-compiler/`.
+- **Build per language** — minimal DSL (AST types) + printer (AST → source string) + project builder (decls → files, with import resolution). Modeled on hey-api's `py-dsl/` + `py-compiler/` shape.
 - **Reuse `@ahmedrowaihi/openapi-tools`** — `parse` + `ir` for spec ingestion. Avoids re-implementing schema walking.
+
+> **`@hey-api/codegen-core` evaluated and not used for now.** It supports `'kotlin' | 'swift'` as first-class languages and offers `Project`/`File`/`Symbol`/`Ref` with name-conflict resolution. But Kotlin's import system is flat (one type → one file → one import line), so the bridge cost (mapping `KtDecl` to codegen-core's `Node`/`Symbol` registry) is significantly higher than just walking the AST. Revisit when Swift lands — if both packages reach for the same logic, extract a shared base, then maybe migrate both to codegen-core.
 
 Per-package layout:
 

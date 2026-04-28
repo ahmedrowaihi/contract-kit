@@ -68,6 +68,8 @@ export function synthName(owner: string, path: string[]): string {
   return [owner, ...path.map(pascal)].join("_");
 }
 
+const KX_SERIALIZATION = "kotlinx.serialization";
+
 export function buildEnum(
   name: string,
   values: readonly unknown[],
@@ -77,14 +79,17 @@ export function buildEnum(
     .filter((v): v is string => typeof v === "string")
     .map((v) =>
       ktEnumVariant(safeIdent(v), [
-        ktAnnotation("SerialName", { args: [JSON.stringify(v)] }),
+        ktAnnotation("SerialName", {
+          pkg: KX_SERIALIZATION,
+          args: [JSON.stringify(v)],
+        }),
       ]),
     );
   emit(
     ktEnum({
       name,
       variants,
-      annotations: [ktAnnotation("Serializable")],
+      annotations: [ktAnnotation("Serializable", { pkg: KX_SERIALIZATION })],
     }),
   );
   return ktRef(name);
@@ -160,7 +165,7 @@ export function buildDataClass(
   });
   return ktDataClass({
     name,
-    annotations: [ktAnnotation("Serializable")],
+    annotations: [ktAnnotation("Serializable", { pkg: KX_SERIALIZATION })],
     properties: props,
   });
 }

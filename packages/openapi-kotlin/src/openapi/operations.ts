@@ -23,6 +23,8 @@ import {
   type TypeCtx,
 } from "./types.js";
 
+const RETROFIT_HTTP = "retrofit2.http";
+
 const HTTP_METHODS = [
   "get",
   "post",
@@ -128,7 +130,7 @@ export function operationsToDecls(
           ktFunParam({
             name: "body",
             type: t,
-            annotations: [ktAnnotation("Body")],
+            annotations: [ktAnnotation("Body", { pkg: RETROFIT_HTTP })],
           }),
         );
       }
@@ -140,6 +142,7 @@ export function operationsToDecls(
       });
 
       const methodAnnotation = ktAnnotation(RETROFIT_ANNOTATION[method], {
+        pkg: RETROFIT_HTTP,
         args: [JSON.stringify(stripLeadingSlash(pathStr))],
       });
 
@@ -177,11 +180,20 @@ function pickFnName(op: Operation, method: HttpMethod, path: string): string {
 function paramAnnotation(p: ParameterObject): KtAnnotation | undefined {
   switch (p.in) {
     case "path":
-      return ktAnnotation("Path", { args: [JSON.stringify(p.name)] });
+      return ktAnnotation("Path", {
+        pkg: RETROFIT_HTTP,
+        args: [JSON.stringify(p.name)],
+      });
     case "query":
-      return ktAnnotation("Query", { args: [JSON.stringify(p.name)] });
+      return ktAnnotation("Query", {
+        pkg: RETROFIT_HTTP,
+        args: [JSON.stringify(p.name)],
+      });
     case "header":
-      return ktAnnotation("Header", { args: [JSON.stringify(p.name)] });
+      return ktAnnotation("Header", {
+        pkg: RETROFIT_HTTP,
+        args: [JSON.stringify(p.name)],
+      });
     default:
       // cookie: Retrofit has no built-in annotation. Skip.
       return undefined;
