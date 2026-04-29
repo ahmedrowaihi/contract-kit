@@ -1,0 +1,56 @@
+import type { SwFun, SwFunParam } from "../../sw-dsl/fun.js";
+import { accessPrefix, INDENT } from "../format.js";
+import { printStmt } from "../stmt.js";
+import { printType } from "../type.js";
+
+export function printFunParam(p: SwFunParam): string {
+  const head =
+    p.label === undefined
+      ? p.name
+      : p.label === p.name
+        ? p.name
+        : `${p.label} ${p.name}`;
+  const def = p.default !== undefined ? ` = ${p.default}` : "";
+  return `${head}: ${printType(p.type)}${def}`;
+}
+
+export function printParamsBlock(
+  params: ReadonlyArray<SwFunParam>,
+  indent: string,
+): string {
+  if (params.length === 0) return "()";
+  return `(\n${params
+    .map((p) => `${indent}${INDENT}${printFunParam(p)}`)
+    .join(",\n")}\n${indent})`;
+}
+
+export function printFun(
+  fn: SwFun,
+  indent: string = "",
+  /** Suppress access modifier — Swift forbids it on protocol requirements. */
+  protocolMember: boolean = false,
+): string {
+  const lines: string[] = [];
+  if (fn.doc) {
+    for (const line of fn.doc.split("\n")) lines.push(`${indent}/// ${line}`);
+  }
+  const access = protocolMember ? "" : accessPrefix(fn.access);
+  const params = printParamsBlock(fn.params, indent);
+  const effects = fn.effects.length > 0 ? ` ${fn.effects.join(" ")}` : "";
+  const isVoid =
+    fn.returnType.kind === "primitive" && fn.returnType.name === "Void";
+  const ret = isVoid ? "" : ` -> ${printType(fn.returnType)}`;
+  const head = `${indent}${access}func ${fn.name}${params}${effects}${ret}`;
+
+  if (fn.body === undefined) {
+    lines.push(head);
+    return lines.join("\n");
+  }
+  if (fn.body.length === 0) {
+    lines.push(`${head} {}`);
+    return lines.join("\n");
+  }
+  const body = fn.body.map((s) => printStmt(s, indent + INDENT)).join("\n");
+  lines.push(`${head} {\n${body}\n${indent}}`);
+  return lines.join("\n");
+}

@@ -9,7 +9,7 @@ The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstor
 | Target | Status | Generator | Stack |
 |---|---|---|---|
 | Kotlin (Android) | ✓ | [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi-kotlin) | Retrofit 2 + kotlinx-serialization + suspend |
-| Swift (iOS) | _planned_ | `@ahmedrowaihi/openapi-swift` | URLSession + Codable + async throws |
+| Swift (iOS) | ✓ | [`@ahmedrowaihi/openapi-swift`](../../packages/openapi-swift) | Protocols + `Codable` + async throws (consumer wires URLSession) |
 
 ## Run
 
