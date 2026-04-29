@@ -11,6 +11,15 @@ export function printType(t: SwType): string {
     case "ref":
       return t.name;
     case "optional":
-      return `${printType(t.inner)}?`;
+      // Function-type `?` needs parens so the optional binds to the
+      // whole function and not its return type.
+      return t.inner.kind === "func"
+        ? `(${printType(t.inner)})?`
+        : `${printType(t.inner)}?`;
+    case "func": {
+      const params = `(${t.params.map(printType).join(", ")})`;
+      const effects = t.effects.length > 0 ? ` ${t.effects.join(" ")}` : "";
+      return `${params}${effects} -> ${printType(t.returnType)}`;
+    }
   }
 }

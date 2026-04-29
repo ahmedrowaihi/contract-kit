@@ -15,4 +15,10 @@ export type SwType =
   | { kind: "array"; element: SwType }
   | { kind: "dictionary"; key: SwType; value: SwType }
   | { kind: "ref"; name: string }
-  | { kind: "optional"; inner: SwType };
+  | { kind: "optional"; inner: SwType }
+  | {
+      kind: "func";
+      params: ReadonlyArray<SwType>;
+      returnType: SwType;
+      effects: ReadonlyArray<"async" | "throws">;
+    };

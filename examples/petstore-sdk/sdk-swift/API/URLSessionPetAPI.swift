@@ -5,17 +5,20 @@ public final class URLSessionPetAPI: PetAPI {
     let session: URLSession
     let decoder: JSONDecoder
     let encoder: JSONEncoder
+    public var requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
 
     public init(
         baseURL: URL,
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder(),
-        encoder: JSONEncoder = JSONEncoder()
+        encoder: JSONEncoder = JSONEncoder(),
+        requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
     ) {
         self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
         self.encoder = encoder
+        self.requestDecorator = requestDecorator
     }
 
     /// POST /pet
@@ -27,6 +30,9 @@ public final class URLSessionPetAPI: PetAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Pet.self, from: data)
     }
@@ -40,6 +46,9 @@ public final class URLSessionPetAPI: PetAPI {
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Pet.self, from: data)
     }
@@ -54,6 +63,9 @@ public final class URLSessionPetAPI: PetAPI {
         let url = components.url!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode([Pet].self, from: data)
     }
@@ -68,6 +80,9 @@ public final class URLSessionPetAPI: PetAPI {
         let url = components.url!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode([Pet].self, from: data)
     }
@@ -79,6 +94,9 @@ public final class URLSessionPetAPI: PetAPI {
         let url = baseURL.appendingPathComponent("pet/\(petId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Pet.self, from: data)
     }
@@ -100,6 +118,9 @@ public final class URLSessionPetAPI: PetAPI {
         let url = components.url!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Pet.self, from: data)
     }
@@ -114,6 +135,9 @@ public final class URLSessionPetAPI: PetAPI {
         request.httpMethod = "DELETE"
         if let apiKey = apiKey {
             request.setValue("\(apiKey)", forHTTPHeaderField: "api_key")
+        }
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
         }
         let (data, _) = try await session.data(for: request)
     }
@@ -134,6 +158,9 @@ public final class URLSessionPetAPI: PetAPI {
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(ApiResponse.self, from: data)
     }
@@ -160,6 +187,9 @@ public final class URLSessionPetAPI: PetAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(SubmitTags_Response.self, from: data)
     }

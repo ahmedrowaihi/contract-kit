@@ -18,6 +18,11 @@ export interface OperationsOptions {
   clientClassName?: (protocolName: string) => string;
   /** Skip emitting the URLSession impl class. Default: `false`. */
   protocolOnly?: boolean;
+  /**
+   * Emit the impl class as `open` instead of `final` so consumers can
+   * subclass and override individual methods. Default: `false`.
+   */
+  openImpl?: boolean;
 }
 
 /**
@@ -60,7 +65,9 @@ export function operationsToDecls(
       swProtocol({ name: proto, funs: sigs.map(signatureToProtocolFun) }),
     );
     if (!opts.protocolOnly) {
-      const result = buildClientClass(clientClassName(proto), proto, sigs);
+      const result = buildClientClass(clientClassName(proto), proto, sigs, {
+        open: opts.openImpl,
+      });
       decls.push(result.class);
       if (result.needsErrorEnum) needsErrorEnum = true;
     }

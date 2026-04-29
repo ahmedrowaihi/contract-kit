@@ -5,17 +5,20 @@ public final class URLSessionUserAPI: UserAPI {
     let session: URLSession
     let decoder: JSONDecoder
     let encoder: JSONEncoder
+    public var requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
 
     public init(
         baseURL: URL,
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder(),
-        encoder: JSONEncoder = JSONEncoder()
+        encoder: JSONEncoder = JSONEncoder(),
+        requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
     ) {
         self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
         self.encoder = encoder
+        self.requestDecorator = requestDecorator
     }
 
     /// POST /user
@@ -27,6 +30,9 @@ public final class URLSessionUserAPI: UserAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(User.self, from: data)
     }
@@ -40,6 +46,9 @@ public final class URLSessionUserAPI: UserAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(User.self, from: data)
     }
@@ -60,6 +69,9 @@ public final class URLSessionUserAPI: UserAPI {
         let url = components.url!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(String.self, from: data)
     }
@@ -69,6 +81,9 @@ public final class URLSessionUserAPI: UserAPI {
         let url = baseURL.appendingPathComponent("user/logout")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
     }
 
@@ -79,6 +94,9 @@ public final class URLSessionUserAPI: UserAPI {
         let url = baseURL.appendingPathComponent("user/\(username)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(User.self, from: data)
     }
@@ -93,6 +111,9 @@ public final class URLSessionUserAPI: UserAPI {
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
     }
 
@@ -103,6 +124,9 @@ public final class URLSessionUserAPI: UserAPI {
         let url = baseURL.appendingPathComponent("user/\(username)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
     }
 
@@ -115,6 +139,9 @@ public final class URLSessionUserAPI: UserAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(UpdateProfile_Response.self, from: data)
     }

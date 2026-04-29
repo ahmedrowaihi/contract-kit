@@ -105,6 +105,32 @@ The protocol-only output (no impl class) is opt-in:
 generate({ ..., protocolOnly: true });
 ```
 
+### Per-request control
+
+Every generated impl class exposes a public `var requestDecorator` you can swap in after construction. It runs once between body wiring and the `URLSession.data(for:)` call — the right place for dynamic auth headers, request signing, conditional retries, or per-call logging, without having to reimplement the protocol.
+
+```swift
+let api = URLSessionPetAPI(baseURL: baseURL)
+api.requestDecorator = { request in
+    var request = request
+    let token = try await tokenStore.fresh()
+    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    return request
+}
+let pet = try await api.getPetById(petId: 1)
+```
+
+For session-level concerns (static auth header, custom timeout, retries), pass a configured `URLSession` to `init` — the impl uses whatever session you provide.
+
+### Subclassable impl
+
+To override individual methods rather than wrap or compose, emit the class as `open` instead of `final`:
+
+```ts
+generate({ ..., openImpl: true });
+// → public open class URLSessionPetAPI: PetAPI { … }
+```
+
 Required-first parameter ordering. Optional params get `? = nil` defaults. Empty 2xx responses (204, 200 with no schema) emit `async throws` with no return type (Swift `Void`).
 
 ### Body media-type dispatch

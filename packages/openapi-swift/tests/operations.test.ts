@@ -498,6 +498,53 @@ describe("operations (IR-driven)", () => {
     assert.doesNotMatch(out, /class URLSessionUAPI/);
   });
 
+  it("impl class exposes a public requestDecorator hook", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          "/u": {
+            get: {
+              tags: ["U"],
+              operationId: "u",
+              responses: { 200: { description: "ok" } },
+            },
+          },
+        }),
+      }),
+    );
+    assert.match(
+      out,
+      /public var requestDecorator: \(\(URLRequest\) async throws -> URLRequest\)\? = nil/,
+    );
+    assert.match(
+      out,
+      /if let decorator = requestDecorator \{\n\s+request = try await decorator\(request\)\n\s+\}/,
+    );
+  });
+
+  it("openImpl: true emits `open class` instead of `final class`", () => {
+    const out = printFile(
+      swFile({
+        decls: operationsToDecls(
+          ir({
+            paths: {
+              "/u": {
+                get: {
+                  tags: ["U"],
+                  operationId: "u",
+                  responses: { 200: { description: "ok" } },
+                },
+              },
+            },
+          }).paths,
+          { openImpl: true },
+        ),
+      }),
+    );
+    assert.match(out, /public open class URLSessionUAPI: UAPI \{/);
+    assert.doesNotMatch(out, /final class URLSessionUAPI/);
+  });
+
   it("custom protocol name function", () => {
     const out = printFile(
       swFile({

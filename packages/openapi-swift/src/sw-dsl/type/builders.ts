@@ -27,3 +27,9 @@ export const swDict = (key: SwType, value: SwType): SwType => ({
   value,
 });
 export const swRef = (name: string): SwType => ({ kind: "ref", name });
+
+export const swFunc = (
+  params: ReadonlyArray<SwType>,
+  returnType: SwType,
+  effects: ReadonlyArray<"async" | "throws"> = [],
+): SwType => ({ kind: "func", params, returnType, effects });

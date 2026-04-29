@@ -5,17 +5,20 @@ public final class URLSessionStoreAPI: StoreAPI {
     let session: URLSession
     let decoder: JSONDecoder
     let encoder: JSONEncoder
+    public var requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
 
     public init(
         baseURL: URL,
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder(),
-        encoder: JSONEncoder = JSONEncoder()
+        encoder: JSONEncoder = JSONEncoder(),
+        requestDecorator: ((URLRequest) async throws -> URLRequest)? = nil
     ) {
         self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
         self.encoder = encoder
+        self.requestDecorator = requestDecorator
     }
 
     /// GET /store/inventory
@@ -23,6 +26,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         let url = baseURL.appendingPathComponent("store/inventory")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode([String: Int32].self, from: data)
     }
@@ -36,6 +42,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Order.self, from: data)
     }
@@ -47,6 +56,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         let url = baseURL.appendingPathComponent("store/order/\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(Order.self, from: data)
     }
@@ -58,6 +70,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         let url = baseURL.appendingPathComponent("store/order/\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
     }
 
@@ -70,6 +85,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
         return try decoder.decode(CreateShape_Response.self, from: data)
     }
@@ -83,6 +101,9 @@ public final class URLSessionStoreAPI: StoreAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try encoder.encode(body)
+        if let decorator = requestDecorator {
+            request = try await decorator(request)
+        }
         let (data, _) = try await session.data(for: request)
     }
 }
