@@ -55,7 +55,7 @@ The four `@hey-api/openapi-ts` plugins ship in lockstep (Changesets `fixed` conf
 
 | Example | Path | What it shows |
 | --- | --- | --- |
-| `petstore-sdk` | [`examples/petstore-sdk`](./examples/petstore-sdk) | Generate Go / Kotlin / Swift client SDKs from the petstore spec; each language has a buildable consumer app under `<lang>/example/` exercising CRUD, auth, multipart, per-call options, `*WithResponse`, validators, transformers. |
+| `petstore-sdk` | [`examples/petstore-sdk`](./examples/petstore-sdk) | Generate Go / Kotlin / Swift / TypeScript client SDKs from the petstore spec; each language has a buildable consumer app under `<lang>/example/` exercising CRUD, auth, multipart, per-call options, response-headers access, validators, transformers. |
 | `orpc-basic` | [`examples/orpc-basic`](./examples/orpc-basic) | Minimal `@ahmedrowaihi/openapi-ts-orpc` setup. |
 
 ## Contributing

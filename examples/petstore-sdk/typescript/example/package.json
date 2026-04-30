@@ -1,0 +1,18 @@
+{
+  "name": "petstore-typescript-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Buildable consumer app for the petstore TypeScript SDK — exercises CRUD, request options, response interceptors, and validators against petstore3.swagger.io.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/main.ts"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@hey-api/client-fetch": "*",
+    "@types/node": "catalog:",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}
