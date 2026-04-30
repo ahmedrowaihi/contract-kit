@@ -11,6 +11,7 @@ The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstor
 | Kotlin (Android / JVM) | ✓ | [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi-kotlin) | OkHttp + kotlinx-serialization + suspend |
 | Swift (iOS / macOS) | ✓ | [`@ahmedrowaihi/openapi-swift`](../../packages/openapi-swift) | URLSession + `Codable` + async throws |
 | Go | ✓ | [`@ahmedrowaihi/openapi-go`](../../packages/openapi-go) | net/http + encoding/json + context.Context |
+| TypeScript | ✓ | [`@ahmedrowaihi/openapi-typescript`](../../packages/openapi-typescript) (wraps [`@hey-api/openapi-ts`](https://www.npmjs.com/package/@hey-api/openapi-ts)) | fetch + `@hey-api/client-fetch` + per-op functions |
 
 ## Run
 
@@ -22,11 +23,13 @@ pnpm install
 pnpm --filter @ahmedrowaihi/openapi-kotlin build
 pnpm --filter @ahmedrowaihi/openapi-swift build
 pnpm --filter @ahmedrowaihi/openapi-go build
+pnpm --filter @ahmedrowaihi/openapi-typescript build
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen        # all targets
 # or one at a time:
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:kotlin
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:swift
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:go
+pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:typescript
 ```
 
 Build / run each example consumer:
@@ -40,6 +43,9 @@ cd swift/example && swift run PetstoreApp
 
 # Kotlin — Gradle multi-module (root settings.gradle.kts → :sdk + :example)
 cd kotlin && gradle :example:run
+
+# TypeScript — Node app importing the generated SDK directly via relative paths
+pnpm --filter petstore-typescript-example start
 ```
 
 Each `<lang>/sdk/` directory is committed so PRs can review codegen diffs whenever a generator changes.
