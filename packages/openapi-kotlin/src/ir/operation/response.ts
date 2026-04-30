@@ -1,4 +1,6 @@
+import { isMeaningless, synthName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type KtType,
   ktProp,
@@ -7,8 +9,6 @@ import {
   ktSealedSubclass,
   ktUnit,
 } from "../../kt-dsl/index.js";
-import { synthName } from "../identifiers.js";
-import { isMeaningless } from "../ref.js";
 import type { TypeCtx } from "../type/index.js";
 import { schemaToType } from "../type/index.js";
 import type { ResponseCase } from "./signature.js";

@@ -1,7 +1,6 @@
+import { securityKey } from "@ahmedrowaihi/oas-core";
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import type { IR } from "@hey-api/shared";
-
-import { securityKey } from "../dist/index.js";
 
 type Fragment = {
   components?: Record<string, unknown>;

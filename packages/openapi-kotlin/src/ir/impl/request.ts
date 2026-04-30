@@ -1,3 +1,5 @@
+import { HTTP_METHOD_LITERAL, type HttpMethod } from "@ahmedrowaihi/oas-core";
+
 import {
   type KtStmt,
   ktArg,
@@ -9,7 +11,6 @@ import {
   ktStr,
   ktVal,
 } from "../../kt-dsl/index.js";
-import { HTTP_METHOD_LITERAL, type HttpMethod } from "../constants.js";
 
 /**
  * Initial request builder + HTTP method. Body-bearing methods can re-call

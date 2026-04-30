@@ -43,6 +43,12 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | --- | --- |
 | [`@ahmedrowaihi/glean`](./apps/glean) | Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools. |
 
+### Other
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/oas-core`](./packages/oas-core) | Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift. |
+
 <!-- @packages-end -->
 
 > The package list above is auto-generated from each `package.json`'s `description` field, with categories driven by [`scripts/sync-readme.mjs`](./scripts/sync-readme.mjs). The lefthook pre-commit hook keeps it current; run `pnpm sync:readme` manually if needed.

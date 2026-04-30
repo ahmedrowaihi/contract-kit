@@ -1,3 +1,5 @@
+import { HTTP_METHOD_LITERAL, type HttpMethod } from "@ahmedrowaihi/oas-core";
+
 import type { SwStmt } from "../../sw-dsl/index.js";
 import {
   swArg,
@@ -8,7 +10,6 @@ import {
   swStr,
   swVar,
 } from "../../sw-dsl/index.js";
-import { HTTP_METHOD_LITERAL, type HttpMethod } from "../constants.js";
 
 /**
  * `var request = URLRequest(url: url)` followed by `request.httpMethod = "GET"`.

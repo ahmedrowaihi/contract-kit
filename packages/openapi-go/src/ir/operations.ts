@@ -1,4 +1,10 @@
+import {
+  HTTP_METHODS,
+  type HttpMethod,
+  securityKey,
+} from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type GoDecl,
   type GoFuncResult,
@@ -11,7 +17,6 @@ import {
   goPtr,
   goRef,
 } from "../go-dsl/index.js";
-import { HTTP_METHODS, type HttpMethod } from "./constants.js";
 import { exportedIdent } from "./identifiers.js";
 import { buildClientStruct } from "./impl/index.js";
 import {
@@ -31,9 +36,6 @@ export interface OperationsOptions {
   /** Per-operation security-scheme names. See swift / kotlin generators. */
   securitySchemeNames?: ReadonlyMap<string, ReadonlyArray<string>>;
 }
-
-export const securityKey = (path: string, method: string): string =>
-  `${path}|${method}`;
 
 export interface OperationsResult {
   decls: GoDecl[];

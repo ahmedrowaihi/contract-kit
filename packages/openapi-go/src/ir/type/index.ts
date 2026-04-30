@@ -1,4 +1,6 @@
+import { refName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type GoType,
   goAny,
@@ -7,7 +9,6 @@ import {
   goSlice,
 } from "../../go-dsl/index.js";
 import { synthName } from "../identifiers.js";
-import { refName } from "../ref.js";
 import type { TypeCtx } from "./context.js";
 import { buildEnumFromIR } from "./enum.js";
 import { inlineObjectType } from "./object.js";

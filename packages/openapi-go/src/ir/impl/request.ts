@@ -1,3 +1,5 @@
+import { HTTP_METHOD_LITERAL, type HttpMethod } from "@ahmedrowaihi/oas-core";
+
 import {
   type GoStmt,
   goCall,
@@ -7,7 +9,6 @@ import {
   goShort,
   goStr,
 } from "../../go-dsl/index.js";
-import { HTTP_METHOD_LITERAL, type HttpMethod } from "../constants.js";
 import type { ErrCheckFn } from "./errors.js";
 
 /**

@@ -1,4 +1,6 @@
+import { pascal } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type GoStruct,
   type GoType,
@@ -10,14 +12,13 @@ import {
   goString,
   goStruct,
 } from "../../go-dsl/index.js";
-
-const isMapOrSlice = (t: GoType): boolean =>
-  t.kind === "map" || t.kind === "slice";
-
-import { pascal, synthName } from "../identifiers.js";
+import { synthName } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 import { schemaToType } from "./index.js";
 import { propertyName } from "./property-naming.js";
+
+const isMapOrSlice = (t: GoType): boolean =>
+  t.kind === "map" || t.kind === "slice";
 
 /**
  * Build a Go struct from an object-shaped IR schema.

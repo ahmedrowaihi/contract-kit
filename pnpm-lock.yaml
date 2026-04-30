@@ -205,8 +205,23 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
 
+  packages/oas-core:
+    devDependencies:
+      '@ahmedrowaihi/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@hey-api/shared':
+        specifier: 'catalog:'
+        version: 0.4.2(magicast@0.5.2)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+
   packages/openapi-go:
     dependencies:
+      '@ahmedrowaihi/oas-core':
+        specifier: workspace:*
+        version: link:../oas-core
       '@hey-api/json-schema-ref-parser':
         specifier: 'catalog:'
         version: 1.4.1
@@ -229,6 +244,9 @@ importers:
 
   packages/openapi-kotlin:
     dependencies:
+      '@ahmedrowaihi/oas-core':
+        specifier: workspace:*
+        version: link:../oas-core
       '@hey-api/json-schema-ref-parser':
         specifier: 'catalog:'
         version: 1.4.1
@@ -263,6 +281,9 @@ importers:
 
   packages/openapi-swift:
     dependencies:
+      '@ahmedrowaihi/oas-core':
+        specifier: workspace:*
+        version: link:../oas-core
       '@hey-api/json-schema-ref-parser':
         specifier: 'catalog:'
         version: 1.4.1
