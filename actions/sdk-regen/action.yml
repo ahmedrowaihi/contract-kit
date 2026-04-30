@@ -1,0 +1,153 @@
+name: 'Regenerate native OpenAPI SDK'
+description: 'Regenerate a Go / Kotlin / Swift client SDK from an OpenAPI 3.x spec — drop-in for keeping a committed SDK in sync with its source spec. Powered by @ahmedrowaihi/openapi-{go,kotlin,swift}.'
+author: 'Ahmed Rowaihi'
+branding:
+  icon: 'code'
+  color: 'blue'
+
+inputs:
+  target:
+    description: 'Language target — `go`, `kotlin`, or `swift`. Run the action multiple times in one workflow (or via a matrix) to regenerate more than one.'
+    required: true
+  input:
+    description: 'Path or URL to the OpenAPI 3.x spec. Resolved relative to the repo root for paths.'
+    required: true
+  output:
+    description: 'Directory the SDK is written to (created if missing). Wiped on each run unless `clean: false` is passed via `extra-options`.'
+    required: true
+  package-name:
+    description: 'Override the generated package / module name. Per-target meaning: Go `package` directive, Kotlin package path (`com.example.api`), Swift unused (Swift uses module names from `Package.swift`).'
+    required: false
+    default: ''
+  generator-version:
+    description: 'Pinned semver of `@ahmedrowaihi/openapi-<target>` to install. Defaults to `latest`.'
+    required: false
+    default: 'latest'
+  commit-strategy:
+    description: '`pull-request` (open a PR via peter-evans/create-pull-request, default), `commit-back` (push directly to the triggering branch — requires `contents: write`), or `none` (regen and exit; following workflow steps own the diff).'
+    required: false
+    default: 'pull-request'
+  commit-message:
+    description: 'Commit message used by both `commit-back` and `pull-request` strategies.'
+    required: false
+    default: 'chore: regenerate ${target} SDK'
+  pr-title:
+    description: 'PR title (only used when `commit-strategy: pull-request`).'
+    required: false
+    default: 'chore: regenerate ${target} SDK'
+  pr-branch:
+    description: 'Branch name for the regen PR (only used when `commit-strategy: pull-request`). Pre-existing branches are reused — peter-evans/create-pull-request resets and force-pushes to keep them in sync with the latest base.'
+    required: false
+    default: 'sdk-regen/${target}'
+  token:
+    description: 'GitHub token used for opening the PR (only used by `commit-strategy: pull-request`). Defaults to the workflow''s `github.token`. Pass a PAT or App token if the regen needs to trigger downstream workflows — the default token cannot, by design (see GitHub Actions docs on workflow re-triggering).'
+    required: false
+    default: ''
+
+outputs:
+  changed:
+    description: '`true` when the regen produced a diff in the output directory, `false` when the spec already matched.'
+    value: ${{ steps.diff.outputs.changed }}
+  files-changed:
+    description: 'Number of files added / modified / deleted under the output directory.'
+    value: ${{ steps.diff.outputs.files-changed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Validate target
+      shell: bash
+      run: |
+        case "${{ inputs.target }}" in
+          go|kotlin|swift) ;;
+          *)
+            echo "::error::invalid target '${{ inputs.target }}' — must be one of: go, kotlin, swift"
+            exit 1
+            ;;
+        esac
+
+    - name: Install generator
+      id: install
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        VERSION: ${{ inputs.generator-version }}
+      run: |
+        set -e
+        WORKDIR="${RUNNER_TEMP}/sdk-regen"
+        mkdir -p "$WORKDIR"
+        cd "$WORKDIR"
+        # Bare package.json so npm doesn't walk up looking for the consumer's lockfile.
+        echo '{"private":true,"type":"module"}' > package.json
+        # Generators declare @hey-api/* + @ahmedrowaihi/openapi-tools as peer
+        # deps so consumers can pin them; npm doesn't auto-install peers at
+        # the top level, so we name them explicitly here.
+        npm install --silent --no-audit --no-fund \
+          "@ahmedrowaihi/openapi-${TARGET}@${VERSION}" \
+          "@ahmedrowaihi/openapi-tools" \
+          "@hey-api/shared" \
+          "@hey-api/spec-types"
+        echo "workdir=$WORKDIR" >> "$GITHUB_OUTPUT"
+
+    - name: Generate SDK
+      shell: bash
+      env:
+        WORKDIR: ${{ steps.install.outputs.workdir }}
+        TARGET: ${{ inputs.target }}
+        SPEC: ${{ inputs.input }}
+        OUTPUT: ${{ inputs.output }}
+        PACKAGE_NAME: ${{ inputs.package-name }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+      run: node "$GITHUB_ACTION_PATH/regen.mjs"
+
+    - name: Detect diff
+      id: diff
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.output }}
+      run: |
+        # `git status --porcelain` is faster than `git diff` here and includes untracked files.
+        files_changed=$(git status --porcelain -- "$OUTPUT" | wc -l | tr -d '[:space:]')
+        if [ "$files_changed" -gt 0 ]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        fi
+        echo "files-changed=$files_changed" >> "$GITHUB_OUTPUT"
+        echo "::notice::sdk-regen — $files_changed file(s) changed under $OUTPUT"
+
+    - name: Commit back to triggering branch
+      if: inputs.commit-strategy == 'commit-back' && steps.diff.outputs.changed == 'true'
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.output }}
+        TARGET: ${{ inputs.target }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+      run: |
+        set -e
+        # Resolve `${target}` placeholder in commit message.
+        msg="${COMMIT_MESSAGE//\$\{target\}/$TARGET}"
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A -- "$OUTPUT"
+        git commit -m "$msg"
+        git push
+
+    - name: Open PR with regen
+      if: inputs.commit-strategy == 'pull-request' && steps.diff.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ inputs.token != '' && inputs.token || github.token }}
+        commit-message: ${{ inputs.commit-message }}
+        title: ${{ inputs.pr-title }}
+        branch: ${{ inputs.pr-branch }}
+        delete-branch: true
+        body: |
+          Auto-regenerated `${{ inputs.target }}` SDK from `${{ inputs.input }}` via [`ahmedrowaihi/contract-kit/actions/sdk-regen`](https://github.com/ahmedrowaihi/contract-kit/tree/main/actions/sdk-regen).
+
+          ${{ steps.diff.outputs.files-changed }} file(s) changed under `${{ inputs.output }}`.
