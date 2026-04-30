@@ -1,0 +1,18 @@
+# @ahmedrowaihi/openapi-go
+
+## 0.1.0
+
+### Minor Changes
+
+- e337c9f: Initial release. Generates idiomatic Go client SDKs from an OpenAPI 3.x spec: per-tag interfaces with `context.Context` first-arg + `*WithResponse` companions, `NetHTTP<Tag>API` impl structs, structs / typed-string enums / type aliases for schemas, sealed-style sum types (interface + concrete cases) for ops with multiple 2xx schemas, and runtime helpers (`APIClient`, `APIError`, `Auth`, `MultipartFormBody`, `URLEncoding`, `RequestOptions`). Per-call options cover `Client` / `BaseURL` / `Timeout` / `Headers` / `RequestInterceptors` / `ResponseValidator` / `ResponseTransformer`; per-op security from `securitySchemes` is auto-applied via a `client.Auth` map. Output ships as raw `.go` files (drop into an existing module) or as a self-contained Go module when `gomod: { module: ... }` is passed. Stdlib only — `net/http` + `encoding/json` + `mime/multipart` — zero third-party dependencies. Reuses the same hey-api IR pipeline as `@ahmedrowaihi/openapi-kotlin` and `@ahmedrowaihi/openapi-swift`. Everything AST-built; runtime helpers are templated strings.
+
+### Patch Changes
+
+- e337c9f: Fix two gaps surfaced by real-world specs (Mux API):
+
+  - **PHP-style array param names** (`timeframe[]`): `pascal()` now strips trailing non-alphanumeric characters so identifiers like `timeframe[]` produce `Timeframe` instead of leaking the brackets into the generated source. Wire-level query keys are unaffected (the impl still emits the original `timeframe[]` for the URL).
+  - **Integer-valued enum schemas** (`enum: [0, 90, 180, 270]`): previously rejected with a thrown error.
+    - Go: emits `type Foo int` + a typed-const block (e.g. `Rotate90 Rotate = 90`).
+    - Swift: emits `enum Foo: Int, Codable { case _0 = 0; case _90 = 90 }`.
+    - Kotlin: degrades to `typealias Foo = Int` — kotlinx-serialization's enum support only round-trips string raw values via `@SerialName`; the typealias preserves the wire type without forcing a custom `KSerializer`.
+    - Mixed string + integer enums throw with a clear "must all be strings or all integers" message.
