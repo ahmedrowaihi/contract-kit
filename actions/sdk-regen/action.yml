@@ -40,9 +40,9 @@ inputs:
     required: false
     default: 'sdk-regen/${target}'
   token:
-    description: 'GitHub token used for committing / opening the PR. Defaults to `${{ github.token }}`. Pass a PAT or App token if the regen needs to trigger downstream workflows (the default token cannot — see GitHub Actions docs on the token).'
+    description: 'GitHub token used for opening the PR (only used by `commit-strategy: pull-request`). Defaults to the workflow''s `github.token`. Pass a PAT or App token if the regen needs to trigger downstream workflows — the default token cannot, by design (see GitHub Actions docs on workflow re-triggering).'
     required: false
-    default: ${{ github.token }}
+    default: ''
 
 outputs:
   changed:
@@ -142,7 +142,7 @@ runs:
       if: inputs.commit-strategy == 'pull-request' && steps.diff.outputs.changed == 'true'
       uses: peter-evans/create-pull-request@v7
       with:
-        token: ${{ inputs.token }}
+        token: ${{ inputs.token != '' && inputs.token || github.token }}
         commit-message: ${{ inputs.commit-message }}
         title: ${{ inputs.pr-title }}
         branch: ${{ inputs.pr-branch }}
