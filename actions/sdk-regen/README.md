@@ -138,6 +138,8 @@ jobs:
 - `contents: write` — required for `commit-back`, and for `pull-request` so the action can push the regen branch.
 - `pull-requests: write` — required for `pull-request` to open / update the PR.
 
+In addition, **the repo's "Allow GitHub Actions to create and approve pull requests" toggle must be enabled** (Settings → Actions → General → Workflow permissions). Without it, the default `GITHUB_TOKEN` can push the regen branch but not open the PR — you'll see `GitHub Actions is not permitted to create or approve pull requests` in the run log. Alternative: pass a PAT or GitHub App token via `with: token: ${{ secrets.MY_PAT }}` to bypass the org-level restriction.
+
 ## How it works
 
 The action is a [composite step](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action):
