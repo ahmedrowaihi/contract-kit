@@ -1,10 +1,10 @@
 # @ahmedrowaihi/openapi-swift
 
-Generate idiomatic iOS Swift client SDKs from an OpenAPI 3.x spec — `Codable` structs + `String`-raw enums + protocol contracts with `async throws` functions, ready to drop into an Xcode project or Swift Package.
+Generate idiomatic iOS Swift client SDKs from an OpenAPI 3.x spec — `Codable` structs, `String`-raw enums, per-tag protocols with `async throws` requirements, and a default `URLSession`-backed impl class. Per-call `RequestOptions`, composable interceptors, typed `APIError`, multipart + form-urlencoded wire encoding, multi-2xx sum-type returns, and per-op security auto-wiring all included.
 
 Built on the [`@hey-api`](https://github.com/hey-api/openapi-ts) toolchain (`@hey-api/json-schema-ref-parser` for spec loading, `@hey-api/shared` IR for normalization). 2.0 / 3.0 / 3.1 inputs all produce the same output.
 
-Sibling package to [`@ahmedrowaihi/openapi-kotlin`](../openapi-kotlin) — same architecture, same milestones, Swift-native output. Part of [contract-kit](https://github.com/ahmedrowaihi/contract-kit). Companion to the [`petstore-sdk` example](../../examples/petstore-sdk).
+Sibling package to [`@ahmedrowaihi/openapi-kotlin`](../openapi-kotlin). Part of [contract-kit](https://github.com/ahmedrowaihi/contract-kit). Companion to the [`petstore-sdk` example](../../examples/petstore-sdk).
 
 ## Install
 
@@ -18,7 +18,7 @@ pnpm add @ahmedrowaihi/openapi-swift @ahmedrowaihi/openapi-tools @hey-api/shared
 import { generate } from "@ahmedrowaihi/openapi-swift";
 
 await generate({
-  input: "https://api.example.com/openapi.json",   // path / URL / pre-parsed object
+  input: "https://api.example.com/openapi.json",
   output: "./sdk-swift",
 });
 ```
@@ -30,8 +30,6 @@ Reads any of: a filesystem path, an http(s) URL, or a pre-parsed object. YAML an
 ### Schemas → `Codable` structs / enums / typealiases
 
 ```swift
-import Foundation
-
 public struct Pet: Codable {
     public let id: Int64?
     public let name: String
@@ -39,12 +37,17 @@ public struct Pet: Codable {
     public let photoUrls: [String]
     public let tags: [Tag]?
     public let status: Pet_Status?
+
+    public init(
+        id: Int64? = nil,
+        name: String,
+        category: Category? = nil,
+        photoUrls: [String],
+        tags: [Tag]? = nil,
+        status: Pet_Status? = nil
+    ) { /* … */ }
 }
-```
 
-Inline string enums become `String`-raw `Codable` enums:
-
-```swift
 public enum Pet_Status: String, Codable {
     case available = "available"
     case pending = "pending"
@@ -52,238 +55,209 @@ public enum Pet_Status: String, Codable {
 }
 ```
 
-### Operations → protocols + URLSession default impls
+Every public struct ships an explicit `public init` so consumers from another module (mode-2 SwiftPM library) can construct values for tests and mocks — Swift's synthesized memberwise init is internal-only.
 
-For each tag the generator emits a `protocol <Tag>API` with `async throws` requirements **and** a `final class URLSession<Tag>API: <Tag>API` that wires up `URLSession`, `JSONEncoder`, `JSONDecoder`. Default impl handles JSON, octet-stream, path/query/header params, optional `if let` dispatch, and tuple-destructured `data` reads. Multipart and form-urlencoded bodies throw a sentinel `URLSessionAPIError.unimplementedBody(mediaType:)` you can catch and override.
+### Operations → protocols + impls
+
+For each tag the generator emits:
+
+- `protocol <Tag>API` with `async throws` requirements
+- `extension <Tag>API` with no-options convenience overloads (forward to the with-options form using `RequestOptions()` defaults)
+- `final class URLSession<Tag>API: <Tag>API` with the wire impl, holding a single `client: APIClient`
 
 ```swift
 public protocol PetAPI {
     /// GET /pet/{petId}
-    func getPetById(
-        petId: Int64
-    ) async throws -> Pet
+    func getPetById(petId: Int64, options: RequestOptions) async throws -> Pet
+    func getPetByIdWithResponse(petId: Int64, options: RequestOptions) async throws -> (Pet, HTTPURLResponse)
+    // …
+}
 
-    /// POST /pet
-    func addPet(
-        body: Pet
-    ) async throws -> Pet
-
-    /// DELETE /pet/{petId}
-    func deletePet(
-        petId: Int64,
-        apiKey: String? = nil
-    ) async throws
+public extension PetAPI {
+    func getPetById(petId: Int64) async throws -> Pet {
+        try await getPetById(petId: petId, options: RequestOptions())
+    }
+    func getPetByIdWithResponse(petId: Int64) async throws -> (Pet, HTTPURLResponse) {
+        try await getPetByIdWithResponse(petId: petId, options: RequestOptions())
+    }
 }
 
 public final class URLSessionPetAPI: PetAPI {
-    let baseURL: URL
-    let session: URLSession
-    let decoder: JSONDecoder
-    let encoder: JSONEncoder
-
-    public init(
-        baseURL: URL,
-        session: URLSession = .shared,
-        decoder: JSONDecoder = JSONDecoder(),
-        encoder: JSONEncoder = JSONEncoder()
-    ) { /* … */ }
-
-    public func getPetById(petId: Int64) async throws -> Pet {
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        let (data, _) = try await session.data(for: request)
-        return try decoder.decode(Pet.self, from: data)
-    }
-    // … one impl per protocol method …
-}
-```
-
-The protocol-only output (no impl class) is opt-in:
-
-```ts
-generate({ ..., protocolOnly: true });
-```
-
-### Per-request control
-
-Every generated impl class exposes a public `var requestDecorator` you can swap in after construction. It runs once between body wiring and the `URLSession.data(for:)` call — the right place for dynamic auth headers, request signing, conditional retries, or per-call logging, without having to reimplement the protocol.
-
-```swift
-let api = URLSessionPetAPI(baseURL: baseURL)
-api.requestDecorator = { request in
-    var request = request
-    let token = try await tokenStore.fresh()
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    return request
-}
-let pet = try await api.getPetById(petId: 1)
-```
-
-For session-level concerns (static auth header, custom timeout, retries), pass a configured `URLSession` to `init` — the impl uses whatever session you provide.
-
-### Subclassable impl
-
-To override individual methods rather than wrap or compose, emit the class as `open` instead of `final`:
-
-```ts
-generate({ ..., openImpl: true });
-// → public open class URLSessionPetAPI: PetAPI { … }
-```
-
-Required-first parameter ordering. Optional params get `? = nil` defaults. Empty 2xx responses (204, 200 with no schema) emit `async throws` with no return type (Swift `Void`).
-
-### Body media-type dispatch
-
-| Input media type | Generated parameter shape |
-|---|---|
-| `application/json` (and `+json`) | `body: T` |
-| `multipart/form-data` (object schema) | one param per property; binary fields → `Data` |
-| `application/x-www-form-urlencoded` (object schema) | one param per property |
-| `application/octet-stream`, image, etc. | `body: Data` |
-
-The protocol carries the typed shape; consumers (or a generated default impl) handle the wire encoding.
-
-## Output layout
-
-```
-sdk-swift/
-├── API/
-│   └── PetAPI.swift        # protocols
-└── Models/
-    ├── Pet.swift           # Codable structs
-    ├── Pet_Status.swift    # enums
-    └── …
-```
-
-`flat` layout puts everything at the root. Pass `fileLocation` to fully customize:
-
-```ts
-generate({
-    ...,
-    layout: "flat",
-    // OR full per-decl override:
-    fileLocation: (decl) => ({ dir: `Sources/MyAPI/${decl.kind === "protocol" ? "API" : "Models"}` }),
-});
-```
-
-## Requirements
-
-The generated code uses [`async`/`await`](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/), so:
-
-- **Swift** 5.5 or newer
-- **iOS** 13.0+ (with the Swift concurrency back-deployment library) / **iOS 15+** native, **macOS** 12+, **tvOS** 15+, **watchOS** 8+
-
-Zero runtime dependencies — the SDK only imports `Foundation`.
-
-## Adding the SDK to an Xcode project
-
-Pick whichever fits your project layout:
-
-### Swift Package Manager (recommended)
-
-Wrap the generated `sdk-swift/` directory in a `Package.swift`:
-
-```swift
-// swift-tools-version: 5.9
-import PackageDescription
-
-let package = Package(
-    name: "PetstoreAPI",
-    platforms: [.iOS(.v15), .macOS(.v12)],
-    products: [
-        .library(name: "PetstoreAPI", targets: ["PetstoreAPI"]),
-    ],
-    targets: [
-        .target(
-            name: "PetstoreAPI",
-            path: "sdk-swift"   // points at the generated tree
-        ),
-    ]
-)
-```
-
-Then add the package to your app via **Xcode → File → Add Package Dependencies… → Add Local…** or in your app's own `Package.swift`:
-
-```swift
-.package(path: "../petstore-sdk")
-```
-
-### Drag & drop into Xcode
-
-Drag the `sdk-swift/` folder into your Xcode project's source list, choose **Create groups**, and tick the target you want it added to. No package manifest needed.
-
-### CocoaPods
-
-Wrap the directory in a `.podspec` if you publish through CocoaPods — the generated SDK has zero runtime deps so the spec stays minimal.
-
-## Consuming the output
-
-You can use the generated `URLSession<Tag>API` class directly:
-
-```swift
-let api = URLSessionPetAPI(baseURL: URL(string: "https://petstore3.swagger.io/api/v3/")!)
-let pet = try await api.getPetById(petId: 1)
-```
-
-…or implement the protocol yourself for auth, retries, custom decoders, or to plug in a different HTTP client:
-
-```swift
-import Foundation
-
-public final class URLSessionPetAPI: PetAPI {
-    let baseURL: URL
-    let session: URLSession
-    let decoder = JSONDecoder()
-    let encoder = JSONEncoder()
-
-    public init(baseURL: URL, session: URLSession = .shared) {
-        self.baseURL = baseURL
-        self.session = session
-    }
-
-    public func getPetById(petId: Int64) async throws -> Pet {
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
-        let (data, _) = try await session.data(from: url)
-        return try decoder.decode(Pet.self, from: data)
-    }
-
-    public func addPet(body: Pet) async throws -> Pet {
-        var req = URLRequest(url: baseURL.appendingPathComponent("pet"))
-        req.httpMethod = "POST"
-        req.httpBody = try encoder.encode(body)
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let (data, _) = try await session.data(for: req)
-        return try decoder.decode(Pet.self, from: data)
-    }
+    let client: APIClient
+    public init(client: APIClient) { self.client = client }
     // …
 }
 ```
 
-This pattern keeps the generated code free of opinions about auth, retries, logging, error model — your app owns those. See the [petstore-sdk example README](../../examples/petstore-sdk/README.md) for fuller setup notes.
+Every operation also emits a sibling `*WithResponse` overload that returns `(T, HTTPURLResponse)` — for callers that need response headers (pagination cursors, `ETag`, rate limits). Void-returning operations get `*WithResponse() -> HTTPURLResponse` instead.
 
-## API
+### Per-call control via `RequestOptions`
+
+```swift
+public struct RequestOptions {
+    public var client: APIClient? = nil
+    public var baseURL: URL? = nil
+    public var timeout: TimeInterval? = nil
+    public var headers: [String: String] = [:]
+    public var requestInterceptors: [(URLRequest) async throws -> URLRequest] = []
+    public var responseValidator: ((Data, HTTPURLResponse) async throws -> Void)? = nil
+    public var responseTransformer: ((Data) async throws -> Data)? = nil
+    public init(/* … all defaulted … */) { /* … */ }
+}
+```
+
+```swift
+try await pets.getPetById(petId: 1)                                              // defaults
+try await pets.getPetById(petId: 1, options: .init(client: customClient))        // swap transport
+try await pets.getPetById(petId: 1, options: .init(headers: ["X-Trace": id]))    // extra headers
+try await pets.getPetById(petId: 1, options: .init(baseURL: stagingURL))         // hit staging
+try await pets.getPetById(petId: 1, options: .init(timeout: 60))                 // long-poll override
+```
+
+### Composable interceptors + auth
+
+The runtime `APIClient` carries an `interceptors.request` array that runs against every outgoing request. Interceptors compose — auth, logging, tracing all coexist:
+
+```swift
+let client = APIClient(baseURL: URL(string: "https://api.example.com/")!)
+client.interceptors.request.append { request in
+    var request = request
+    request.setValue("Bearer \(await TokenStore.access())", forHTTPHeaderField: "Authorization")
+    return request
+}
+```
+
+When the spec declares any `securitySchemes`, the generator additionally emits an `Auth` enum (with `bearer`, `apiKey`, `basic` cases — `apiKey` carries an `APIKeyLocation` of `header` / `query` / `cookie`) and the client gains a `var auth: [String: Auth]` bag keyed by scheme name. Operations with `security:` requirements walk the bag and apply the matching scheme automatically:
+
+```swift
+client.auth["bearerAuth"] = .bearer(token: token)
+client.auth["xApiKey"] = .apiKey(name: "X-API-Key", value: key, in: .header)
+```
+
+### Body media-type dispatch
+
+| Input media type | Generated parameter shape | Wire encoding |
+|---|---|---|
+| `application/json` (and `+json`) | `body: T` | `JSONEncoder.encode` |
+| `multipart/form-data` (object schema) | one param per property; binary fields → `Data` | emitted `MultipartFormBody` helper |
+| `application/x-www-form-urlencoded` (object schema) | one param per property | `URLComponents.percentEncodedQuery` |
+| `application/octet-stream`, image, etc. | `body: Data` | raw bytes |
+| `oneOf` / unresolvable JSON | `body: Data` | raw bytes (caller pre-encodes) |
+
+### Typed errors
+
+Every non-2xx response funnels into `APIError`:
+
+```swift
+public enum APIError: Error {
+    case clientError(statusCode: Int, body: Data)        // 4XX
+    case serverError(statusCode: Int, body: Data)        // 5XX
+    case unexpectedStatus(statusCode: Int, body: Data)   // 1XX/3XX/etc.
+    case decodingFailed(Error)                           // JSONDecoder threw on a 2XX body
+    case transport(Error)                                // URLSession / network layer
+}
+```
+
+### Multi-2xx → sum-type return
+
+When an operation declares more than one 2xx response code with distinct schemas, the generator emits a sum-type enum and the impl dispatches on `httpResponse.statusCode`:
+
+```swift
+public enum SubmitJob_Response {
+    case status200(JobResult)
+    case status202(Pending)
+    case status204
+}
+```
+
+## Generator options
+
+Every option is optional. Pass them to `generate({ ... })`:
+
+| Option | Purpose |
+|---|---|
+| `input` / `output` | Spec source (path / URL / object) and SDK output dir. |
+| `clean` | Wipe `output` before writing. Default `true`. Refuses to wipe cwd or filesystem root. |
+| `package` | Emit `Package.swift` for SwiftPM-library mode. `true` → defaults from output dir basename. Object → custom `name`, `platforms`, `toolsVersion`, `sources`. Omit → mode 1 (raw `API/` + `Models/` files only). |
+| `defaultTag` | Tag to use when an op has none. Default `"Default"`. |
+| `protocolName` | `(tag) => string`. Default `(tag) => `${PascalCase(tag)}API``. |
+| `clientClassName` | `(protocolName) => string`. Default `(p) => `URLSession${p}``. |
+| `protocolOnly` | Skip impl class emission. Default `false`. |
+| `openImpl` | Emit impl class as `open` instead of `final` so consumers can subclass. Default `false`. |
+| `layout` | `"split"` (default — `API/` + `Models/`) or `"flat"`. |
+| `fileLocation` | `(decl) => { dir }` — full per-decl override. Rejects `..` traversal and absolute paths. |
+
+```ts
+generate({
+    input,
+    output,
+    package: { name: "PetstoreSDK" },
+    openImpl: true,
+    layout: "flat",
+});
+```
+
+## Two consumption modes
+
+| Mode | Setup | When |
+|---|---|---|
+| **Drop into an Xcode target** | Paste `API/` + `Models/` into your app's target sources. Same module, no `import` needed. | Adding the SDK directly to one app. |
+| **Standalone SwiftPM library** | Pass `package: { name: "YourSDK" }` to `generate()`; `Package.swift` is emitted alongside the source. Consumers reach for it via `.package(path: …)` or a git URL and `import YourSDK`. | Sharing across multiple apps, publishing privately, or wanting a clean module boundary. |
+
+## Output layout
+
+```text
+sdk-swift/
+├── API/
+│   ├── PetAPI.swift                # protocol
+│   ├── PetAPI+Defaults.swift       # convenience overloads (no-options)
+│   ├── URLSessionPetAPI.swift      # impl class
+│   ├── APIClient.swift             # runtime helper (transport, dispatch, decode)
+│   ├── APIInterceptors.swift       # interceptor pipeline
+│   ├── APIError.swift              # typed errors
+│   ├── Auth.swift                  # (when spec has securitySchemes)
+│   ├── APIKeyLocation.swift        # (when spec has securitySchemes)
+│   ├── MultipartFormBody.swift     # (when any op uses multipart/form-data)
+│   ├── URLEncoding.swift           # (when any op has query params)
+│   ├── QueryStyle.swift            # (when any op has query params)
+│   └── RequestOptions.swift
+└── Models/
+    ├── Pet.swift                   # Codable structs
+    ├── Pet_Status.swift            # enums
+    └── …
+```
+
+## Requirements
+
+The generated code uses Swift Concurrency, so:
+
+- **Swift** 5.5 or newer
+- **iOS** 13.0+ (with the back-deployment library) / **iOS 15+** native, **macOS** 12+, **tvOS** 15+, **watchOS** 8+
+
+Zero runtime dependencies — the SDK only imports `Foundation`.
+
+## API surface
 
 | Export | Purpose |
-| --- | --- |
+|---|---|
 | `generate(opts)` | High-level entry: load → IR → decls → files on disk. |
 | `schemasToDecls(schemas)` | `IR.Model.components.schemas` → `SwDecl[]`. |
-| `operationsToDecls(paths, opts?)` | `IR.PathsObject` → `SwDecl[]` (protocols grouped by tag). |
+| `operationsToDecls(paths, opts?)` | `IR.PathsObject` → `SwDecl[]` (protocols + impls grouped by tag). |
 | `buildSwiftProject(decls, opts?)` | `SwDecl[]` → `{ path, content }[]` with `import Foundation` per file. |
+| `packageSwiftFile(opts)` | Build a `Package.swift` for a SwiftPM-library wrapping the SDK. |
+| `securityKey(path, method)` | Key into `OperationsOptions.securitySchemeNames`. |
 | `printFile(file)` / `sw*` builders | Lower-level Swift AST + printer. |
 
-Internals are organized so each concern lives in one file:
-
-```
-src/sw-dsl/                Swift AST: types/, expr/, stmt/, decl/, fun.ts, file.ts
-src/sw-compiler/           AST → string, mirrors AST tree
+```text
+src/sw-dsl/                   Swift AST: types/, expr/, stmt/, decl/, fun.ts, file.ts
+src/sw-compiler/              AST → string, mirrors the AST tree
 src/ir/
-├── type/                  IR.SchemaObject → SwType (primitive, object, enum, union)
-├── operation/             IR.OperationObject → signature (params, return, doc) shared by protocol + impl
-├── impl/                  URLSession-based body builders (url, request, headers, body, decode)
-├── schema.ts              schemasToDecls
-├── operations.ts          paths → protocols + impl classes (orchestrator)
-└── …
+├── type/                     IR.SchemaObject → SwType
+├── operation/                IR.OperationObject → signature shared by protocol + impl
+├── impl/                     URLSession body builders (url, request, headers, body, decode)
+├── runtime/                  Top-level helper decls (APIClient, APIError, RequestOptions, Auth, …)
+├── schema.ts                 schemasToDecls
+└── operations.ts             paths → protocols + impl classes (orchestrator)
 ```
 
-Adding a new statement / expression node: add to `sw-dsl/{expr,stmt}/types.ts` + builder + one printer case. No string templating anywhere — `body.ts`, `url.ts`, `headers.ts` etc. all build statements via the AST builders.
+Adding a new statement / expression node: add to `sw-dsl/{expr,stmt}/types.ts`, builder, one printer case. No string templating — everything is AST-built.

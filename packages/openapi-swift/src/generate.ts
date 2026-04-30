@@ -10,7 +10,12 @@ import {
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
 
-import { operationsToDecls, schemasToDecls, securityKey } from "./ir/index.js";
+import {
+  type OperationsOptions,
+  operationsToDecls,
+  schemasToDecls,
+  securityKey,
+} from "./ir/index.js";
 import {
   type BuildOptions,
   type BuiltFile,
@@ -19,7 +24,19 @@ import {
   packageSwiftFile,
 } from "./project/index.js";
 
-export interface GenerateOptions extends BuildOptions {
+/**
+ * Operations options the consumer can pass through `generate()`. The
+ * orchestrator owns `securitySchemeNames` (extracted from the bundled
+ * spec), so it's stripped from the public surface.
+ */
+type ForwardedOperationsOptions = Omit<
+  OperationsOptions,
+  "securitySchemeNames"
+>;
+
+export interface GenerateOptions
+  extends BuildOptions,
+    ForwardedOperationsOptions {
   /**
    * The OpenAPI spec source: a filesystem path, http(s) URL, or a
    * pre-parsed object. YAML and JSON inputs both work. External
@@ -58,6 +75,11 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
   const decls = [
     ...schemasToDecls(ir.components?.schemas ?? {}),
     ...operationsToDecls(ir.paths, {
+      defaultTag: opts.defaultTag,
+      protocolName: opts.protocolName,
+      clientClassName: opts.clientClassName,
+      protocolOnly: opts.protocolOnly,
+      openImpl: opts.openImpl,
       securitySchemeNames: extractSecuritySchemeNames(bundled),
     }),
   ];

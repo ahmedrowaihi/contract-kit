@@ -120,7 +120,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> [Pet] {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/findByStatus"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("findByStatus"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -152,7 +152,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> ([Pet], HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/findByStatus"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("findByStatus"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -184,7 +184,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> [Pet] {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/findByTags"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("findByTags"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -216,7 +216,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> ([Pet], HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/findByTags"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("findByTags"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -248,7 +248,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> Pet {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -272,7 +272,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> (Pet, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -298,7 +298,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> Pet {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/\(petId)"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -333,7 +333,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> (Pet, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/\(petId)"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -367,7 +367,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         if let timeout = options.timeout {
@@ -395,7 +395,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> HTTPURLResponse {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         if let timeout = options.timeout {
@@ -424,7 +424,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> ApiResponse {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/\(petId)/uploadImage"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)").appendingPathComponent("uploadImage"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -460,7 +460,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> (ApiResponse, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet/\(petId)/uploadImage"), resolvingAgainstBaseURL: false) else {
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)").appendingPathComponent("uploadImage"), resolvingAgainstBaseURL: false) else {
             throw APIError.transport(URLError(.badURL))
         }
         var components = urlComponents
@@ -497,7 +497,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> ApiResponse {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)/uploadDocument")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)").appendingPathComponent("uploadDocument")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         if let timeout = options.timeout {
@@ -534,7 +534,7 @@ public final class URLSessionPetAPI: PetAPI {
     ) async throws -> (ApiResponse, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("pet/\(petId)/uploadDocument")
+        let url = baseURL.appendingPathComponent("pet").appendingPathComponent("\(petId)").appendingPathComponent("uploadDocument")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         if let timeout = options.timeout {

@@ -233,6 +233,85 @@ describe("operations (IR-driven)", () => {
     assert.match(out, /body: Data/);
   });
 
+  it("application/x-www-form-urlencoded → URLComponents.percentEncodedQuery", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          "/forms": {
+            post: {
+              tags: ["Forms"],
+              operationId: "submit",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/x-www-form-urlencoded": {
+                    schema: {
+                      type: "object",
+                      required: ["name"],
+                      properties: {
+                        name: { type: "string" },
+                        title: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: { 200: { description: "ok" } },
+            },
+          },
+        }),
+      }),
+    );
+    // Build via URLComponents so percent-encoding is correct for keys
+    // and values (the prior `name=value` interpolation mis-encoded `&` etc).
+    assert.match(out, /var formComponents = URLComponents\(\)/);
+    assert.match(out, /formComponents\.queryItems = \[URLQueryItem\]\(\)/);
+    assert.match(
+      out,
+      /formComponents\.queryItems\?\.append\(URLQueryItem\(name: "name", value: "\\\(name\)"\)\)/,
+    );
+    assert.match(
+      out,
+      /request\.httpBody = formComponents\.percentEncodedQuery\?\.data\(using: \.utf8\) \?\? Data\(\)/,
+    );
+  });
+
+  it("path with multiple dynamic segments → chain of appendingPathComponent calls", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          "/users/{id}/items/{type}": {
+            get: {
+              tags: ["Users"],
+              operationId: "getUserItem",
+              parameters: [
+                {
+                  name: "id",
+                  in: "path",
+                  required: true,
+                  schema: { type: "string" },
+                },
+                {
+                  name: "type",
+                  in: "path",
+                  required: true,
+                  schema: { type: "string" },
+                },
+              ],
+              responses: { 200: { description: "ok" } },
+            },
+          },
+        }),
+      }),
+    );
+    // One appendingPathComponent per segment so reserved chars in path
+    // values are percent-encoded inside their own component.
+    assert.match(
+      out,
+      /baseURL\.appendingPathComponent\("users"\)\.appendingPathComponent\("\\\(id\)"\)\.appendingPathComponent\("items"\)\.appendingPathComponent\("\\\(type\)"\)/,
+    );
+  });
+
   it("204 / empty 2xx → no `-> Type` (Void)", () => {
     const out = printFile(
       swFile({
@@ -330,7 +409,7 @@ describe("operations (IR-driven)", () => {
     assert.match(out, /public init\(\s+client: APIClient\s+\)/);
     assert.match(
       out,
-      /let url = baseURL\.appendingPathComponent\("users\/\\\(id\)"\)/,
+      /let url = baseURL\.appendingPathComponent\("users"\)\.appendingPathComponent\("\\\(id\)"\)/,
     );
     assert.match(out, /var request = URLRequest\(url: url\)/);
     assert.match(out, /request\.httpMethod = "GET"/);
@@ -511,6 +590,10 @@ describe("operations (IR-driven)", () => {
     assert.match(out, /public final class MultipartFormBody \{/);
     assert.match(out, /public let boundary: String\n/);
     assert.match(out, /public let contentType: String\n/);
+    // finalize() is idempotent — guarded by a `finalized` flag so the
+    // closing boundary isn't appended twice on repeat calls.
+    assert.match(out, /private var finalized: Bool = false/);
+    assert.match(out, /if finalized \{\s+return data\s+\}\s+finalized = true/);
   });
 
   it("optional header is wrapped in if let", () => {
@@ -934,7 +1017,11 @@ describe("operations (IR-driven)", () => {
     );
     assert.match(out, /public enum Auth \{/);
     assert.match(out, /case bearer\(token: String\)/);
-    assert.match(out, /case apiKey\(name: String, value: String\)/);
+    assert.match(
+      out,
+      /case apiKey\(name: String, value: String, in: APIKeyLocation\)/,
+    );
+    assert.match(out, /public enum APIKeyLocation \{/);
     assert.match(out, /case basic\(username: String, password: String\)/);
     assert.match(
       out,
@@ -945,6 +1032,45 @@ describe("operations (IR-driven)", () => {
       out,
       /request\.setValue\("Bearer \\\(token\)", forHTTPHeaderField: "Authorization"\)/,
     );
+  });
+
+  it("Auth.apiKey routes header / query / cookie via APIKeyLocation", () => {
+    const fragment = {
+      components: {
+        securitySchemes: {
+          headerKey: { type: "apiKey", in: "header", name: "X-API-Key" },
+        },
+      },
+      paths: {
+        "/me": {
+          get: {
+            tags: ["Profile"],
+            operationId: "me",
+            security: [{ headerKey: [] }],
+            responses: { 200: { description: "ok" } },
+          },
+        },
+      },
+    };
+    const m = ir(fragment);
+    const out = printFile(
+      swFile({
+        decls: operationsToDecls(m.paths, {
+          securitySchemeNames: securityNamesMap(fragment),
+        }),
+      }),
+    );
+    // Header branch (existing behavior).
+    assert.match(
+      out,
+      /case \.header:\s+request\.setValue\(value, forHTTPHeaderField: name\)/,
+    );
+    // Query branch — appends URLQueryItem to request.url.
+    assert.match(out, /case \.query:/);
+    assert.match(out, /URLQueryItem\(name: name, value: value\)/);
+    // Cookie branch — appends `<name>=<value>` to the Cookie header.
+    assert.match(out, /case \.cookie:/);
+    assert.match(out, /let cookie = "\\\(name\)=\\\(value\)"/);
   });
 
   it("auto-wires per-op security from client.auth bag", () => {

@@ -4,6 +4,7 @@ public final class MultipartFormBody {
     public let boundary: String
     public let contentType: String
     private var data: Data
+    private var finalized: Bool = false
 
     public init(
         boundary: String = UUID().uuidString
@@ -50,6 +51,10 @@ public final class MultipartFormBody {
     }
 
     public func finalize() -> Data {
+        if finalized {
+            return data
+        }
+        finalized = true
         if let encoded = "--\(boundary)--\r\n".data(using: .utf8) {
             data.append(encoded)
         }

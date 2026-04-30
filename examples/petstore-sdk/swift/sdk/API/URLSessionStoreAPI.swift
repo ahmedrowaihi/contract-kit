@@ -15,7 +15,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> [String: Int32] {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/inventory")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("inventory")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -38,7 +38,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> ([String: Int32], HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/inventory")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("inventory")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -62,7 +62,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> Order {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         if let timeout = options.timeout {
@@ -83,7 +83,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> (Order, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         if let timeout = options.timeout {
@@ -104,7 +104,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> Order {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order/\(orderId)")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order").appendingPathComponent("\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -123,7 +123,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> (Order, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order/\(orderId)")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order").appendingPathComponent("\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -142,7 +142,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order/\(orderId)")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order").appendingPathComponent("\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         if let timeout = options.timeout {
@@ -161,7 +161,7 @@ public final class URLSessionStoreAPI: StoreAPI {
     ) async throws -> HTTPURLResponse {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        let url = baseURL.appendingPathComponent("store/order/\(orderId)")
+        let url = baseURL.appendingPathComponent("store").appendingPathComponent("order").appendingPathComponent("\(orderId)")
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         if let timeout = options.timeout {

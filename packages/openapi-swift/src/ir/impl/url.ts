@@ -44,10 +44,7 @@ export function buildUrlStmts(
     .filter((l) => l.loc === "query")
     .map((l) => l.param);
 
-  const appendPath = swCall(
-    swMember(swIdent("baseURL"), "appendingPathComponent"),
-    [swArg(pathInterpolation(pathStr, pathParams))],
-  );
+  const appendPath = buildPathChain(swIdent("baseURL"), pathStr, pathParams);
 
   if (queryParams.length === 0) {
     return [swLet("url", appendPath)];
@@ -116,22 +113,46 @@ function styleCase(style: IR.ParameterObject["style"]): string {
   }
 }
 
-function pathInterpolation(
+/**
+ * Build a chain of `.appendingPathComponent(<seg>)` calls, one per
+ * `/`-separated segment of the path template. Each dynamic segment
+ * goes through `appendingPathComponent` separately so reserved
+ * characters in the value (`/`, `?`, `#`, spaces) are percent-encoded
+ * and stay inside their own component instead of leaking into the
+ * URL structure.
+ */
+function buildPathChain(
+  base: SwExpr,
   pathStr: string,
   pathParams: ReadonlyArray<IR.ParameterObject>,
 ): SwExpr {
   const stripped = pathStr.startsWith("/") ? pathStr.slice(1) : pathStr;
+  const segments = stripped.split("/").filter((s) => s.length > 0);
+  return segments.reduce<SwExpr>(
+    (acc, seg) =>
+      swCall(swMember(acc, "appendingPathComponent"), [
+        swArg(segmentExpr(seg, pathParams)),
+      ]),
+    base,
+  );
+}
+
+function segmentExpr(
+  seg: string,
+  pathParams: ReadonlyArray<IR.ParameterObject>,
+): SwExpr {
   const parts: Array<string | SwExpr> = [];
   const re = /\{([^}]+)\}/g;
   let lastEnd = 0;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(stripped)) !== null) {
-    if (m.index > lastEnd) parts.push(stripped.slice(lastEnd, m.index));
+  while ((m = re.exec(seg)) !== null) {
+    if (m.index > lastEnd) parts.push(seg.slice(lastEnd, m.index));
     const matched = pathParams.find((p) => p.name === m![1]);
     parts.push(swIdent(paramIdent(matched ? matched.name : m[1]!)));
     lastEnd = m.index + m[0].length;
   }
-  if (lastEnd < stripped.length) parts.push(stripped.slice(lastEnd));
+  if (lastEnd < seg.length) parts.push(seg.slice(lastEnd));
+  if (parts.length === 0) return swStr("");
   if (parts.length === 1 && typeof parts[0] === "string")
     return swStr(parts[0]);
   return swInterp(parts);

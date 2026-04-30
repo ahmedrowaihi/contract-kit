@@ -1,18 +1,20 @@
 import type { IR } from "@hey-api/shared";
-import type { SwStmt } from "../../sw-dsl/index.js";
+import type { SwExpr, SwStmt } from "../../sw-dsl/index.js";
 import {
   swArg,
   swArrayLit,
   swAssign,
   swCall,
+  swDotCase,
   swExprStmt,
   swIdent,
   swIfLet,
   swInterp,
   swLet,
   swMember,
+  swOptChain,
+  swRef,
   swStr,
-  swString,
   swThrow,
   swTry,
   swVar,
@@ -184,42 +186,56 @@ function multipartBody(schema: IR.SchemaObject): ReadonlyArray<SwStmt> {
 
 /**
  * Build an `application/x-www-form-urlencoded` body from an object
- * schema's properties — one `name=value` pair per property, joined with
- * `&`. Each value goes through `URLEncoding.formField(_:)` for proper
- * percent-encoding.
- *
- * For now this uses a small inline composition rather than emitting a
- * dedicated runtime helper — only one media type uses it and the shape
- * is straightforward.
+ * schema's properties. Routes through `URLComponents` so the URL spec's
+ * percent-encoding rules apply uniformly to keys and values — naive
+ * string interpolation would mishandle `&`, `=`, `+`, and other reserved
+ * characters in a payload value.
  */
 function formUrlEncodedBody(schema: IR.SchemaObject): ReadonlyArray<SwStmt> {
   const required = new Set(schema.required ?? []);
-  const stmts: SwStmt[] = [swVar("formPairs", swArrayLit([], swString))];
+  const stmts: SwStmt[] = [
+    swVar("formComponents", swCall(swIdent("URLComponents"), [])),
+    swAssign(
+      swMember(swIdent("formComponents"), "queryItems"),
+      swArrayLit([], swRef("URLQueryItem")),
+    ),
+  ];
   for (const propName of Object.keys(schema.properties ?? {})) {
     const id = paramIdent(propName);
-    const append = swExprStmt(
-      swCall(swMember(swIdent("formPairs"), "append"), [
-        swArg(swInterp([propName, "=", swIdent(id)])),
-      ]),
+    const appendItem = swExprStmt(
+      swCall(
+        swOptChain(swMember(swIdent("formComponents"), "queryItems"), "append"),
+        [
+          swArg(
+            swCall(swIdent("URLQueryItem"), [
+              swArg(swStr(propName), "name"),
+              swArg(swInterp([swIdent(id)]), "value"),
+            ]),
+          ),
+        ],
+      ),
     );
     stmts.push(
-      required.has(propName) ? append : swIfLet(id, swIdent(id), [append]),
+      required.has(propName)
+        ? appendItem
+        : swIfLet(id, swIdent(id), [appendItem]),
     );
   }
   stmts.push(setContentType("application/x-www-form-urlencoded"));
-  stmts.push(
-    swAssign(
-      swMember(swIdent("request"), "httpBody"),
-      swCall(
-        swMember(
-          swCall(swMember(swIdent("formPairs"), "joined"), [
-            swArg(swStr("&"), "separator"),
-          ]),
-          "data",
-        ),
-        [swArg({ kind: "dotCase", name: "utf8" }, "using")],
-      ),
+  const encodedQuery: SwExpr = swCall(
+    swOptChain(
+      swMember(swIdent("formComponents"), "percentEncodedQuery"),
+      "data",
     ),
+    [swArg(swDotCase("utf8"), "using")],
+  );
+  stmts.push(
+    swAssign(swMember(swIdent("request"), "httpBody"), {
+      kind: "binOp",
+      op: "??",
+      left: encodedQuery,
+      right: swCall(swIdent("Data"), []),
+    }),
   );
   return stmts;
 }
