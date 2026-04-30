@@ -2,16 +2,7 @@
 
 [![pkg.pr.new](https://pkg.pr.new/badge/ahmedrowaihi/contract-kit)](https://pkg.pr.new)
 
-Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
-
-## Naming convention
-
-| Prefix | Category | Example |
-| --- | --- | --- |
-| `openapi-ts-*` | `@hey-api/openapi-ts` plugins | `@ahmedrowaihi/openapi-ts-orpc` |
-| `openapi-*` | Standalone OpenAPI tools | `@ahmedrowaihi/openapi-tools` |
-| `asyncapi-*` | AsyncAPI family (planned) | `@ahmedrowaihi/asyncapi-tools` |
-| `sdk-*` | Client SDK generators (planned) | `@ahmedrowaihi/sdk-swift` |
+OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities, native client SDK generators (Kotlin / Swift), and live spec discovery from traffic. Everything sits on top of the [`@hey-api`](https://github.com/hey-api/openapi-ts) IR so 2.0 / 3.0 / 3.1 inputs share one normalization layer.
 
 ## Packages
 
@@ -26,38 +17,54 @@ Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 | [`@ahmedrowaihi/openapi-ts-paths`](./packages/openapi-ts-plugins/paths) | Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching |
 | [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi-ts-plugins/typia) | Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs |
 
-### Standalone OpenAPI tools
+### OpenAPI runtime utilities
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
+
+### Native client SDK generators
 
 | Package | Description |
 | --- | --- |
 | [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi-kotlin) | Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
-| [`@ahmedrowaihi/openapi-recon`](./packages/openapi-recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
 | [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
-| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
+
+### Spec discovery from traffic
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-recon`](./packages/openapi-recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
+
+### Apps
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/glean`](./apps/glean) | Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools. |
 
 <!-- @packages-end -->
 
-The `@hey-api/openapi-ts` plugins ship in lockstep (`fixed` Changesets config) — bumping one bumps all to the same version.
+> The package list above is auto-generated from each `package.json`'s `description` field, with categories driven by [`scripts/sync-readme.mjs`](./scripts/sync-readme.mjs). The lefthook pre-commit hook keeps it current; run `pnpm sync:readme` manually if needed.
 
-> The package list above is auto-generated from each `package.json`'s `description` field. To regenerate manually run `pnpm sync:readme`. Otherwise the lefthook pre-commit hook keeps it current.
+The four `@hey-api/openapi-ts` plugins ship in lockstep (Changesets `fixed` config) — bumping one bumps all to the same version. Other packages version independently.
 
 ## Examples
 
-| Example | Path |
-| --- | --- |
-| `@ahmedrowaihi/example-orpc-basic` | `examples/orpc-basic` |
+| Example | Path | What it shows |
+| --- | --- | --- |
+| `petstore-sdk` | [`examples/petstore-sdk`](./examples/petstore-sdk) | Generate Kotlin + Swift client SDKs from the petstore spec; full `Example.kt` / `Example.swift` covering CRUD, auth, multipart, per-call options, `*WithResponse`, validators, transformers. |
+| `orpc-basic` | [`examples/orpc-basic`](./examples/orpc-basic) | Minimal `@ahmedrowaihi/openapi-ts-orpc` setup. |
 
-## Develop
+## Contributing
 
 ```bash
 pnpm install
 pnpm build
 pnpm typecheck
+pnpm test
 ```
 
-## Release
-
-This repo uses [Changesets](https://github.com/changesets/changesets). The three plugins are version-locked.
+Releases run on [Changesets](https://github.com/changesets/changesets):
 
 ```bash
 pnpm changeset           # describe a change
@@ -65,14 +72,10 @@ pnpm version-packages    # bump versions + write CHANGELOGs (locally)
 pnpm release             # build + publish via changeset publish
 ```
 
-In CI: pushing a `.changeset/*.md` to `main` opens a "Version Packages" PR; merging that PR publishes to npm.
+In CI, pushing a `.changeset/*.md` to `main` opens a "Version Packages" PR; merging that PR publishes to npm.
 
-## Preview packages (per PR)
-
-Every PR triggers a [pkg.pr.new](https://pkg.pr.new) preview build. The bot comments install commands on the PR; you can install any package at the PR's commit SHA without waiting for a release:
+Every PR also triggers a [pkg.pr.new](https://pkg.pr.new) preview build — install any package at the PR's commit SHA without waiting for a release:
 
 ```bash
 pnpm add https://pkg.pr.new/@ahmedrowaihi/openapi-tools@<commit-sha>
 ```
-
-Useful for testing fixes downstream before they merge.
