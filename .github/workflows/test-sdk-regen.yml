@@ -1,0 +1,72 @@
+name: Test sdk-regen action
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'actions/sdk-regen/**'
+      - '.github/workflows/test-sdk-regen.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'actions/sdk-regen/**'
+      - '.github/workflows/test-sdk-regen.yml'
+
+# Self-test: invoke the action against the petstore fixture for each target
+# in `commit-strategy: none` mode (just regen, no PR), then assert the output
+# is non-empty and the generator's signature files landed. Doesn't compare
+# byte-for-byte against `examples/petstore-sdk/` since the example regens
+# pin a specific package + module name; the fixture round-trip is enough to
+# catch a broken action.
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: go
+            output: tmp-sdk/go
+            sentinel: pet.go
+          - target: kotlin
+            output: tmp-sdk/kotlin
+            sentinel: com/example/api/api/PetApi.kt
+          - target: swift
+            output: tmp-sdk/swift
+            sentinel: API/PetAPI.swift
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run sdk-regen
+        id: regen
+        uses: ./actions/sdk-regen
+        with:
+          target: ${{ matrix.target }}
+          input: fixtures/petstore.yaml
+          output: ${{ matrix.output }}
+          commit-strategy: none
+
+      - name: Assert outputs
+        shell: bash
+        env:
+          OUTPUT: ${{ matrix.output }}
+          SENTINEL: ${{ matrix.sentinel }}
+          CHANGED: ${{ steps.regen.outputs.changed }}
+          FILES_CHANGED: ${{ steps.regen.outputs.files-changed }}
+        run: |
+          set -e
+          if [ "$CHANGED" != "true" ]; then
+            echo "::error::expected outputs.changed=true (action ran in clean tree); got '$CHANGED'"
+            exit 1
+          fi
+          if [ "$FILES_CHANGED" -lt 1 ]; then
+            echo "::error::expected outputs.files-changed >= 1; got '$FILES_CHANGED'"
+            exit 1
+          fi
+          if [ ! -f "$OUTPUT/$SENTINEL" ]; then
+            echo "::error::sentinel file missing: $OUTPUT/$SENTINEL"
+            ls -la "$OUTPUT" || true
+            exit 1
+          fi
+          echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinel $SENTINEL present"
