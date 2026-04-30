@@ -1,98 +1,169 @@
-import type { KtAnnotation, KtDecl, KtType } from "../kt-dsl/types.js";
+import type { KtDecl } from "../kt-dsl/index.js";
 
 /**
- * Compute the imports a single decl needs, given the project-wide map
- * from decl-name → fully-qualified-name. External annotations (those
- * that carry their own `pkg`) and externally-packaged refs are always
- * imported. Cross-package internal refs are imported; same-package
- * refs are not.
+ * Compute the import list for a single Kotlin file by walking the
+ * already-printed source and matching against known identifiers.
+ * Coarse-import-everything caused unused imports per file; the
+ * print-then-scan pattern is precise without needing a full type-tree
+ * walker.
+ *
+ * Identifiers that share names across packages (e.g. `Response` exists
+ * in both `okhttp3` and a hypothetical user model) are disambiguated
+ * by file kind: API-layer files always pull `okhttp3.Response`, model
+ * files never do.
  */
-export function collectImports(
-  decl: KtDecl,
-  fqn: ReadonlyMap<string, string>,
-  currentPkg: string,
-): string[] {
-  const out = new Set<string>();
-  walkAnnotations(decl, (a) => {
-    if (a.pkg) out.add(`${a.pkg}.${a.name}`);
-  });
-  walkTypes(decl, (t) => collectTypeImport(t, fqn, currentPkg, out));
-  return [...out].sort();
-}
+export function importsForSource(
+  source: string,
+  ctx: { isApiSurface: boolean; rootPkg: string; subPkg: string },
+): ReadonlyArray<string> {
+  const set = new Set<string>();
 
-function collectTypeImport(
-  t: KtType,
-  fqn: ReadonlyMap<string, string>,
-  currentPkg: string,
-  out: Set<string>,
-): void {
-  switch (t.kind) {
-    case "primitive":
-      return;
-    case "list":
-      collectTypeImport(t.element, fqn, currentPkg, out);
-      return;
-    case "map":
-      collectTypeImport(t.key, fqn, currentPkg, out);
-      collectTypeImport(t.value, fqn, currentPkg, out);
-      return;
-    case "nullable":
-      collectTypeImport(t.inner, fqn, currentPkg, out);
-      return;
-    case "ref": {
-      if (t.pkg) {
-        // For nested types like `MultipartBody.Part`, import the outer
-        // class so qualified-name use resolves.
-        const dot = t.name.indexOf(".");
-        const head = dot === -1 ? t.name : t.name.slice(0, dot);
-        out.add(`${t.pkg}.${head}`);
-        return;
-      }
-      const target = fqn.get(t.name);
-      if (!target) return;
-      const targetPkg = target.slice(0, target.lastIndexOf("."));
-      if (targetPkg !== currentPkg) out.add(target);
+  // kotlinx-serialization annotations.
+  if (/@Serializable\b/.test(source)) {
+    set.add("kotlinx.serialization.Serializable");
+  }
+  if (/@SerialName\b/.test(source)) {
+    set.add("kotlinx.serialization.SerialName");
+  }
+
+  // kotlinx-datetime model fields.
+  if (/\bInstant\b/.test(source)) set.add("kotlinx.datetime.Instant");
+  if (/\bLocalDate\b/.test(source)) set.add("kotlinx.datetime.LocalDate");
+
+  // kotlinx-serialization builtins (only when actually mentioned).
+  if (/\bListSerializer\(/.test(source)) {
+    set.add("kotlinx.serialization.builtins.ListSerializer");
+  }
+  if (/\bMapSerializer\(/.test(source)) {
+    set.add("kotlinx.serialization.builtins.MapSerializer");
+  }
+  if (/\bByteArraySerializer\(\)/.test(source)) {
+    set.add("kotlinx.serialization.builtins.ByteArraySerializer");
+  }
+  if (/\.nullable\b/.test(source)) {
+    set.add("kotlinx.serialization.builtins.nullable");
+  }
+  if (/\bserializer\(\)/.test(source) && ctx.isApiSurface) {
+    // Built-in `String.serializer()`, `Int.serializer()`, etc. live
+    // under kotlinx.serialization.builtins. Only the API surface uses
+    // them — model files use the auto-generated companion form.
+    set.add("kotlinx.serialization.builtins.serializer");
+  }
+  if (/\bJsonElement\b/.test(source)) {
+    set.add("kotlinx.serialization.json.JsonElement");
+  }
+
+  // OkHttp types — only API-surface files reference them.
+  if (ctx.isApiSurface) {
+    if (/\bHttpUrl\b/.test(source)) set.add("okhttp3.HttpUrl");
+    if (/\bRequest\b/.test(source)) set.add("okhttp3.Request");
+    if (/\bResponse\b/.test(source)) set.add("okhttp3.Response");
+    if (/\bFormBody\b/.test(source)) set.add("okhttp3.FormBody");
+    if (/\.toMediaType\(\)/.test(source)) {
+      set.add("okhttp3.MediaType.Companion.toMediaType");
+    }
+    if (/\.toRequestBody\(/.test(source)) {
+      set.add("okhttp3.RequestBody.Companion.toRequestBody");
+    }
+
+    // Cross-package model refs. The API surface lives in `<root>.api`
+    // and references model types from `<root>.models`. Wildcard-import
+    // when the file mentions any PascalCased identifier that isn't a
+    // built-in (cheap heuristic; the alternative is walking every type
+    // ref through the decl tree).
+    if (
+      ctx.subPkg === `${ctx.rootPkg}.api` &&
+      /\b[A-Z][A-Za-z0-9_]*\b/.test(source) &&
+      hasLikelyModelRef(source)
+    ) {
+      set.add(`${ctx.rootPkg}.models.*`);
     }
   }
+
+  // Drop self-package imports — Kotlin allows them but they're noise.
+  return [...set].filter((i) => !i.startsWith(`${ctx.subPkg}.`)).sort();
 }
 
-function walkAnnotations(decl: KtDecl, visit: (a: KtAnnotation) => void): void {
-  switch (decl.kind) {
-    case "dataClass":
-      decl.annotations.forEach(visit);
-      for (const p of decl.properties) p.annotations.forEach(visit);
-      return;
-    case "enum":
-      decl.annotations.forEach(visit);
-      for (const v of decl.variants) v.annotations.forEach(visit);
-      return;
-    case "interface":
-      decl.annotations.forEach(visit);
-      for (const fn of decl.funs) {
-        fn.annotations.forEach(visit);
-        for (const p of fn.params) p.annotations.forEach(visit);
-      }
-      return;
-    case "typeAlias":
-      return;
+/**
+ * Identifiers that ship in `kotlin.*` / `okhttp3.*` / kotlinx — and so
+ * do NOT trigger a `<root>.models.*` import. Used to keep the wildcard
+ * model import out of files that never actually reference user types.
+ */
+const NON_MODEL_TYPES = new Set([
+  // Kotlin stdlib
+  "Any",
+  "Unit",
+  "Nothing",
+  "String",
+  "Int",
+  "Long",
+  "Short",
+  "Byte",
+  "Double",
+  "Float",
+  "Boolean",
+  "ByteArray",
+  "List",
+  "Map",
+  "Pair",
+  "Triple",
+  "Throwable",
+  "Exception",
+  "RuntimeException",
+  "Result",
+  "Charsets",
+  "Base64",
+  "TimeUnit",
+  // kotlinx
+  "Instant",
+  "LocalDate",
+  "JsonElement",
+  "Json",
+  "Dispatchers",
+  "Serializable",
+  "SerialName",
+  "ListSerializer",
+  "MapSerializer",
+  "ByteArraySerializer",
+  // OkHttp
+  "HttpUrl",
+  "Request",
+  "Response",
+  "OkHttpClient",
+  "FormBody",
+  "MultipartBody",
+  "RequestBody",
+  "MediaType",
+  // Runtime helpers (same package)
+  "APIClient",
+  "APIError",
+  "APIInterceptors",
+  "Auth",
+  "APIKeyLocation",
+  "MultipartFormBody",
+  "QueryStyle",
+  "RequestOptions",
+  "URLEncoding",
+]);
+
+function hasLikelyModelRef(source: string): boolean {
+  const matches = source.matchAll(/\b([A-Z][A-Za-z0-9_]*)\b/g);
+  for (const m of matches) {
+    if (!NON_MODEL_TYPES.has(m[1]!)) return true;
   }
+  return false;
 }
 
-function walkTypes(decl: KtDecl, visit: (t: KtType) => void): void {
-  switch (decl.kind) {
-    case "dataClass":
-      for (const p of decl.properties) visit(p.type);
-      return;
-    case "enum":
-      return;
-    case "interface":
-      for (const fn of decl.funs) {
-        visit(fn.returnType);
-        for (const p of fn.params) visit(p.type);
-      }
-      return;
-    case "typeAlias":
-      visit(decl.type);
-      return;
-  }
+/** API-surface predicate, exposed for the build orchestrator. */
+export function isApiSurface(decl: KtDecl): boolean {
+  if (decl.kind === "interface") return true;
+  if (decl.kind === "class") return true;
+  if (decl.kind === "topLevelFun") return true;
+  return Boolean(
+    (decl.kind === "enum" ||
+      decl.kind === "sealedClass" ||
+      decl.kind === "dataClass" ||
+      decl.kind === "object") &&
+      decl.runtime,
+  );
 }

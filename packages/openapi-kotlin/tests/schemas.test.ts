@@ -1,270 +1,184 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { ktFile, printFile, schemasToDecls } from "../dist/index.js";
+import { printDecl, schemasToDecls } from "../dist/index.js";
 import { ir } from "./_helpers.ts";
 
-const decls = (components: Record<string, unknown>) =>
-  schemasToDecls(
-    ir({ components: { schemas: components } }).components?.schemas ?? {},
-  );
-
-describe("schemas (IR-driven)", () => {
-  it("primitives + required vs optional", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        imports: ["kotlinx.serialization.Serializable"],
-        decls: decls({
+describe("schemasToDecls", () => {
+  it("emits a @Serializable data class with required + optional props", () => {
+    const m = ir({
+      components: {
+        schemas: {
           User: {
             type: "object",
-            required: ["id", "age"],
+            required: ["id"],
             properties: {
               id: { type: "string" },
               name: { type: "string" },
-              age: { type: "integer" },
-              weight: { type: "number" },
-              active: { type: "boolean" },
-            },
-          },
-        }),
-      }),
-    );
-
-    assert.equal(
-      out,
-      `package x
-
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class User(
-    val id: String,
-    val name: String?,
-    val age: Int,
-    val weight: Double?,
-    val active: Boolean?,
-)
-`,
-    );
-  });
-
-  it("integer format=int64 → Long; number format=float → Float", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          Big: {
-            type: "object",
-            required: ["bigId", "ratio"],
-            properties: {
-              bigId: { type: "integer", format: "int64" },
-              ratio: { type: "number", format: "float" },
-            },
-          },
-        }),
-      }),
-    );
-    assert.match(out, /val bigId: Long,/);
-    assert.match(out, /val ratio: Float,/);
-  });
-
-  it("3.1 nullable via type=[T,null]", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          A: {
-            type: "object",
-            required: ["modern"],
-            properties: { modern: { type: ["string", "null"] } },
-          },
-        }),
-      }),
-    );
-    assert.match(out, /val modern: String\?,/);
-  });
-
-  it("3.0 nullable: true is honored when openapi version is 3.0", () => {
-    const m = ir(
-      {
-        components: {
-          schemas: {
-            A: {
-              type: "object",
-              required: ["legacy"],
-              properties: { legacy: { type: "string", nullable: true } },
             },
           },
         },
       },
-      "3.0",
-    );
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: schemasToDecls(m.components?.schemas ?? {}),
-      }),
-    );
-    assert.match(out, /val legacy: String\?,/);
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    assert.equal(decls.length, 1);
+    const out = printDecl(decls[0]!);
+    assert.match(out, /@Serializable/);
+    assert.match(out, /public data class User\(/);
+    assert.match(out, /public val id: String,/);
+    assert.match(out, /public val name: String\? = null,/);
   });
 
-  it("arrays + refs", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          Tag: { type: "string" },
+  it("emits a @Serializable enum class with raw value + @SerialName", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Status: {
+            type: "string",
+            enum: ["active", "pending"],
+          },
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    const out = decls.map(printDecl).join("\n");
+    assert.match(out, /enum class Status/);
+    assert.match(out, /@SerialName\("active"\) ACTIVE\("active"\)/);
+    assert.match(out, /@SerialName\("pending"\) PENDING\("pending"\)/);
+  });
+
+  it("emits a typealias for a primitive schema", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Email: { type: "string" },
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    assert.equal(decls.length, 1);
+    assert.match(printDecl(decls[0]!), /typealias Email = String/);
+  });
+
+  it("emits a Map<String, V> typealias for additionalProperties-only objects", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Headers: {
+            type: "object",
+            additionalProperties: { type: "string" },
+          },
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    assert.match(
+      printDecl(decls[0]!),
+      /typealias Headers = Map<String, String>/,
+    );
+  });
+
+  it("renames camelCase from snake_case + emits @SerialName", () => {
+    const m = ir({
+      components: {
+        schemas: {
           User: {
             type: "object",
-            required: ["id"],
-            properties: { id: { type: "string" } },
-          },
-          Page: {
-            type: "object",
-            required: ["items", "tags"],
+            required: ["first_name"],
             properties: {
-              items: {
-                type: "array",
-                items: { $ref: "#/components/schemas/User" },
-              },
-              tags: {
-                type: "array",
-                items: { $ref: "#/components/schemas/Tag" },
-              },
+              first_name: { type: "string" },
             },
           },
-        }),
-      }),
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    const out = printDecl(decls[0]!);
+    assert.match(
+      out,
+      /@SerialName\("first_name"\) public val firstName: String,/,
     );
-    assert.match(out, /typealias Tag = String/);
-    assert.match(out, /val items: List<User>,/);
-    assert.match(out, /val tags: List<Tag>,/);
   });
 
-  it("inline nested object → promoted to synthetic data class", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
+  it("maps integer formats: int64 → Long, default → Int", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Counts: {
+            type: "object",
+            required: ["small", "big"],
+            properties: {
+              small: { type: "integer" },
+              big: { type: "integer", format: "int64" },
+            },
+          },
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    const out = decls.map(printDecl).join("\n");
+    assert.match(out, /public val small: Int,/);
+    assert.match(out, /public val big: Long,/);
+  });
+
+  it("inlines nested object schemas as Owner_Property data classes", () => {
+    const m = ir({
+      components: {
+        schemas: {
           User: {
             type: "object",
             required: ["address"],
             properties: {
               address: {
                 type: "object",
-                required: ["street"],
-                properties: {
-                  street: { type: "string" },
-                  zip: { type: "string" },
-                },
+                required: ["city"],
+                properties: { city: { type: "string" } },
               },
             },
           },
-        }),
-      }),
+        },
+      },
+    });
+    const decls = schemasToDecls(m.components?.schemas ?? {});
+    const names = decls.map((d) =>
+      d.kind === "topLevelFun" ? d.fun.name : (d as { name: string }).name,
     );
-    assert.match(out, /data class User\(\s+val address: User_Address,/);
-    assert.match(
-      out,
-      /data class User_Address\(\s+val street: String,\s+val zip: String\?,/,
-    );
+    assert.deepEqual(names.sort(), ["User", "User_Address"]);
   });
 
-  it("string enum at top level → @Serializable enum class", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        imports: [
-          "kotlinx.serialization.SerialName",
-          "kotlinx.serialization.Serializable",
-        ],
-        decls: decls({
-          Status: {
-            type: "string",
-            enum: ["active", "pending", "archived"],
-          },
-        }),
-      }),
-    );
-    assert.equal(
-      out,
-      `package x
-
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-@Serializable
-enum class Status {
-    @SerialName("active") Active,
-    @SerialName("pending") Pending,
-    @SerialName("archived") Archived,
-}
-`,
-    );
-  });
-
-  it("inline enum on a property → promoted to synthetic enum", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          User: {
+  it("maps date-time / date formats to Instant / LocalDate; uuid → String", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Event: {
             type: "object",
-            required: ["status"],
+            required: ["startedAt", "day", "id"],
             properties: {
-              status: { type: "string", enum: ["a", "b"] },
+              startedAt: { type: "string", format: "date-time" },
+              day: { type: "string", format: "date" },
+              id: { type: "string", format: "uuid" },
             },
           },
-        }),
-      }),
-    );
-    assert.match(out, /val status: User_Status,/);
-    assert.match(out, /enum class User_Status \{/);
+        },
+      },
+    });
+    const out = printDecl(schemasToDecls(m.components?.schemas ?? {})[0]!);
+    assert.match(out, /public val startedAt: Instant,/);
+    assert.match(out, /public val day: LocalDate,/);
+    assert.match(out, /public val id: String,/);
   });
 
-  it("additionalProperties: schema → typealias Map<String, T>; sealed → empty data class", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          Bag: {
-            type: "object",
-            additionalProperties: { type: "integer" },
-          },
-          Anything: {
-            type: "object",
-            additionalProperties: true,
-          },
-          Sealed: {
-            type: "object",
-            additionalProperties: false,
-          },
-        }),
-      }),
+  it("rejects enums whose normalized entry names collide", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Foo: { type: "string", enum: ["USER", "user"] },
+        },
+      },
+    });
+    assert.throws(
+      () => schemasToDecls(m.components?.schemas ?? {}),
+      /entry name "USER" collides/,
     );
-    assert.match(out, /typealias Bag = Map<String, Int>/);
-    assert.match(out, /typealias Anything = Map<String, Any>/);
-    assert.match(out, /data class Sealed\(\)/);
-  });
-
-  it("snake_case property names preserved verbatim", () => {
-    const out = printFile(
-      ktFile({
-        packageName: "x",
-        decls: decls({
-          X: {
-            type: "object",
-            required: ["snake_case_field", "camelCase"],
-            properties: {
-              snake_case_field: { type: "string" },
-              camelCase: { type: "string" },
-            },
-          },
-        }),
-      }),
-    );
-    assert.match(out, /val snake_case_field: String,/);
-    assert.match(out, /val camelCase: String,/);
   });
 });

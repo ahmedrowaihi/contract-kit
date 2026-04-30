@@ -1,3 +1,3 @@
-export type { OperationsOptions } from "./operations.js";
-export { operationsToDecls } from "./operations.js";
-export { schemasToDecls } from "./schemas.js";
+export type { OperationsOptions, OperationsResult } from "./operations.js";
+export { operationsToDecls, securityKey } from "./operations.js";
+export { schemasToDecls } from "./schema.js";

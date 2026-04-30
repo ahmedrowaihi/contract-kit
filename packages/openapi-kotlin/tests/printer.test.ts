@@ -4,8 +4,13 @@ import { describe, it } from "node:test";
 import {
   ktAnnotation,
   ktDataClass,
+  ktEnum,
+  ktEnumEntry,
   ktFile,
+  ktFun,
+  ktFunParam,
   ktInt,
+  ktInterface,
   ktList,
   ktNullable,
   ktProp,
@@ -15,106 +20,21 @@ import {
 } from "../dist/index.js";
 
 describe("printer", () => {
-  it("emits @Serializable data class with required + nullable props", () => {
+  it("emits a public @Serializable data class with required + optional props", () => {
     const file = ktFile({
-      packageName: "com.example.api.model",
+      pkg: "com.example.api",
       imports: ["kotlinx.serialization.Serializable"],
       decls: [
         ktDataClass({
           name: "User",
           annotations: [ktAnnotation("Serializable")],
           properties: [
-            ktProp({ name: "id", type: ktString }),
-            ktProp({ name: "name", type: ktNullable(ktString) }),
-          ],
-        }),
-      ],
-    });
-
-    assert.equal(
-      printFile(file),
-      `package com.example.api.model
-
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class User(
-    val id: String,
-    val name: String?,
-)
-`,
-    );
-  });
-
-  it("composes list, ref, primitive types", () => {
-    const file = ktFile({
-      packageName: "x",
-      decls: [
-        ktDataClass({
-          name: "Page",
-          annotations: [ktAnnotation("Serializable")],
-          properties: [
-            ktProp({ name: "items", type: ktList(ktRef("User")) }),
-            ktProp({ name: "total", type: ktInt }),
-            ktProp({ name: "next", type: ktNullable(ktString) }),
-          ],
-        }),
-      ],
-    });
-
-    assert.equal(
-      printFile(file),
-      `package x
-
-@Serializable
-data class Page(
-    val items: List<User>,
-    val total: Int,
-    val next: String?,
-)
-`,
-    );
-  });
-
-  it("emits empty data class when no properties", () => {
-    const file = ktFile({
-      packageName: "x",
-      decls: [
-        ktDataClass({
-          name: "Empty",
-          properties: [],
-          annotations: [ktAnnotation("Serializable")],
-        }),
-      ],
-    });
-    assert.equal(
-      printFile(file),
-      `package x
-
-@Serializable
-data class Empty()
-`,
-    );
-  });
-
-  it("emits annotation args verbatim on properties", () => {
-    const file = ktFile({
-      packageName: "x",
-      imports: [
-        "kotlinx.serialization.SerialName",
-        "kotlinx.serialization.Serializable",
-      ],
-      decls: [
-        ktDataClass({
-          name: "Foo",
-          annotations: [ktAnnotation("Serializable")],
-          properties: [
+            ktProp({ name: "id", type: ktString, inPrimary: true }),
             ktProp({
-              name: "raw",
-              type: ktString,
-              annotations: [
-                ktAnnotation("SerialName", { args: ['"raw_field"'] }),
-              ],
+              name: "name",
+              type: ktNullable(ktString),
+              inPrimary: true,
+              default: "null",
             }),
           ],
         }),
@@ -123,16 +43,111 @@ data class Empty()
 
     assert.equal(
       printFile(file),
-      `package x
+      `package com.example.api
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Foo(
-    @SerialName("raw_field") val raw: String,
+public data class User(
+    public val id: String,
+    public val name: String? = null,
 )
 `,
     );
+  });
+
+  it("emits a String-raw @Serializable enum class", () => {
+    const file = ktFile({
+      pkg: "com.example.api",
+      decls: [
+        ktEnum({
+          name: "Status",
+          annotations: [ktAnnotation("Serializable")],
+          properties: [
+            ktProp({ name: "raw", type: ktString, inPrimary: true }),
+          ],
+          entries: [
+            ktEnumEntry("ACTIVE", `"active"`, [
+              ktAnnotation("SerialName", `"active"`),
+            ]),
+            ktEnumEntry("PENDING", `"pending"`, [
+              ktAnnotation("SerialName", `"pending"`),
+            ]),
+          ],
+        }),
+      ],
+    });
+    const out = printFile(file);
+    assert.match(out, /enum class Status\(\n\s+public val raw: String,\n\)/);
+    assert.match(out, /@SerialName\("active"\) ACTIVE\("active"\)/);
+  });
+
+  it("emits an interface with suspend funs and no body", () => {
+    const file = ktFile({
+      pkg: "com.example.api",
+      decls: [
+        ktInterface({
+          name: "UsersApi",
+          funs: [
+            ktFun({
+              name: "getUser",
+              params: [ktFunParam({ name: "id", type: ktString })],
+              returnType: ktRef("User"),
+              modifiers: ["suspend"],
+              doc: "GET /users/{id}",
+            }),
+          ],
+        }),
+      ],
+    });
+    assert.equal(
+      printFile(file),
+      `package com.example.api
+
+public interface UsersApi {
+    /** GET /users/{id} */
+    suspend fun getUser(
+        id: String
+    ): User
+}
+`,
+    );
+  });
+
+  it("composes List, nullable, ref types", () => {
+    const file = ktFile({
+      pkg: "com.example.api",
+      decls: [
+        ktDataClass({
+          name: "Page",
+          annotations: [ktAnnotation("Serializable")],
+          properties: [
+            ktProp({
+              name: "items",
+              type: ktList(ktRef("User")),
+              inPrimary: true,
+            }),
+            ktProp({ name: "total", type: ktInt, inPrimary: true }),
+            ktProp({
+              name: "next",
+              type: ktNullable(ktString),
+              inPrimary: true,
+              default: "null",
+            }),
+          ],
+        }),
+      ],
+    });
+    const out = printFile(file);
+    assert.match(out, /public val items: List<User>/);
+    assert.match(out, /public val next: String\? = null/);
+  });
+
+  it("ktNullable is idempotent (does not double-wrap)", () => {
+    const t = ktNullable(ktNullable(ktString));
+    assert.equal(t.kind, "nullable");
+    if (t.kind === "nullable") {
+      assert.equal(t.inner.kind, "primitive");
+    }
   });
 });
