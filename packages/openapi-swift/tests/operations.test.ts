@@ -397,26 +397,28 @@ describe("operations (IR-driven)", () => {
         }),
       }),
     );
+    // URLComponents is constructed via guard-let; force-unwrap is gone.
     assert.match(
       out,
-      /var components = URLComponents\(url: baseURL\.appendingPathComponent\("search"\), resolvingAgainstBaseURL: false\)!/,
+      /guard let urlComponents = URLComponents\(url: baseURL\.appendingPathComponent\("search"\), resolvingAgainstBaseURL: false\) else/,
     );
+    assert.match(out, /var components = urlComponents/);
     assert.match(out, /components\.queryItems = \[URLQueryItem\]\(\)/);
-    // Scalar — emits the value variant.
+    // Scalar — emits the value variant; appends use optional chaining.
     assert.match(
       out,
-      /components\.queryItems!\.append\(contentsOf: URLEncoding\.query\("q", value: q\)\)/,
+      /components\.queryItems\?\.append\(contentsOf: URLEncoding\.query\("q", value: q\)\)/,
     );
     assert.match(
       out,
-      /components\.queryItems!\.append\(contentsOf: URLEncoding\.query\("limit", value: limit\)\)/,
+      /components\.queryItems\?\.append\(contentsOf: URLEncoding\.query\("limit", value: limit\)\)/,
     );
     // Array — emits the values variant with style + explode.
     assert.match(
       out,
-      /components\.queryItems!\.append\(contentsOf: URLEncoding\.query\("tags", values: tags, style: \.form, explode: true\)\)/,
+      /components\.queryItems\?\.append\(contentsOf: URLEncoding\.query\("tags", values: tags, style: \.form, explode: true\)\)/,
     );
-    assert.match(out, /let url = components\.url!/);
+    assert.match(out, /guard let url = components\.url else/);
     // The runtime helper itself is included at the bottom of the file.
     assert.match(out, /public final class URLEncoding \{/);
     assert.match(out, /public enum QueryStyle \{/);

@@ -7,6 +7,8 @@ import type {
 import {
   swAny,
   swDict,
+  swFunParam,
+  swInit,
   swOptional,
   swProp,
   swRef,
@@ -41,10 +43,9 @@ export function buildStruct(
         // change the synthesized name of an inline-object type.
         propPath: [pascal(jsonKey)],
       });
-      return {
-        naming,
-        type: required.has(jsonKey) ? t : swOptional(t),
-      };
+      const optional = !required.has(jsonKey);
+      const finalType = optional && t.kind !== "optional" ? swOptional(t) : t;
+      return { naming, type: finalType, optional };
     },
   );
 
@@ -60,11 +61,20 @@ export function buildStruct(
       }))
     : undefined;
 
+  const initParams = entries.map(({ naming, type, optional }) =>
+    swFunParam({
+      name: naming.swiftName,
+      type,
+      default: optional ? "nil" : undefined,
+    }),
+  );
+
   return swStruct({
     name,
     properties,
     conforms: ["Codable"],
     codingKeys,
+    inits: initParams.length > 0 ? [swInit({ params: initParams })] : [],
   });
 }
 
@@ -78,13 +88,14 @@ export function inlineObjectType(
   schema: IR.SchemaObject,
   ctx: TypeCtx,
 ): SwType {
-  if (schema.properties) {
+  const hasNamedProperties = Object.keys(schema.properties ?? {}).length > 0;
+  if (hasNamedProperties) {
     const name = synthName(ctx.ownerName, ctx.propPath);
     ctx.emit(buildStruct(name, schema, ctx));
     return swRef(name);
   }
   const ap = schema.additionalProperties;
-  if (ap) {
+  if (ap && typeof ap === "object") {
     return swDict(swString, schemaToType(ap, ctx));
   }
   return swDict(swString, swAny);

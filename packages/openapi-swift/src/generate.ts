@@ -1,5 +1,11 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  join,
+  parse as parsePath,
+  resolve,
+} from "node:path";
 
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
@@ -61,7 +67,10 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
     ? packageSwiftFile(resolvePackageOptions(opts.package, out))
     : undefined;
   const files = packageFile ? [...sdkFiles, packageFile] : sdkFiles;
-  if (opts.clean !== false) await rm(out, { recursive: true, force: true });
+  if (opts.clean !== false) {
+    assertSafeOutputDir(out);
+    await rm(out, { recursive: true, force: true });
+  }
   for (const file of files) {
     const full = join(out, file.path);
     await mkdir(dirname(full), { recursive: true });
@@ -119,6 +128,19 @@ function extractSecuritySchemeNames(
     }
   }
   return map;
+}
+
+/**
+ * Refuse to wipe the current working directory or a filesystem root.
+ * `clean: true` runs `rm -rf` on the resolved output dir, which would
+ * destroy the user's repo if they pointed `output` at `.` or `/`.
+ */
+function assertSafeOutputDir(out: string): void {
+  if (out === process.cwd() || out === parsePath(out).root) {
+    throw new Error(
+      `Refusing to clean output directory: ${out} (would wipe cwd or filesystem root). Use a dedicated subdirectory.`,
+    );
+  }
 }
 
 function defaultPackageName(outputDir: string): string {

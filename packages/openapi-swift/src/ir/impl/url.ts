@@ -3,17 +3,20 @@ import type { SwCallArg, SwExpr, SwStmt } from "../../sw-dsl/index.js";
 import {
   swArg,
   swArrayLit,
+  swAssign,
   swBoolLit,
   swCall,
   swDotCase,
   swExprStmt,
-  swForceUnwrap,
+  swGuardLet,
   swIdent,
   swInterp,
   swLet,
   swMember,
+  swOptChain,
   swRef,
   swStr,
+  swThrow,
   swVar,
 } from "../../sw-dsl/index.js";
 import { paramIdent } from "../identifiers.js";
@@ -51,37 +54,36 @@ export function buildUrlStmts(
   }
 
   return [
-    swVar(
-      "components",
-      swForceUnwrap(
-        swCall(swIdent("URLComponents"), [
-          swArg(appendPath, "url"),
-          swArg(swBoolLit(false), "resolvingAgainstBaseURL"),
-        ]),
-      ),
+    swGuardLet(
+      "urlComponents",
+      swCall(swIdent("URLComponents"), [
+        swArg(appendPath, "url"),
+        swArg(swBoolLit(false), "resolvingAgainstBaseURL"),
+      ]),
+      [throwBadURL()],
     ),
-    {
-      kind: "assign",
-      target: swMember(swIdent("components"), "queryItems"),
-      value: swArrayLit([], swRef("URLQueryItem")),
-    },
+    swVar("components", swIdent("urlComponents")),
+    swAssign(
+      swMember(swIdent("components"), "queryItems"),
+      swArrayLit([], swRef("URLQueryItem")),
+    ),
     ...queryParams.map(appendQueryItemsCall),
-    swLet("url", swForceUnwrap(swMember(swIdent("components"), "url"))),
+    swGuardLet("url", swMember(swIdent("components"), "url"), [throwBadURL()]),
   ];
 }
 
-/**
- * `components.queryItems!.append(contentsOf: URLEncoding.query(...))`
- * for one parameter — the helper handles required vs optional, scalar
- * vs array, and `style` / `explode` per the OpenAPI spec.
- */
+function throwBadURL(): SwStmt {
+  return swThrow(
+    swCall(swMember(swIdent("APIError"), "transport"), [
+      swArg(swCall(swIdent("URLError"), [swArg(swDotCase("badURL"))])),
+    ]),
+  );
+}
+
 function appendQueryItemsCall(p: IR.ParameterObject): SwStmt {
   return swExprStmt(
     swCall(
-      swMember(
-        swForceUnwrap(swMember(swIdent("components"), "queryItems")),
-        "append",
-      ),
+      swOptChain(swMember(swIdent("components"), "queryItems"), "append"),
       [swArg(urlEncodingQueryCall(p), "contentsOf")],
     ),
   );

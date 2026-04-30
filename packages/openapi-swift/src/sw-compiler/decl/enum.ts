@@ -4,18 +4,23 @@ import { printType } from "../type.js";
 import { printFun } from "./fun.js";
 
 function printCaseLine(c: SwEnumCase): string {
+  const hasAssocs = c.assocs && c.assocs.length > 0;
+  if (c.rawValue !== undefined && hasAssocs) {
+    throw new Error(
+      `Enum case "${c.name}" has both a raw value and associated values; Swift forbids this combination.`,
+    );
+  }
   const raw =
     c.rawValue !== undefined ? ` = ${JSON.stringify(c.rawValue)}` : "";
-  const assocs =
-    c.assocs && c.assocs.length > 0
-      ? `(${c.assocs
-          .map((a) =>
-            a.label !== undefined
-              ? `${a.label}: ${printType(a.type)}`
-              : printType(a.type),
-          )
-          .join(", ")})`
-      : "";
+  const assocs = hasAssocs
+    ? `(${c
+        .assocs!.map((a) =>
+          a.label !== undefined
+            ? `${a.label}: ${printType(a.type)}`
+            : printType(a.type),
+        )
+        .join(", ")})`
+    : "";
   return `${INDENT}case ${c.name}${assocs}${raw}`;
 }
 

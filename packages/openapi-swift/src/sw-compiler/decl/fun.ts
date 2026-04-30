@@ -13,24 +13,29 @@ function printGenerics(generics: ReadonlyArray<SwGenericParam>): string {
     .join(", ")}>`;
 }
 
-export function printFunParam(p: SwFunParam): string {
+export function printFunParam(
+  p: SwFunParam,
+  includeDefault: boolean = true,
+): string {
   const head =
     p.label === undefined
       ? p.name
       : p.label === p.name
         ? p.name
         : `${p.label} ${p.name}`;
-  const def = p.default !== undefined ? ` = ${p.default}` : "";
+  const def =
+    includeDefault && p.default !== undefined ? ` = ${p.default}` : "";
   return `${head}: ${printType(p.type)}${def}`;
 }
 
 export function printParamsBlock(
   params: ReadonlyArray<SwFunParam>,
   indent: string,
+  includeDefault: boolean = true,
 ): string {
   if (params.length === 0) return "()";
   return `(\n${params
-    .map((p) => `${indent}${INDENT}${printFunParam(p)}`)
+    .map((p) => `${indent}${INDENT}${printFunParam(p, includeDefault)}`)
     .join(",\n")}\n${indent})`;
 }
 
@@ -53,7 +58,8 @@ export function printFun(
   const staticKw = fn.isStatic ? "static " : "";
   const mutatingKw = fn.isMutating ? "mutating " : "";
   const generics = printGenerics(fn.generics);
-  const params = printParamsBlock(fn.params, indent);
+  const isProtocolRequirement = fn.body === undefined;
+  const params = printParamsBlock(fn.params, indent, !isProtocolRequirement);
   const effects = fn.effects.length > 0 ? ` ${fn.effects.join(" ")}` : "";
   const isVoid =
     fn.returnType.kind === "primitive" && fn.returnType.name === "Void";

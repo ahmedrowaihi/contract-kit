@@ -101,11 +101,16 @@ public final class URLSessionUserAPI: UserAPI {
     ) async throws -> String {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        var components = URLComponents(url: baseURL.appendingPathComponent("user/login"), resolvingAgainstBaseURL: false)!
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("user/login"), resolvingAgainstBaseURL: false) else {
+            throw APIError.transport(URLError(.badURL))
+        }
+        var components = urlComponents
         components.queryItems = [URLQueryItem]()
-        components.queryItems!.append(contentsOf: URLEncoding.query("username", value: username))
-        components.queryItems!.append(contentsOf: URLEncoding.query("password", value: password))
-        let url = components.url!
+        components.queryItems?.append(contentsOf: URLEncoding.query("username", value: username))
+        components.queryItems?.append(contentsOf: URLEncoding.query("password", value: password))
+        guard let url = components.url else {
+            throw APIError.transport(URLError(.badURL))
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {
@@ -125,11 +130,16 @@ public final class URLSessionUserAPI: UserAPI {
     ) async throws -> (String, HTTPURLResponse) {
         let client = options.client ?? self.client
         let baseURL = options.baseURL ?? client.baseURL
-        var components = URLComponents(url: baseURL.appendingPathComponent("user/login"), resolvingAgainstBaseURL: false)!
+        guard let urlComponents = URLComponents(url: baseURL.appendingPathComponent("user/login"), resolvingAgainstBaseURL: false) else {
+            throw APIError.transport(URLError(.badURL))
+        }
+        var components = urlComponents
         components.queryItems = [URLQueryItem]()
-        components.queryItems!.append(contentsOf: URLEncoding.query("username", value: username))
-        components.queryItems!.append(contentsOf: URLEncoding.query("password", value: password))
-        let url = components.url!
+        components.queryItems?.append(contentsOf: URLEncoding.query("username", value: username))
+        components.queryItems?.append(contentsOf: URLEncoding.query("password", value: password))
+        guard let url = components.url else {
+            throw APIError.transport(URLError(.badURL))
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         if let timeout = options.timeout {

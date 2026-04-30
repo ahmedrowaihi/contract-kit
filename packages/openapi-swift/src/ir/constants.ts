@@ -6,6 +6,7 @@ export const HTTP_METHODS = [
   "patch",
   "head",
   "options",
+  "trace",
 ] as const;
 
 export type HttpMethod = (typeof HTTP_METHODS)[number];
@@ -18,8 +19,9 @@ export const HTTP_METHOD_LITERAL: Record<HttpMethod, string> = {
   patch: "PATCH",
   head: "HEAD",
   options: "OPTIONS",
+  trace: "TRACE",
 };
 
-export const JSON_MEDIA_RE = /^application\/(json|.*\+json)/i;
+export const JSON_MEDIA_RE = /^application\/(?:json|[\w.+-]+\+json)(?:\s*;|$)/i;
 export const FORM_URLENCODED_MEDIA = "application/x-www-form-urlencoded";
 export const MULTIPART_FORM_MEDIA = "multipart/form-data";

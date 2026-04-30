@@ -43,9 +43,10 @@ export function schemasToDecls(
         decls.push(buildStruct(name, schema, { emit }));
         continue;
       }
-      const valueType = ap
-        ? schemaToType(ap, { emit, ownerName: name, propPath: [] })
-        : swAny;
+      const valueType =
+        ap && typeof ap === "object"
+          ? schemaToType(ap, { emit, ownerName: name, propPath: [] })
+          : swAny;
       decls.push(swTypeAlias({ name, type: swDict(swString, valueType) }));
       continue;
     }

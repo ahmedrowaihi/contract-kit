@@ -59,11 +59,7 @@ export function buildBodyStmts(body: IR.BodyObject): BodyResult {
   const schema = body.schema;
   const isObjectSchema = schema.type === "object" && Boolean(schema.properties);
 
-  if (!mt || JSON_MEDIA_RE.test(mt)) {
-    // `oneOf` (and similar) collapses to `Any` at the type layer, which
-    // can't go through `JSONEncoder.encode`. The param became `Data` in
-    // `operation/body.ts`; mirror that here by emitting the raw-bytes
-    // wire path instead of `try encoder.encode(body)`.
+  if (mt && JSON_MEDIA_RE.test(mt)) {
     const stmts = isOpaqueJsonBody(schema)
       ? rawBinaryBody("application/json")
       : jsonBody();

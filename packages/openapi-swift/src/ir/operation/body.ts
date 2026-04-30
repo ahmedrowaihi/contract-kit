@@ -21,7 +21,7 @@ import { schemaToType } from "../type/index.js";
  *   produce code that fails to compile.
  * - `multipart/form-data` + object schema → one param per property; binary fields become `Data`
  * - `application/x-www-form-urlencoded` + object schema → one param per property
- * - anything else (octet-stream, image/*, ...) → `body: Data`
+ * - empty / octet-stream / image/* / unknown → `body: Data` (caller pre-encodes)
  */
 export function buildBodyParams(
   body: IR.BodyObject,
@@ -31,7 +31,7 @@ export function buildBodyParams(
   const schema = body.schema;
   const isObject = schema.type === "object" && Boolean(schema.properties);
 
-  if (!mt || JSON_MEDIA_RE.test(mt)) {
+  if (mt && JSON_MEDIA_RE.test(mt)) {
     if (isOpaqueJsonBody(schema)) {
       return [swFunParam({ name: "body", type: swData })];
     }
