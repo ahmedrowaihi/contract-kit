@@ -1,7 +1,6 @@
 import type { IR } from "@hey-api/shared";
-
-import { type SwFunParam, swFunParam } from "../../sw-dsl/fun.js";
-import { swData, swOptional } from "../../sw-dsl/type/index.js";
+import type { SwFunParam } from "../../sw-dsl/index.js";
+import { swData, swFunParam, swOptional } from "../../sw-dsl/index.js";
 import {
   FORM_URLENCODED_MEDIA,
   JSON_MEDIA_RE,
@@ -15,7 +14,11 @@ import { schemaToType } from "../type/index.js";
  * Resolve an `IR.BodyObject` into the function parameters that show up
  * in both the protocol signature and the impl method:
  *
- * - `application/json` (and `+json`) → single `body: T`
+ * - `application/json` (and `+json`) → single `body: T`. When the
+ *   schema collapses to `Any` (e.g. a `oneOf` with no discriminated
+ *   union codegen), the param falls back to `Data` so the caller
+ *   pre-encodes JSON — `Any` isn't `Encodable`, so emitting it would
+ *   produce code that fails to compile.
  * - `multipart/form-data` + object schema → one param per property; binary fields become `Data`
  * - `application/x-www-form-urlencoded` + object schema → one param per property
  * - anything else (octet-stream, image/*, ...) → `body: Data`
@@ -29,6 +32,9 @@ export function buildBodyParams(
   const isObject = schema.type === "object" && Boolean(schema.properties);
 
   if (!mt || JSON_MEDIA_RE.test(mt)) {
+    if (isOpaqueJsonBody(schema)) {
+      return [swFunParam({ name: "body", type: swData })];
+    }
     return [
       swFunParam({
         name: "body",
@@ -44,6 +50,17 @@ export function buildBodyParams(
     return objectBodyToFlatParams(schema, ctx, /* binaryAsData */ false);
   }
   return [swFunParam({ name: "body", type: swData })];
+}
+
+/**
+ * True when the body schema would resolve to `Any` — currently
+ * `oneOf`/`anyOf` with no shared type. We can't generate a working
+ * `JSONEncoder.encode` call against `Any`, so the call site swaps to
+ * raw `Data` and the wire encoder emits `request.httpBody = body`
+ * verbatim.
+ */
+export function isOpaqueJsonBody(schema: IR.SchemaObject): boolean {
+  return !schema.type && Array.isArray(schema.items) && schema.items.length > 0;
 }
 
 function objectBodyToFlatParams(

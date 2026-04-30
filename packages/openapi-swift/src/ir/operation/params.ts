@@ -1,8 +1,6 @@
 import type { IR } from "@hey-api/shared";
-
-import type { SwFunParam } from "../../sw-dsl/fun.js";
-import { swFunParam } from "../../sw-dsl/fun.js";
-import { swOptional } from "../../sw-dsl/type/index.js";
+import type { SwFunParam } from "../../sw-dsl/index.js";
+import { swFunParam, swOptional } from "../../sw-dsl/index.js";
 import { paramIdent } from "../identifiers.js";
 import type { TypeCtx } from "../type/index.js";
 import { schemaToType } from "../type/index.js";

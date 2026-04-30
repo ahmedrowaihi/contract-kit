@@ -1,14 +1,16 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
 
-import { operationsToDecls, schemasToDecls } from "./ir/index.js";
+import { operationsToDecls, schemasToDecls, securityKey } from "./ir/index.js";
 import {
   type BuildOptions,
   type BuiltFile,
   buildSwiftProject,
+  type PackageOptions,
+  packageSwiftFile,
 } from "./project/index.js";
 
 export interface GenerateOptions extends BuildOptions {
@@ -24,6 +26,15 @@ export interface GenerateOptions extends BuildOptions {
   output: string;
   /** Wipe `output` before writing. Default: `true`. */
   clean?: boolean;
+  /**
+   * When set, emit `Package.swift` at the output root so the SDK is a
+   * self-contained SwiftPM library. Pass `true` for sensible defaults
+   * keyed off the output dir basename, or an options object for
+   * fine-grained control (custom name, platforms, tools version).
+   * Default: omitted — the output is just `API/` + `Models/` source
+   * files, ready to drop into an existing Xcode target.
+   */
+  package?: boolean | PackageOptions;
 }
 
 export interface GenerateResult {
@@ -40,11 +51,16 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
 
   const decls = [
     ...schemasToDecls(ir.components?.schemas ?? {}),
-    ...operationsToDecls(ir.paths),
+    ...operationsToDecls(ir.paths, {
+      securitySchemeNames: extractSecuritySchemeNames(bundled),
+    }),
   ];
-  const files = buildSwiftProject(decls, opts);
-
+  const sdkFiles = buildSwiftProject(decls, opts);
   const out = resolve(opts.output);
+  const packageFile = opts.package
+    ? packageSwiftFile(resolvePackageOptions(opts.package, out))
+    : undefined;
+  const files = packageFile ? [...sdkFiles, packageFile] : sdkFiles;
   if (opts.clean !== false) await rm(out, { recursive: true, force: true });
   for (const file of files) {
     const full = join(out, file.path);
@@ -52,4 +68,67 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
     await writeFile(full, file.content);
   }
   return { files, output: out };
+}
+
+/**
+ * Normalize the `package` option into a fully-resolved `PackageOptions`.
+ * `package: true` means "use defaults keyed off the output dir": the
+ * package + library name is the basename of the output dir
+ * Pascal-cased (e.g. `…/sdk-swift` → `SdkSwift`, `…/petstore-sdk` →
+ * `PetstoreSdk`). Pass an explicit `name` when that's not what you
+ * want.
+ */
+function resolvePackageOptions(
+  pkg: boolean | PackageOptions,
+  outputDir: string,
+): PackageOptions {
+  if (typeof pkg === "object") return pkg;
+  return { name: defaultPackageName(outputDir) };
+}
+
+/**
+ * Walk the bundled spec to extract per-operation security-scheme NAMES
+ * keyed by `${path}|${method}`. Needed because the IR drops scheme
+ * names from `op.security` (it inlines the resolved scheme objects),
+ * leaving the orchestrator with no way to wire `client.auth["<name>"]`.
+ *
+ * Map shape: `"/me|get" → ["bearerAuth", "apiKeyAuth"]`.
+ */
+function extractSecuritySchemeNames(
+  spec: Record<string, unknown>,
+): Map<string, ReadonlyArray<string>> {
+  const map = new Map<string, ReadonlyArray<string>>();
+  const paths = (spec.paths ?? {}) as Record<string, unknown>;
+  for (const [pathStr, pathItem] of Object.entries(paths)) {
+    if (!pathItem || typeof pathItem !== "object") continue;
+    for (const [method, op] of Object.entries(
+      pathItem as Record<string, unknown>,
+    )) {
+      if (!op || typeof op !== "object") continue;
+      const security = (op as { security?: unknown }).security;
+      if (!Array.isArray(security)) continue;
+      const names = new Set<string>();
+      for (const requirement of security) {
+        if (requirement && typeof requirement === "object") {
+          for (const name of Object.keys(requirement)) names.add(name);
+        }
+      }
+      if (names.size > 0) {
+        map.set(securityKey(pathStr, method), [...names]);
+      }
+    }
+  }
+  return map;
+}
+
+function defaultPackageName(outputDir: string): string {
+  const base = basename(outputDir)
+    .replace(/[^A-Za-z0-9]+/g, " ")
+    .trim();
+  return (
+    base
+      .split(/\s+/)
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join("") || "GeneratedSDK"
+  );
 }

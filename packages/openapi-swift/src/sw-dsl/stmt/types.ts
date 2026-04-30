@@ -1,7 +1,6 @@
 import type { SwExpr } from "../expr/types.js";
 import type { SwType } from "../type/types.js";
 
-/** Left-hand side of `let`: either a single name or a tuple destructure. */
 export type SwLetBinding =
   | string
   | { kind: "tuple"; names: ReadonlyArray<string | "_"> };
@@ -10,7 +9,12 @@ export type SwStmt =
   | SwBindingStmt
   | SwControlStmt
   | { kind: "assign"; target: SwExpr; value: SwExpr }
-  | { kind: "expr"; expr: SwExpr };
+  | { kind: "expr"; expr: SwExpr }
+  | {
+      kind: "doCatch";
+      body: ReadonlyArray<SwStmt>;
+      catch_: ReadonlyArray<SwStmt>;
+    };
 
 export type SwBindingStmt =
   | { kind: "let"; binding: SwLetBinding; expr: SwExpr; type?: SwType }
@@ -37,4 +41,21 @@ export type SwControlStmt =
       name: string;
       source: SwExpr;
       else_: ReadonlyArray<SwStmt>;
+    }
+  | {
+      kind: "switch";
+      on: SwExpr;
+      cases: ReadonlyArray<SwSwitchCase>;
+      default_?: ReadonlyArray<SwStmt>;
+    }
+  | {
+      kind: "forIn";
+      name: string;
+      source: SwExpr;
+      body: ReadonlyArray<SwStmt>;
     };
+
+export interface SwSwitchCase {
+  patterns: ReadonlyArray<SwExpr>;
+  body: ReadonlyArray<SwStmt>;
+}

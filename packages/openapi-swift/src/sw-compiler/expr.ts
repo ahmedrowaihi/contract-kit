@@ -7,6 +7,15 @@ export function printExpr(e: SwExpr): string {
   switch (e.kind) {
     case "ident":
       return e.name;
+    case "dotCase":
+      return `.${e.name}`;
+    case "enumPattern": {
+      const bindings =
+        e.bindings.length === 0
+          ? ""
+          : `(${e.bindings.map((b) => `let ${b}`).join(", ")})`;
+      return `.${e.case}${bindings}`;
+    }
     case "str":
       return JSON.stringify(e.value);
     case "int":
@@ -43,15 +52,32 @@ export function printExpr(e: SwExpr): string {
       return `${printExpr(e.left)} ${e.op} ${printExpr(e.right)}`;
     case "closure":
       return printClosure(e);
+    case "range": {
+      const op = e.halfOpen ? "..<" : "...";
+      return `${printExpr(e.low)}${op}${printExpr(e.high)}`;
+    }
+    case "as": {
+      const op = e.optional ? "as?" : "as";
+      return `${printExpr(e.expr)} ${op} ${printType(e.type)}`;
+    }
   }
+}
+
+function escapeForSwiftLiteral(s: string): string {
+  // Order matters: backslashes first so the escape sequences we add for
+  // `"` / `\n` / `\r` / `\t` aren't double-escaped.
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
 }
 
 function printInterp(parts: ReadonlyArray<string | SwExpr>): string {
   const inner = parts
     .map((p) =>
-      typeof p === "string"
-        ? p.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-        : `\\(${printExpr(p)})`,
+      typeof p === "string" ? escapeForSwiftLiteral(p) : `\\(${printExpr(p)})`,
     )
     .join("");
   return `"${inner}"`;
@@ -94,8 +120,16 @@ function printCall(e: Extract<SwExpr, { kind: "call" }>): string {
 }
 
 export function printClosure(c: SwClosureExpr, indent: string = ""): string {
-  const params = c.params.length === 0 ? "" : `${c.params.join(", ")} in\n`;
-  if (c.body.length === 0) return `{ ${params.trim()} }`;
+  if (c.body.length === 1) {
+    const only = c.body[0]!;
+    if (only.kind === "return" && only.expr !== undefined) {
+      const params = c.params.length === 0 ? "" : `${c.params.join(", ")} in `;
+      return `{ ${params}${printExpr(only.expr)} }`;
+    }
+  }
+  if (c.body.length === 0) {
+    return c.params.length === 0 ? "{}" : `{ ${c.params.join(", ")} in }`;
+  }
   const stmts = c.body.map((s) => printStmt(s, indent + INDENT)).join("\n");
   if (c.params.length === 0) {
     return `{\n${stmts}\n${indent}}`;

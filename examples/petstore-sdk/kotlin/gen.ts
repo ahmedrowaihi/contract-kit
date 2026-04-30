@@ -6,8 +6,8 @@ import { generate } from "@ahmedrowaihi/openapi-kotlin";
 const here = dirname(fileURLToPath(import.meta.url));
 
 const result = await generate({
-  input: resolve(here, "../../fixtures/petstore.yaml"),
-  output: resolve(here, "sdk-kotlin"),
+  input: resolve(here, "../../../fixtures/petstore.yaml"),
+  output: resolve(here, "sdk"),
   packageName: "com.example.petstore",
 });
 

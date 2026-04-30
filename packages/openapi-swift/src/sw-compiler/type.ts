@@ -21,5 +21,7 @@ export function printType(t: SwType): string {
       const effects = t.effects.length > 0 ? ` ${t.effects.join(" ")}` : "";
       return `${params}${effects} -> ${printType(t.returnType)}`;
     }
+    case "tuple":
+      return `(${t.items.map(printType).join(", ")})`;
   }
 }

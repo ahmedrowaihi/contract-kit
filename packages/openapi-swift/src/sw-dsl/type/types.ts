@@ -16,6 +16,7 @@ export type SwType =
   | { kind: "dictionary"; key: SwType; value: SwType }
   | { kind: "ref"; name: string }
   | { kind: "optional"; inner: SwType }
+  | { kind: "tuple"; items: ReadonlyArray<SwType> }
   | {
       kind: "func";
       params: ReadonlyArray<SwType>;

@@ -1,6 +1,6 @@
 import type { IR } from "@hey-api/shared";
-
-import { type SwType, swAny, swOptional } from "../../sw-dsl/type/index.js";
+import type { SwType } from "../../sw-dsl/index.js";
+import { swAny, swOptional } from "../../sw-dsl/index.js";
 import type { TypeCtx } from "./context.js";
 import { schemaToType } from "./index.js";
 import { inlineObjectType } from "./object.js";

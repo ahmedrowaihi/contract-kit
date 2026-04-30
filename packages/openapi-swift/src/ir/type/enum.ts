@@ -1,7 +1,6 @@
 import type { IR } from "@hey-api/shared";
-
-import { swEnum, swEnumCase } from "../../sw-dsl/decl/enum.js";
-import { type SwType, swRef, swString } from "../../sw-dsl/type/index.js";
+import type { SwType } from "../../sw-dsl/index.js";
+import { swEnum, swEnumCase, swRef, swString } from "../../sw-dsl/index.js";
 import { safeCaseName } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 

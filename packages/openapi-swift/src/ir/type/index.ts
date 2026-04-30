@@ -1,13 +1,12 @@
 import type { IR } from "@hey-api/shared";
-
+import type { SwType } from "../../sw-dsl/index.js";
 import {
-  type SwType,
   swAny,
   swArray,
   swOptional,
   swRef,
   swVoid,
-} from "../../sw-dsl/type/index.js";
+} from "../../sw-dsl/index.js";
 import { synthName } from "../identifiers.js";
 import { refName } from "../ref.js";
 import type { TypeCtx } from "./context.js";

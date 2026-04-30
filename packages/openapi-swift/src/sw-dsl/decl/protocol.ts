@@ -9,6 +9,19 @@ export interface SwProtocol {
   funs: ReadonlyArray<SwFun>;
 }
 
+/**
+ * Top-level protocol decl. Pass each requirement as a `SwFun` with no
+ * body — the printer omits the braces.
+ *
+ * @example
+ * ```swift
+ * // swProtocol({ name: "UsersAPI",
+ * //              funs: [swFun({ name: "getUser", params: […],
+ * //                             returnType: swRef("User"),
+ * //                             effects: ["async", "throws"] })] })
+ * //   → public protocol UsersAPI { func getUser(…) async throws -> User }
+ * ```
+ */
 export function swProtocol(opts: {
   name: string;
   funs: ReadonlyArray<SwFun>;

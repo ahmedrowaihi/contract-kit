@@ -9,7 +9,6 @@ export interface SwInit {
   kind: "init";
   access: SwAccess;
   params: ReadonlyArray<SwFunParam>;
-  /** Statements to run after auto `self.x = x` assignments. */
   body: ReadonlyArray<SwStmt>;
 }
 
@@ -18,13 +17,23 @@ export interface SwClass {
   name: string;
   access: SwAccess;
   modifiers: ReadonlyArray<SwClassModifier>;
-  /** Parent class first (if any), then protocols. */
   conforms: ReadonlyArray<string>;
   properties: ReadonlyArray<SwProp>;
   inits: ReadonlyArray<SwInit>;
   funs: ReadonlyArray<SwFun>;
+  runtime?: boolean;
 }
 
+/**
+ * Class initializer. The printer auto-emits `self.x = x` for every
+ * param before running `body`.
+ *
+ * @example
+ * ```swift
+ * // swInit({ params: [swFunParam({ name: "baseURL", type: swRef("URL") })] })
+ * //   → public init(baseURL: URL) { self.baseURL = baseURL }
+ * ```
+ */
 export function swInit(opts: {
   params: ReadonlyArray<SwFunParam>;
   body?: ReadonlyArray<SwStmt>;
@@ -38,6 +47,16 @@ export function swInit(opts: {
   };
 }
 
+/**
+ * Top-level class decl. Default modifier is `final`; pass
+ * `modifiers: ["open"]` to allow subclassing.
+ *
+ * @example
+ * ```swift
+ * // swClass({ name: "APIClient", properties: […], inits: […], funs: […] })
+ * //   → public final class APIClient { … }
+ * ```
+ */
 export function swClass(opts: {
   name: string;
   conforms?: ReadonlyArray<string>;
@@ -46,6 +65,7 @@ export function swClass(opts: {
   funs?: ReadonlyArray<SwFun>;
   modifiers?: ReadonlyArray<SwClassModifier>;
   access?: SwAccess;
+  runtime?: boolean;
 }): SwClass {
   return {
     kind: "class",
@@ -56,5 +76,6 @@ export function swClass(opts: {
     properties: opts.properties ?? [],
     inits: opts.inits ?? [],
     funs: opts.funs ?? [],
+    runtime: opts.runtime,
   };
 }

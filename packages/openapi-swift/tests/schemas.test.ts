@@ -166,6 +166,56 @@ describe("schemas (IR-driven)", () => {
     assert.match(out, /public enum User_Status: String, Codable \{/);
   });
 
+  it("snake_case JSON keys → camelCase Swift names + CodingKeys enum", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          User: {
+            type: "object",
+            required: ["first_name", "id"],
+            properties: {
+              id: { type: "string" },
+              first_name: { type: "string" },
+              last_name: { type: "string" },
+            },
+          },
+        }),
+      }),
+    );
+    assert.match(out, /public let id: String\n/);
+    assert.match(out, /public let firstName: String\n/);
+    assert.match(out, /public let lastName: String\?\n/);
+    assert.match(out, /enum CodingKeys: String, CodingKey \{/);
+    assert.match(out, /case id\n/);
+    assert.match(out, /case firstName = "first_name"/);
+    assert.match(out, /case lastName = "last_name"/);
+  });
+
+  it("date-time → Date, uuid → UUID, uri → URL, binary → Data", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          Event: {
+            type: "object",
+            required: ["id", "createdAt", "icon", "blob"],
+            properties: {
+              id: { type: "string", format: "uuid" },
+              createdAt: { type: "string", format: "date-time" },
+              icon: { type: "string", format: "uri" },
+              blob: { type: "string", format: "binary" },
+              note: { type: "string" },
+            },
+          },
+        }),
+      }),
+    );
+    assert.match(out, /public let id: UUID\n/);
+    assert.match(out, /public let createdAt: Date\n/);
+    assert.match(out, /public let icon: URL\n/);
+    assert.match(out, /public let blob: Data\n/);
+    assert.match(out, /public let note: String\?\n/);
+  });
+
   it("additionalProperties: schema → typealias [String: T]; sealed → empty struct", () => {
     const out = printFile(
       swFile({

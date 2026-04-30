@@ -1,22 +1,29 @@
 import type { IR } from "@hey-api/shared";
-
-import { type SwStruct, swProp, swStruct } from "../../sw-dsl/decl/struct.js";
+import type {
+  SwCodingKeysEntry,
+  SwStruct,
+  SwType,
+} from "../../sw-dsl/index.js";
 import {
-  type SwType,
   swAny,
   swDict,
   swOptional,
+  swProp,
   swRef,
   swString,
-} from "../../sw-dsl/type/index.js";
-import { synthName } from "../identifiers.js";
+  swStruct,
+} from "../../sw-dsl/index.js";
+import { pascal, synthName } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 import { schemaToType } from "./index.js";
+import { propertyName } from "./property-naming.js";
 
 /**
  * Build a `Codable` struct from an object-shaped IR schema. Each property
  * goes through `schemaToType` for its inner type; required vs optional is
- * driven by the schema's `required` array.
+ * driven by the schema's `required` array. JSON keys are translated to
+ * lower-camelCase Swift identifiers; if any property is renamed a nested
+ * `CodingKeys` enum is emitted to preserve the wire format.
  */
 export function buildStruct(
   name: string,
@@ -24,18 +31,41 @@ export function buildStruct(
   ctx: { emit: TypeCtx["emit"] },
 ): SwStruct {
   const required = new Set(schema.required ?? []);
-  const properties = Object.entries(schema.properties ?? {}).map(
-    ([propName, propSchema]) => {
+  const entries = Object.entries(schema.properties ?? {}).map(
+    ([jsonKey, propSchema]) => {
+      const naming = propertyName(jsonKey);
       const t = schemaToType(propSchema, {
         emit: ctx.emit,
         ownerName: name,
-        propPath: [propName],
+        // Synth path uses pascal(jsonKey) so renaming the property doesn't
+        // change the synthesized name of an inline-object type.
+        propPath: [pascal(jsonKey)],
       });
-      const finalType = required.has(propName) ? t : swOptional(t);
-      return swProp({ name: propName, type: finalType });
+      return {
+        naming,
+        type: required.has(jsonKey) ? t : swOptional(t),
+      };
     },
   );
-  return swStruct({ name, properties, conforms: ["Codable"] });
+
+  const properties = entries.map(({ naming, type }) =>
+    swProp({ name: naming.swiftName, type }),
+  );
+
+  const anyRenamed = entries.some(({ naming }) => naming.renamed);
+  const codingKeys: ReadonlyArray<SwCodingKeysEntry> | undefined = anyRenamed
+    ? entries.map(({ naming }) => ({
+        swiftName: naming.swiftName,
+        jsonKey: naming.jsonKey,
+      }))
+    : undefined;
+
+  return swStruct({
+    name,
+    properties,
+    conforms: ["Codable"],
+    codingKeys,
+  });
 }
 
 /**

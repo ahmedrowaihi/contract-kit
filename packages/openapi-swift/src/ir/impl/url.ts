@@ -1,21 +1,21 @@
 import type { IR } from "@hey-api/shared";
-import type { SwExpr, SwStmt } from "../../sw-dsl/index.js";
+import type { SwCallArg, SwExpr, SwStmt } from "../../sw-dsl/index.js";
 import {
   swArg,
   swArrayLit,
   swBoolLit,
   swCall,
+  swDotCase,
   swExprStmt,
   swForceUnwrap,
   swIdent,
-  swIfLet,
   swInterp,
   swLet,
   swMember,
+  swRef,
   swStr,
   swVar,
 } from "../../sw-dsl/index.js";
-import { swRef } from "../../sw-dsl/type/index.js";
 import { paramIdent } from "../identifiers.js";
 import type { LocatedParam } from "../operation/params.js";
 
@@ -23,13 +23,12 @@ import type { LocatedParam } from "../operation/params.js";
  * Statements that build a `URLRequest`-ready URL from `baseURL`, the
  * path template, and query parameters. The result is bound to `url`.
  *
- * Behavior:
- *  - Path template parameters are interpolated into
+ *  - Path-template parameters are interpolated into
  *    `baseURL.appendingPathComponent("…/\(id)/…")`.
  *  - When there are no query params, `url` is bound directly.
- *  - When there are query params, we go through `URLComponents`, append
- *    one `URLQueryItem` per param (wrapped in `if let` for optional
- *    params), and unwrap `components.url!` into `url`.
+ *  - When there are query params, we route through `URLComponents`,
+ *    append-contentsOf a `URLEncoding.query(...)` result per param,
+ *    and unwrap `components.url!` into `url`.
  */
 export function buildUrlStmts(
   pathStr: string,
@@ -42,19 +41,16 @@ export function buildUrlStmts(
     .filter((l) => l.loc === "query")
     .map((l) => l.param);
 
-  const pathExpr = pathInterpolation(pathStr, pathParams);
   const appendPath = swCall(
     swMember(swIdent("baseURL"), "appendingPathComponent"),
-    [swArg(pathExpr)],
+    [swArg(pathInterpolation(pathStr, pathParams))],
   );
 
   if (queryParams.length === 0) {
     return [swLet("url", appendPath)];
   }
 
-  const stmts: SwStmt[] = [];
-  // var components = URLComponents(url: <appendPath>, resolvingAgainstBaseURL: false)!
-  stmts.push(
+  return [
     swVar(
       "components",
       swForceUnwrap(
@@ -64,22 +60,58 @@ export function buildUrlStmts(
         ]),
       ),
     ),
-  );
-  // components.queryItems = [URLQueryItem]()
-  stmts.push({
-    kind: "assign",
-    target: swMember(swIdent("components"), "queryItems"),
-    value: swArrayLit([], swRef("URLQueryItem")),
-  });
-  // components.queryItems!.append(URLQueryItem(name: "x", value: "\(x)"))
-  for (const p of queryParams) {
-    stmts.push(...appendQueryItem(p));
-  }
-  // let url = components.url!
-  stmts.push(
+    {
+      kind: "assign",
+      target: swMember(swIdent("components"), "queryItems"),
+      value: swArrayLit([], swRef("URLQueryItem")),
+    },
+    ...queryParams.map(appendQueryItemsCall),
     swLet("url", swForceUnwrap(swMember(swIdent("components"), "url"))),
+  ];
+}
+
+/**
+ * `components.queryItems!.append(contentsOf: URLEncoding.query(...))`
+ * for one parameter — the helper handles required vs optional, scalar
+ * vs array, and `style` / `explode` per the OpenAPI spec.
+ */
+function appendQueryItemsCall(p: IR.ParameterObject): SwStmt {
+  return swExprStmt(
+    swCall(
+      swMember(
+        swForceUnwrap(swMember(swIdent("components"), "queryItems")),
+        "append",
+      ),
+      [swArg(urlEncodingQueryCall(p), "contentsOf")],
+    ),
   );
-  return stmts;
+}
+
+function urlEncodingQueryCall(p: IR.ParameterObject): SwExpr {
+  const id = paramIdent(p.name);
+  const isArray = p.schema.type === "array";
+  const args: SwCallArg[] = [
+    swArg(swStr(p.name)),
+    swArg(swIdent(id), isArray ? "values" : "value"),
+  ];
+  if (isArray) {
+    args.push(swArg(swDotCase(styleCase(p.style)), "style"));
+    args.push(swArg(swBoolLit(p.explode ?? true), "explode"));
+  }
+  return swCall(swMember(swIdent("URLEncoding"), "query"), args);
+}
+
+function styleCase(style: IR.ParameterObject["style"]): string {
+  switch (style) {
+    case "spaceDelimited":
+      return "spaceDelimited";
+    case "pipeDelimited":
+      return "pipeDelimited";
+    default:
+      // form, simple, label, matrix, deepObject all collapse to `.form`
+      // for query encoding — others are path/header-specific styles.
+      return "form";
+  }
 }
 
 function pathInterpolation(
@@ -101,29 +133,4 @@ function pathInterpolation(
   if (parts.length === 1 && typeof parts[0] === "string")
     return swStr(parts[0]);
   return swInterp(parts);
-}
-
-function appendQueryItem(p: IR.ParameterObject): ReadonlyArray<SwStmt> {
-  const id = paramIdent(p.name);
-  const valueExpr = (ref: SwExpr): SwExpr => swInterp([ref]);
-  const itemFor = (ref: SwExpr): SwExpr =>
-    swCall(swIdent("URLQueryItem"), [
-      swArg(swStr(p.name), "name"),
-      swArg(valueExpr(ref), "value"),
-    ]);
-  const appendCall = (ref: SwExpr): SwStmt =>
-    swExprStmt(
-      swCall(
-        swMember(
-          swForceUnwrap(swMember(swIdent("components"), "queryItems")),
-          "append",
-        ),
-        [swArg(itemFor(ref))],
-      ),
-    );
-
-  if (p.required) {
-    return [appendCall(swIdent(id))];
-  }
-  return [swIfLet(id, swIdent(id), [appendCall(swIdent(id))])];
 }

@@ -1,25 +1,33 @@
+import type {
+  SwClass,
+  SwClassModifier,
+  SwExpr,
+  SwFun,
+  SwStmt,
+} from "../../sw-dsl/index.js";
 import {
-  type SwClass,
-  type SwClassModifier,
-  type SwFun,
-  type SwStmt,
   swArg,
+  swArrayLit,
   swAssign,
   swCall,
   swClass,
+  swExprStmt,
+  swForIn,
   swFun,
   swFunParam,
   swIdent,
   swIfLet,
   swInit,
+  swLet,
+  swMember,
   swProp,
-  swTryAwait,
+  swRef,
+  swStr,
+  swSubscript,
 } from "../../sw-dsl/index.js";
-import { swFunc, swOptional, swRef } from "../../sw-dsl/type/index.js";
 import type { OperationSignature } from "../operation/signature.js";
 import { buildBodyStmts } from "./body.js";
 import { buildSendAndDecodeStmts } from "./decode.js";
-import { urlSessionAPIErrorEnum } from "./error-type.js";
 import { buildHeaderStmts } from "./headers.js";
 import { buildRequestStmts } from "./request.js";
 import { buildUrlStmts } from "./url.js";
@@ -27,38 +35,51 @@ import { buildUrlStmts } from "./url.js";
 interface BuiltMethod {
   fun: SwFun;
   needsErrorEnum: boolean;
+  needsMultipart: boolean;
 }
 
 /**
  * Compose statement-level builders into the full body of a single impl
  * method. Order:
- *  1. URL + URLComponents/queryItems
- *  2. URLRequest construction + httpMethod
- *  3. Header `setValue` calls
- *  4. Body wire encoding (JSON / multipart / form / binary)
- *  5. Optional `requestDecorator` hook — runs once after build, before send.
- *  6. `try await session.data(for: request)` + JSON decode
+ *  1. Resolve per-call overrides — `client = options.client ?? self.client`
+ *     and `baseURL = options.baseURL ?? client.baseURL`. Subsequent
+ *     statements reference the locals; `self.client` only shows up here.
+ *  2. URL + URLComponents/queryItems
+ *  3. URLRequest construction + httpMethod
+ *  4. Header `setValue` calls (operation-defined headers)
+ *  5. Body wire encoding (JSON / multipart / form / binary)
+ *  6. Apply `options.headers` overrides (last write wins so callers can
+ *     override Content-Type if they really want)
+ *  7. Delegate to `client.execute(...)` with `extraInterceptors:
+ *     options.requestInterceptors`
  *
- * Steps 5 and 6 are skipped when the body builder terminates (`throw`)
- * to avoid emitting unreachable code.
+ * Step 7 (and the per-call header step) are skipped when the body
+ * builder terminates (`throw`) to avoid emitting unreachable code.
  */
 function buildImplFun(sig: OperationSignature): BuiltMethod {
   const stmts: SwStmt[] = [];
+  stmts.push(...resolveOverrideStmts());
   stmts.push(...buildUrlStmts(sig.pathStr, sig.locatedParams));
   stmts.push(...buildRequestStmts(sig.method));
+  stmts.push(applyOptionsTimeoutStmt());
   stmts.push(...buildHeaderStmts(sig.locatedParams));
 
   let needsErrorEnum = false;
+  let needsMultipart = false;
   let terminated = false;
   if (sig.op.body) {
     const result = buildBodyStmts(sig.op.body);
     stmts.push(...result.stmts);
     needsErrorEnum = result.needsErrorEnum;
+    needsMultipart = result.needsMultipart;
     terminated = result.terminates;
   }
   if (!terminated) {
-    stmts.push(decoratorHookStmt());
-    stmts.push(...buildSendAndDecodeStmts(sig.returnType));
+    if (sig.securitySchemeNames.length > 0) {
+      stmts.push(...applyAuthStmts(sig.securitySchemeNames));
+    }
+    stmts.push(applyOptionsHeadersStmt());
+    stmts.push(...buildSendAndDecodeStmts(sig));
   }
 
   const fun = swFun({
@@ -69,22 +90,96 @@ function buildImplFun(sig: OperationSignature): BuiltMethod {
     doc: sig.doc,
     body: stmts,
   });
-  return { fun, needsErrorEnum };
+  return { fun, needsErrorEnum, needsMultipart };
+}
+
+/** `let client = options.client ?? self.client`; same shape for `baseURL`. */
+function resolveOverrideStmts(): ReadonlyArray<SwStmt> {
+  return [
+    swLet(
+      "client",
+      coalesce(
+        swMember(swIdent("options"), "client"),
+        swMember(swIdent("self"), "client"),
+      ),
+    ),
+    swLet(
+      "baseURL",
+      coalesce(
+        swMember(swIdent("options"), "baseURL"),
+        swMember(swIdent("client"), "baseURL"),
+      ),
+    ),
+  ];
 }
 
 /**
- * `if let decorator = requestDecorator { request = try await decorator(request) }`
- *
- * Lets consumers inject per-request mutation (auth header refresh, request
- * signing, dynamic logging) without having to reimplement the protocol.
+ * `if let timeout = options.timeout { request.timeoutInterval = timeout }`
+ * — per-call override of `URLRequest.timeoutInterval`, set right after
+ * the request is built so subsequent steps see the final value.
  */
-function decoratorHookStmt(): SwStmt {
-  return swIfLet("decorator", swIdent("requestDecorator"), [
+function applyOptionsTimeoutStmt(): SwStmt {
+  return swIfLet("timeout", swMember(swIdent("options"), "timeout"), [
     swAssign(
-      swIdent("request"),
-      swTryAwait(swCall(swIdent("decorator"), [swArg(swIdent("request"))])),
+      swMember(swIdent("request"), "timeoutInterval"),
+      swIdent("timeout"),
     ),
   ]);
+}
+
+/**
+ * `for header in options.headers { request.setValue(header.value, forHTTPHeaderField: header.key) }`
+ * — per-call header overrides, applied last so they can replace any
+ * Content-Type / auth header the impl already set.
+ */
+function applyOptionsHeadersStmt(): SwStmt {
+  return swForIn("header", swMember(swIdent("options"), "headers"), [
+    swExprStmt(
+      swCall(swMember(swIdent("request"), "setValue"), [
+        swArg(swMember(swIdent("header"), "value")),
+        swArg(swMember(swIdent("header"), "key"), "forHTTPHeaderField"),
+      ]),
+    ),
+  ]);
+}
+
+function coalesce(lhs: SwExpr, rhs: SwExpr): SwExpr {
+  return { kind: "binOp", op: "??", left: lhs, right: rhs };
+}
+
+/**
+ * Walk the spec-defined security-scheme names for this op; if the
+ * consumer has any of them configured on `client.auth`, apply it to
+ * the in-flight request.
+ *
+ * @example
+ * ```swift
+ * for schemeName in ["petstore_auth", "api_key"] {
+ *     if let auth = client.auth[schemeName] {
+ *         request = auth.apply(to: request)
+ *     }
+ * }
+ * ```
+ */
+function applyAuthStmts(
+  schemeNames: ReadonlyArray<string>,
+): ReadonlyArray<SwStmt> {
+  return [
+    swForIn("schemeName", swArrayLit(schemeNames.map((n) => swStr(n))), [
+      swIfLet(
+        "auth",
+        swSubscript(swMember(swIdent("client"), "auth"), swIdent("schemeName")),
+        [
+          swAssign(
+            swIdent("request"),
+            swCall(swMember(swIdent("auth"), "apply"), [
+              swArg(swIdent("request"), "to"),
+            ]),
+          ),
+        ],
+      ),
+    ]),
+  ];
 }
 
 export interface ClientClassResult {
@@ -93,6 +188,9 @@ export interface ClientClassResult {
   /** True when at least one method emitted the unimplemented-body throw,
    * so the orchestrator should also emit `URLSessionAPIError`. */
   needsErrorEnum: boolean;
+  /** True when at least one method uses the `MultipartFormBody` helper,
+   * so the orchestrator should emit it. */
+  needsMultipart: boolean;
 }
 
 export interface ClientClassOptions {
@@ -103,7 +201,8 @@ export interface ClientClassOptions {
 /**
  * Convert a list of `OperationSignature`s for a tag into a class that
  * conforms to the matching protocol and contains a working URLSession-
- * based impl for each operation.
+ * based impl for each operation. The class holds a single `client:
+ * APIClient` and delegates send/dispatch/decode to it.
  */
 export function buildClientClass(
   className: string,
@@ -119,72 +218,19 @@ export function buildClientClass(
     name: className,
     conforms: [protocolName],
     modifiers,
-    properties: clientStoredProps(),
-    inits: [clientInit()],
+    properties: [
+      swProp({ name: "client", type: swRef("APIClient"), access: "internal" }),
+    ],
+    inits: [
+      swInit({
+        params: [swFunParam({ name: "client", type: swRef("APIClient") })],
+      }),
+    ],
     funs: built.map((b) => b.fun),
   });
   return {
     class: cls,
     needsErrorEnum: built.some((b) => b.needsErrorEnum),
+    needsMultipart: built.some((b) => b.needsMultipart),
   };
 }
-
-const requestDecoratorType = swOptional(
-  swFunc([swRef("URLRequest")], swRef("URLRequest"), ["async", "throws"]),
-);
-
-function clientStoredProps() {
-  return [
-    swProp({ name: "baseURL", type: swRef("URL"), access: "internal" }),
-    swProp({ name: "session", type: swRef("URLSession"), access: "internal" }),
-    swProp({
-      name: "decoder",
-      type: swRef("JSONDecoder"),
-      access: "internal",
-    }),
-    swProp({
-      name: "encoder",
-      type: swRef("JSONEncoder"),
-      access: "internal",
-    }),
-    // Optional per-request mutation hook. Mutable so consumers can swap
-    // it in after construction (e.g. once auth is loaded).
-    swProp({
-      name: "requestDecorator",
-      type: requestDecoratorType,
-      mutable: true,
-      access: "public",
-      default: "nil",
-    }),
-  ];
-}
-
-function clientInit() {
-  return swInit({
-    params: [
-      swFunParam({ name: "baseURL", type: swRef("URL") }),
-      swFunParam({
-        name: "session",
-        type: swRef("URLSession"),
-        default: ".shared",
-      }),
-      swFunParam({
-        name: "decoder",
-        type: swRef("JSONDecoder"),
-        default: "JSONDecoder()",
-      }),
-      swFunParam({
-        name: "encoder",
-        type: swRef("JSONEncoder"),
-        default: "JSONEncoder()",
-      }),
-      swFunParam({
-        name: "requestDecorator",
-        type: requestDecoratorType,
-        default: "nil",
-      }),
-    ],
-  });
-}
-
-export { urlSessionAPIErrorEnum } from "./error-type.js";

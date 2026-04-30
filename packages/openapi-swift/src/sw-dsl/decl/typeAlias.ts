@@ -8,6 +8,15 @@ export interface SwTypeAlias {
   type: SwType;
 }
 
+/**
+ * Type alias decl.
+ *
+ * @example
+ * ```swift
+ * // swTypeAlias({ name: "Headers", type: swDict(swString, swString) })
+ * //   → public typealias Headers = [String: String]
+ * ```
+ */
 export function swTypeAlias(opts: {
   name: string;
   type: SwType;

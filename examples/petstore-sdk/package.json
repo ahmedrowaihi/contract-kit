@@ -5,8 +5,8 @@
   "type": "module",
   "description": "One OpenAPI spec → multiple platform SDKs (Kotlin now; Swift, etc. later). Demonstrates the contract-kit native client codegen story end-to-end.",
   "scripts": {
-    "gen:kotlin": "jiti kotlin.gen.ts",
-    "gen:swift": "jiti swift.gen.ts",
+    "gen:kotlin": "jiti kotlin/gen.ts",
+    "gen:swift": "jiti swift/gen.ts",
     "gen": "pnpm gen:kotlin && pnpm gen:swift"
   },
   "devDependencies": {

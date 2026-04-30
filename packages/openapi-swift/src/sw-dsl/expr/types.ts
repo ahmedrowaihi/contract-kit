@@ -7,8 +7,24 @@ export type SwExpr =
   | SwClosureExpr
   | SwEffectExpr
   | SwBinOpExpr
+  | SwRangeExpr
+  | SwAsExpr
   | { kind: "tuple"; items: ReadonlyArray<SwExpr> }
   | { kind: "typeRef"; type: SwType };
+
+export interface SwRangeExpr {
+  kind: "range";
+  halfOpen: boolean;
+  low: SwExpr;
+  high: SwExpr;
+}
+
+export interface SwAsExpr {
+  kind: "as";
+  expr: SwExpr;
+  type: SwType;
+  optional: boolean;
+}
 
 export type SwLiteralExpr =
   | { kind: "str"; value: string }
@@ -27,6 +43,8 @@ export type SwLiteralExpr =
 
 export type SwAccessExpr =
   | { kind: "ident"; name: string }
+  | { kind: "dotCase"; name: string }
+  | { kind: "enumPattern"; case: string; bindings: ReadonlyArray<string> }
   | { kind: "member"; on: SwExpr; name: string }
   | { kind: "optChain"; on: SwExpr; name: string }
   | { kind: "subscript"; on: SwExpr; index: SwExpr }
@@ -41,13 +59,11 @@ export interface SwCallExpr {
   kind: "call";
   callee: SwExpr;
   args: ReadonlyArray<SwCallArg>;
-  /** When set, args render as a trailing closure literal rather than `(...)`. */
   trailingClosure?: SwClosureExpr;
 }
 
 export interface SwClosureExpr {
   kind: "closure";
-  /** Captured argument names. Empty array means the closure has no `<args> in` line. */
   params: ReadonlyArray<string>;
   body: ReadonlyArray<import("../stmt/types.js").SwStmt>;
 }
@@ -56,7 +72,7 @@ export type SwEffectExpr = { kind: "try"; expr: SwExpr; awaited: boolean };
 
 export interface SwBinOpExpr {
   kind: "binOp";
-  op: "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||";
+  op: "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||" | "??";
   left: SwExpr;
   right: SwExpr;
 }

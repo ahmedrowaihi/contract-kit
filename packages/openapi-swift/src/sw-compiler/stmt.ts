@@ -29,6 +29,12 @@ export function printStmt(s: SwStmt, indent: string = ""): string {
       return printIfLet(s, indent);
     case "guardLet":
       return printGuardLet(s, indent);
+    case "switch":
+      return printSwitch(s, indent);
+    case "doCatch":
+      return printDoCatch(s, indent);
+    case "forIn":
+      return `${indent}for ${s.name} in ${printExpr(s.source)} ${printBlock(s.body, indent)}`;
   }
 }
 
@@ -62,4 +68,43 @@ function printGuardLet(
   indent: string,
 ): string {
   return `${indent}guard let ${s.name} = ${printExpr(s.source)} else ${printBlock(s.else_, indent)}`;
+}
+
+function printDoCatch(
+  s: Extract<SwStmt, { kind: "doCatch" }>,
+  indent: string,
+): string {
+  const body = printBlock(s.body, indent);
+  const catchBlock = printBlock(s.catch_, indent);
+  return `${indent}do ${body} catch ${catchBlock}`;
+}
+
+function printSwitch(
+  s: Extract<SwStmt, { kind: "switch" }>,
+  indent: string,
+): string {
+  const lines: string[] = [`${indent}switch ${printExpr(s.on)} {`];
+  for (const c of s.cases) {
+    const head = `${indent}case ${c.patterns.map(printExpr).join(", ")}:`;
+    lines.push(head);
+    if (c.body.length === 0) {
+      lines.push(`${indent}${INDENT}break`);
+    } else {
+      for (const stmt of c.body) {
+        lines.push(printStmt(stmt, indent + INDENT));
+      }
+    }
+  }
+  if (s.default_) {
+    lines.push(`${indent}default:`);
+    if (s.default_.length === 0) {
+      lines.push(`${indent}${INDENT}break`);
+    } else {
+      for (const stmt of s.default_) {
+        lines.push(printStmt(stmt, indent + INDENT));
+      }
+    }
+  }
+  lines.push(`${indent}}`);
+  return lines.join("\n");
 }

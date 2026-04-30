@@ -1,0 +1,11 @@
+# Gradle build + cache
+.gradle/
+build/
+local.properties
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Kotlin compile cache
+.kotlin/

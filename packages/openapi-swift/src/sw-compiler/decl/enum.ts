@@ -1,6 +1,23 @@
-import type { SwEnum } from "../../sw-dsl/decl/enum.js";
+import type { SwEnum, SwEnumCase } from "../../sw-dsl/decl/enum.js";
 import { accessPrefix, INDENT } from "../format.js";
 import { printType } from "../type.js";
+import { printFun } from "./fun.js";
+
+function printCaseLine(c: SwEnumCase): string {
+  const raw =
+    c.rawValue !== undefined ? ` = ${JSON.stringify(c.rawValue)}` : "";
+  const assocs =
+    c.assocs && c.assocs.length > 0
+      ? `(${c.assocs
+          .map((a) =>
+            a.label !== undefined
+              ? `${a.label}: ${printType(a.type)}`
+              : printType(a.type),
+          )
+          .join(", ")})`
+      : "";
+  return `${INDENT}case ${c.name}${assocs}${raw}`;
+}
 
 export function printEnum(e: SwEnum): string {
   const inheritance = [
@@ -9,23 +26,15 @@ export function printEnum(e: SwEnum): string {
   ];
   const tail = inheritance.length > 0 ? `: ${inheritance.join(", ")}` : "";
   const head = `${accessPrefix(e.access)}enum ${e.name}${tail}`;
-  if (e.cases.length === 0) return `${head} {}`;
-  const lines = [`${head} {`];
-  for (const c of e.cases) {
-    const raw =
-      c.rawValue !== undefined ? ` = ${JSON.stringify(c.rawValue)}` : "";
-    const assocs =
-      c.assocs && c.assocs.length > 0
-        ? `(${c.assocs
-            .map((a) =>
-              a.label !== undefined
-                ? `${a.label}: ${printType(a.type)}`
-                : printType(a.type),
-            )
-            .join(", ")})`
-        : "";
-    lines.push(`${INDENT}case ${c.name}${assocs}${raw}`);
+  const empty = e.cases.length === 0 && e.funs.length === 0;
+  if (empty) return `${head} {}`;
+
+  const sections: string[] = [];
+  if (e.cases.length > 0) {
+    sections.push(e.cases.map(printCaseLine).join("\n"));
   }
-  lines.push("}");
-  return lines.join("\n");
+  if (e.funs.length > 0) {
+    sections.push(e.funs.map((fn) => printFun(fn, INDENT)).join("\n\n"));
+  }
+  return `${head} {\n${sections.join("\n\n")}\n}`;
 }
