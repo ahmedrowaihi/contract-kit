@@ -143,4 +143,52 @@ describe("schemasToDecls", () => {
       /entry name "FooUserName" collides/,
     );
   });
+
+  it("emits a typed-int enum for integer-valued enum schemas", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Rotate: { type: "integer", enum: [0, 90, 180, 270] },
+        },
+      },
+    });
+    const out = schemasToDecls(m.components?.schemas ?? {})
+      .map(printDecl)
+      .join("\n");
+    assert.match(out, /type Rotate int/);
+    assert.match(out, /Rotate0 Rotate = 0/);
+    assert.match(out, /Rotate90 Rotate = 90/);
+    assert.match(out, /Rotate180 Rotate = 180/);
+    assert.match(out, /Rotate270 Rotate = 270/);
+  });
+
+  it("integer-enum negative values get a Neg<abs> suffix", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Bias: { type: "integer", enum: [-1, 0, 1] },
+        },
+      },
+    });
+    const out = schemasToDecls(m.components?.schemas ?? {})
+      .map(printDecl)
+      .join("\n");
+    assert.match(out, /BiasNeg1 Bias = -1/);
+    assert.match(out, /Bias0 Bias = 0/);
+    assert.match(out, /Bias1 Bias = 1/);
+  });
+
+  it("rejects enums with mixed string + integer members", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Mixed: { type: "string", enum: ["a", 1] },
+        },
+      },
+    });
+    assert.throws(
+      () => schemasToDecls(m.components?.schemas ?? {}),
+      /must all be strings or all integers/,
+    );
+  });
 });

@@ -242,4 +242,33 @@ describe("operationsToDecls", () => {
       /multipart\.AppendText\("caption", fmt\.Sprint\(\*caption\)\)/,
     );
   });
+
+  it("strips PHP-style trailing brackets from query param names", () => {
+    const m = ir({
+      paths: {
+        "/data": {
+          get: {
+            tags: ["Data"],
+            operationId: "list",
+            parameters: [
+              {
+                name: "timeframe[]",
+                in: "query",
+                required: true,
+                schema: { type: "array", items: { type: "string" } },
+              },
+            ],
+            responses: { 204: { description: "ok" } },
+          },
+        },
+      },
+    });
+    const { decls } = operationsToDecls(m.paths);
+    const iface = decls.find((d) => d.kind === "interface")!;
+    const out = printDecl(iface);
+    // Param ident is `timeframe` (trailing `[]` stripped); the wire-
+    // level query name (`timeframe[]`) is still preserved by the impl
+    // via the original IR.ParameterObject.name.
+    assert.match(out, /List\(.+timeframe \[\]string,/);
+  });
 });

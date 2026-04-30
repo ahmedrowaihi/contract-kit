@@ -9,7 +9,7 @@ export interface SwEnumAssoc {
 
 export interface SwEnumCase {
   name: string;
-  rawValue?: string;
+  rawValue?: string | number;
   assocs?: ReadonlyArray<SwEnumAssoc>;
 }
 
@@ -38,7 +38,7 @@ export interface SwEnum {
  */
 export const swEnumCase = (
   name: string,
-  rawValue?: string,
+  rawValue?: string | number,
   assocs?: ReadonlyArray<SwEnumAssoc>,
 ): SwEnumCase => ({ name, rawValue, assocs });
 
