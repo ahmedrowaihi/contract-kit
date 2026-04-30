@@ -7,9 +7,11 @@
   "scripts": {
     "gen:kotlin": "jiti kotlin/gen.ts",
     "gen:swift": "jiti swift/gen.ts",
-    "gen": "pnpm gen:kotlin && pnpm gen:swift"
+    "gen:go": "jiti go/gen.ts",
+    "gen": "pnpm gen:kotlin && pnpm gen:swift && pnpm gen:go"
   },
   "devDependencies": {
+    "@ahmedrowaihi/openapi-go": "workspace:*",
     "@ahmedrowaihi/openapi-kotlin": "workspace:*",
     "@ahmedrowaihi/openapi-swift": "workspace:*",
     "@ahmedrowaihi/tsconfig": "workspace:*",

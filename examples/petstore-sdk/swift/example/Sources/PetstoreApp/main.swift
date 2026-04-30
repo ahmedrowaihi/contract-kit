@@ -1,4 +1,5 @@
 import Foundation
+import PetstoreSDK
 
 enum API {
     static let client = APIClient(
@@ -73,10 +74,6 @@ func readWithCustomHeader(id: Int64, traceId: String) async throws -> Pet {
     )
 }
 
-func readBypassingClientInterceptors(id: Int64, rawClient: APIClient) async throws -> Pet {
-    try await API.pets.getPetById(petId: id, options: .init(client: rawClient))
-}
-
 func readWithHeaders(id: Int64) async throws -> (Pet, [AnyHashable: Any]) {
     let (pet, response) = try await API.pets.getPetByIdWithResponse(petId: id)
     return (pet, response.allHeaderFields)
@@ -112,4 +109,18 @@ func readWithRuntimeValidation(id: Int64) async throws -> Pet {
         petId: id,
         options: .init(responseValidator: validate)
     )
+}
+
+@main
+struct App {
+    static func main() async {
+        do {
+            let pet = try await read(id: 10)
+            print("read pet 10: id=\(pet.id ?? -1) name=\(pet.name)")
+            let (p, headers) = try await readWithHeaders(id: 10)
+            print("readWithHeaders: id=\(p.id ?? -1) keys=\(headers.count)")
+        } catch {
+            print("err:", error)
+        }
+    }
 }
