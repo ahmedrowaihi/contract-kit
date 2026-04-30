@@ -4,19 +4,31 @@ import {
   ktAnnotation,
   ktEnum,
   ktEnumEntry,
+  ktInt,
   ktProp,
   ktRef,
   ktString,
+  ktTypeAlias,
 } from "../../kt-dsl/index.js";
 import { enumEntryIdent } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 
 /**
  * Convert an `IR.SchemaObject` whose `type === "enum"` into a Kotlin
- * `enum class` with a `String` raw value. Each entry carries its raw
- * string in the primary constructor (`raw: String`) plus a
- * `@SerialName("…")` annotation so kotlinx-serialization round-trips
- * the wire form even when the entry name diverges from the raw value.
+ * type:
+ *
+ *  - All-string members → `@Serializable enum class Foo(val raw: String)`
+ *    with one entry per value, each carrying `@SerialName("<raw>")` so
+ *    kotlinx-serialization preserves the wire form.
+ *  - All-integer members → degrade to `typealias Foo = Int`. kotlinx-
+ *    serialization's enum support only round-trips string raw values
+ *    via `@SerialName`; integer JSON values would need a custom
+ *    `KSerializer`. The typealias preserves the underlying type and
+ *    keeps the field shape compatible with the wire format; consumers
+ *    lose the enum-value constraint at the type level but retain it at
+ *    runtime through their own validation if needed.
+ *
+ * Mixed-type enums throw — pick one shape.
  */
 export function buildEnumFromIR(
   name: string,
@@ -24,13 +36,21 @@ export function buildEnumFromIR(
   emit: TypeCtx["emit"],
 ): KtType {
   const rawValues = (schema.items ?? []).map((i) => i.const);
-  for (const value of rawValues) {
-    if (typeof value !== "string") {
-      throw new Error(
-        `Enum ${name}: only string-valued enum members are supported, got ${typeof value}: ${JSON.stringify(value)}`,
-      );
-    }
+  const allStrings = rawValues.every((v) => typeof v === "string");
+  const allIntegers = rawValues.every(
+    (v) => typeof v === "number" && Number.isInteger(v),
+  );
+  if (!allStrings && !allIntegers) {
+    throw new Error(
+      `Enum ${name}: members must all be strings or all integers; got ${JSON.stringify(rawValues)}`,
+    );
   }
+
+  if (allIntegers) {
+    emit(ktTypeAlias({ name, type: ktInt }));
+    return ktRef(name);
+  }
+
   const collisions = new Map<string, string[]>();
   const entries = (rawValues as string[]).map((raw) => {
     const ident = enumEntryIdent(raw);

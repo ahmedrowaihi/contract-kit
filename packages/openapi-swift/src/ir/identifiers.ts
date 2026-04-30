@@ -1,5 +1,7 @@
 export function pascal(s: string): string {
   return s
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/[^a-zA-Z0-9]+$/, "")
     .replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) => c.toUpperCase())
     .replace(/^./, (c) => c.toUpperCase());
 }

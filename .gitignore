@@ -11,6 +11,13 @@ dist
 .wxt
 .output
 
+# Native-client build artifacts (Go binaries, Swift / Kotlin build dirs)
+.build
+.swiftpm
+.gradle
+build
+Package.resolved
+
 # Logs
 *.log
 npm-debug.log*

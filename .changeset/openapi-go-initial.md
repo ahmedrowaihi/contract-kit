@@ -1,0 +1,5 @@
+---
+"@ahmedrowaihi/openapi-go": minor
+---
+
+Initial release. Generates idiomatic Go client SDKs from an OpenAPI 3.x spec: per-tag interfaces with `context.Context` first-arg + `*WithResponse` companions, `NetHTTP<Tag>API` impl structs, structs / typed-string enums / type aliases for schemas, sealed-style sum types (interface + concrete cases) for ops with multiple 2xx schemas, and runtime helpers (`APIClient`, `APIError`, `Auth`, `MultipartFormBody`, `URLEncoding`, `RequestOptions`). Per-call options cover `Client` / `BaseURL` / `Timeout` / `Headers` / `RequestInterceptors` / `ResponseValidator` / `ResponseTransformer`; per-op security from `securitySchemes` is auto-applied via a `client.Auth` map. Output ships as raw `.go` files (drop into an existing module) or as a self-contained Go module when `gomod: { module: ... }` is passed. Stdlib only — `net/http` + `encoding/json` + `mime/multipart` — zero third-party dependencies. Reuses the same hey-api IR pipeline as `@ahmedrowaihi/openapi-kotlin` and `@ahmedrowaihi/openapi-swift`. Everything AST-built; runtime helpers are templated strings.

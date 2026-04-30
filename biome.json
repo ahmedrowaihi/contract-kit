@@ -11,7 +11,12 @@
       "!!**/.output/**",
       "!!**/globals.css",
       "!!**/.vscode/**",
-      "!!**/cdk.out/**"
+      "!!**/cdk.out/**",
+      "!!**/.build/**",
+      "!!**/.swiftpm/**",
+      "!!**/.gradle/**",
+      "!!**/build/**",
+      "!!**/Package.resolved"
     ]
   },
   "formatter": {

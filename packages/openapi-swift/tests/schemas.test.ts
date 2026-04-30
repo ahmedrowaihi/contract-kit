@@ -239,4 +239,28 @@ describe("schemas (IR-driven)", () => {
     assert.match(out, /public typealias Anything = \[String: Any\]/);
     assert.match(out, /public struct Sealed: Codable \{\}/);
   });
+
+  it("emits an Int-raw enum for integer-valued enum schemas", () => {
+    const out = printFile(
+      swFile({
+        decls: decls({
+          Rotate: { type: "integer", enum: [0, 90, 180, 270] },
+        }),
+      }),
+    );
+    assert.match(out, /public enum Rotate: Int, Codable \{/);
+    assert.match(out, /case _0 = 0/);
+    assert.match(out, /case _90 = 90/);
+    assert.match(out, /case _270 = 270/);
+  });
+
+  it("rejects enums with mixed string + integer members", () => {
+    assert.throws(
+      () =>
+        decls({
+          Mixed: { type: "string", enum: ["a", 1] },
+        }),
+      /must all be strings or all integers/,
+    );
+  });
 });

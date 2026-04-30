@@ -181,4 +181,32 @@ describe("schemasToDecls", () => {
       /entry name "USER" collides/,
     );
   });
+
+  it("degrades integer-valued enum schemas to a Int typealias", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Rotate: { type: "integer", enum: [0, 90, 180, 270] },
+        },
+      },
+    });
+    const out = schemasToDecls(m.components?.schemas ?? {})
+      .map(printDecl)
+      .join("\n");
+    assert.match(out, /typealias Rotate = Int/);
+  });
+
+  it("rejects enums with mixed string + integer members", () => {
+    const m = ir({
+      components: {
+        schemas: {
+          Mixed: { type: "string", enum: ["a", 1] },
+        },
+      },
+    });
+    assert.throws(
+      () => schemasToDecls(m.components?.schemas ?? {}),
+      /must all be strings or all integers/,
+    );
+  });
 });

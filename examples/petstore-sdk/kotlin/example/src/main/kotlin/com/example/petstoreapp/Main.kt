@@ -1,4 +1,4 @@
-package com.example.petstore
+package com.example.petstoreapp
 
 import com.example.petstore.api.APIClient
 import com.example.petstore.api.APIError
@@ -18,10 +18,7 @@ import com.example.petstore.models.ApiResponse
 import com.example.petstore.models.FindPetsByStatus_Param_Status
 import com.example.petstore.models.Pet
 import com.example.petstore.models.Pet_Status
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Response
 
@@ -103,9 +100,6 @@ suspend fun readWithCustomHeader(id: Long, traceId: String): Pet =
         options = RequestOptions(headers = mapOf("X-Trace-Id" to traceId)),
     )
 
-suspend fun readBypassingClientInterceptors(id: Long, rawClient: APIClient): Pet =
-    Api.pets.getPetById(petId = id, options = RequestOptions(client = rawClient))
-
 suspend fun readWithHeaders(id: Long): Pair<Pet, Map<String, List<String>>> {
     val (pet, response) = Api.pets.getPetByIdWithResponse(petId = id)
     return pet to response.headers.toMultimap()
@@ -116,17 +110,6 @@ suspend fun readWithTimeout(id: Long, ms: Long): Pet =
         petId = id,
         options = RequestOptions(timeout = ms),
     )
-
-suspend fun readUnwrappingEnvelope(id: Long): Pet {
-    val unwrap: suspend (ByteArray) -> ByteArray = { data ->
-        val envelope: JsonObject = Json.parseToJsonElement(data.decodeToString()).jsonObject
-        Json.encodeToString(JsonObject.serializer(), envelope["data"]!!.jsonObject).toByteArray()
-    }
-    return Api.pets.getPetById(
-        petId = id,
-        options = RequestOptions(responseTransformer = unwrap),
-    )
-}
 
 suspend fun readWithRuntimeValidation(id: Long): Pet {
     val validate: suspend (ByteArray, Response) -> Unit = { data, response ->
@@ -146,4 +129,10 @@ fun installLoggingInterceptor() {
         println("→ ${request.method} ${request.url}")
         request
     }
+}
+
+fun main() = runBlocking {
+    println("read pet 10: ${read(10).name}")
+    val (pet, headers) = readWithHeaders(10)
+    println("readWithHeaders: id=${pet.id}, content-type=${headers["content-type"]}")
 }
