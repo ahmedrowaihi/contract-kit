@@ -135,21 +135,35 @@ runs:
         echo "files-changed=$files_changed" >> "$GITHUB_OUTPUT"
         echo "::notice::sdk-regen — $files_changed file(s) changed under $OUTPUT"
 
+    - name: Resolve placeholders
+      id: vars
+      if: steps.diff.outputs.changed == 'true' && inputs.commit-strategy != 'none'
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        PR_TITLE: ${{ inputs.pr-title }}
+        PR_BRANCH: ${{ inputs.pr-branch }}
+        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+      run: |
+        # Substitute `${target}` placeholder in title / branch / commit message.
+        # Defaults reference `${target}` for matrix-friendly per-target naming;
+        # without this step the placeholder reaches peter-evans verbatim.
+        echo "pr-title=${PR_TITLE//\$\{target\}/$TARGET}" >> "$GITHUB_OUTPUT"
+        echo "pr-branch=${PR_BRANCH//\$\{target\}/$TARGET}" >> "$GITHUB_OUTPUT"
+        echo "commit-message=${COMMIT_MESSAGE//\$\{target\}/$TARGET}" >> "$GITHUB_OUTPUT"
+
     - name: Commit back to triggering branch
       if: inputs.commit-strategy == 'commit-back' && steps.diff.outputs.changed == 'true'
       shell: bash
       env:
         OUTPUT: ${{ inputs.output }}
-        TARGET: ${{ inputs.target }}
-        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        COMMIT_MESSAGE: ${{ steps.vars.outputs.commit-message }}
       run: |
         set -e
-        # Resolve `${target}` placeholder in commit message.
-        msg="${COMMIT_MESSAGE//\$\{target\}/$TARGET}"
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add -A -- "$OUTPUT"
-        git commit -m "$msg"
+        git commit -m "$COMMIT_MESSAGE"
         git push
 
     - name: Open PR with regen
@@ -157,9 +171,9 @@ runs:
       uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ inputs.token != '' && inputs.token || github.token }}
-        commit-message: ${{ inputs.commit-message }}
-        title: ${{ inputs.pr-title }}
-        branch: ${{ inputs.pr-branch }}
+        commit-message: ${{ steps.vars.outputs.commit-message }}
+        title: ${{ steps.vars.outputs.pr-title }}
+        branch: ${{ steps.vars.outputs.pr-branch }}
         delete-branch: true
         body: |
           Auto-regenerated `${{ inputs.target }}` SDK from `${{ inputs.input }}` via [`ahmedrowaihi/contract-kit/actions/sdk-regen`](https://github.com/ahmedrowaihi/contract-kit/tree/main/actions/sdk-regen).
