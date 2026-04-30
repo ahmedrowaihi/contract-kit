@@ -41,6 +41,14 @@ jobs:
             sentinel: API/PetAPI.swift
             manifest: TestSDK
             manifest-sentinel: Package.swift
+          # TypeScript target delegates to @hey-api/openapi-ts; manifest is
+          # a no-op (hey-api owns its own output structure), so we leave
+          # `manifest` empty and skip the manifest-sentinel assertion below.
+          - target: typescript
+            output: tmp-sdk/typescript
+            sentinel: sdk.gen.ts
+            manifest: ''
+            manifest-sentinel: ''
     steps:
       - uses: actions/checkout@v4
 
@@ -77,9 +85,13 @@ jobs:
             ls -la "$OUTPUT" || true
             exit 1
           fi
-          if [ ! -f "$OUTPUT/$MANIFEST_SENTINEL" ]; then
+          if [ -n "$MANIFEST_SENTINEL" ] && [ ! -f "$OUTPUT/$MANIFEST_SENTINEL" ]; then
             echo "::error::manifest sentinel file missing: $OUTPUT/$MANIFEST_SENTINEL"
             ls -la "$OUTPUT" || true
             exit 1
           fi
-          echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinels $SENTINEL + $MANIFEST_SENTINEL present"
+          if [ -n "$MANIFEST_SENTINEL" ]; then
+            echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinels $SENTINEL + $MANIFEST_SENTINEL present"
+          else
+            echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinel $SENTINEL present (no manifest expected)"
+          fi
