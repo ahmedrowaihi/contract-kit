@@ -4,7 +4,7 @@
 
 import { resolve } from "node:path";
 
-const { TARGET, WORKDIR, SPEC, OUTPUT, PACKAGE_NAME } = process.env;
+const { TARGET, WORKDIR, SPEC, OUTPUT, PACKAGE_NAME, MANIFEST } = process.env;
 
 if (!TARGET || !WORKDIR || !SPEC || !OUTPUT) {
   throw new Error(
@@ -28,6 +28,17 @@ const opts = {
   output: resolve(process.cwd(), OUTPUT),
 };
 if (PACKAGE_NAME) opts.packageName = PACKAGE_NAME;
+
+// Translate the polymorphic `manifest` input into each generator's
+// per-target option. Empty string → leave the SDK as a flat source
+// tree drop-in (no go.mod / build.gradle.kts / Package.swift). The
+// generators all default to that mode when their respective option
+// is omitted, so we just don't set it.
+if (MANIFEST) {
+  if (TARGET === "go") opts.gomod = { module: MANIFEST };
+  else if (TARGET === "kotlin") opts.gradle = true;
+  else if (TARGET === "swift") opts.package = { name: MANIFEST };
+}
 
 const result = await generate(opts);
 console.log(`wrote ${result.files.length} file(s) → ${result.output}`);
