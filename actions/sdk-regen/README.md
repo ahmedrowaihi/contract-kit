@@ -1,8 +1,8 @@
 # sdk-regen GitHub Action
 
-Regenerate a Go / Kotlin / Swift client SDK from an OpenAPI 3.x spec on every push or PR — and either commit the result back or open a PR with the diff. Drops in next to a committed SDK to keep it in sync with its source spec without manual `pnpm gen` invocations.
+Regenerate a Go / Kotlin / Swift / TypeScript client SDK from an OpenAPI 3.x spec on every push or PR — and either commit the result back or open a PR with the diff. Drops in next to a committed SDK to keep it in sync with its source spec without manual `pnpm gen` invocations.
 
-Powered by [`@ahmedrowaihi/openapi-go`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-go) / [`-kotlin`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-kotlin) / [`-swift`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-swift). Part of [contract-kit](https://github.com/ahmedrowaihi/contract-kit).
+Powered by [`@ahmedrowaihi/openapi-go`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-go) / [`-kotlin`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-kotlin) / [`-swift`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-swift) for native targets, and [`-typescript`](https://www.npmjs.com/package/@ahmedrowaihi/openapi-typescript) (a thin wrapper around [`@hey-api/openapi-ts`](https://www.npmjs.com/package/@hey-api/openapi-ts)) for the TS target. Part of [contract-kit](https://github.com/ahmedrowaihi/contract-kit).
 
 ## Usage
 
@@ -122,11 +122,11 @@ jobs:
 
 | Input | Required | Default | Description |
 | --- | --- | --- | --- |
-| `target` | yes | — | `go`, `kotlin`, or `swift` |
+| `target` | yes | — | `go`, `kotlin`, `swift`, or `typescript` |
 | `input` | yes | — | Path or URL to the OpenAPI 3.x spec |
 | `output` | yes | — | Directory the SDK is written to |
-| `package-name` | no | `''` | Override the generated package / module name (Go `package`, Kotlin package path; ignored for Swift) |
-| `manifest` | no | `''` | Emit a build manifest alongside the SDK. Per target: Go expects the module path (e.g. `github.com/foo/bar/sdk`) and emits `go.mod`; Kotlin treats any non-empty value as truthy and emits `build.gradle.kts` + `settings.gradle.kts`; Swift expects the package name and emits `Package.swift`. Empty (default) skips manifest emission so the output is a flat drop-in source tree. |
+| `package-name` | no | `''` | Override the generated package / module name (Go `package`, Kotlin package path; ignored for Swift / TypeScript — TypeScript output structure is owned by hey-api's plugins) |
+| `manifest` | no | `''` | Emit a build manifest alongside the SDK. Per target: Go expects the module path (e.g. `github.com/foo/bar/sdk`) and emits `go.mod`; Kotlin treats any non-empty value as truthy and emits `build.gradle.kts` + `settings.gradle.kts`; Swift expects the package name and emits `Package.swift`. Ignored for TypeScript (hey-api owns the output structure). Empty (default) skips manifest emission so the output is a flat drop-in source tree. |
 | `generator-version` | no | `latest` | Pinned semver of `@ahmedrowaihi/openapi-<target>` |
 | `commit-strategy` | no | `pull-request` | `pull-request` \| `commit-back` \| `none` |
 | `commit-message` | no | `chore: regenerate ${target} SDK` | Commit message (`${target}` is substituted in `commit-back`) |

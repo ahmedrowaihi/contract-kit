@@ -68,9 +68,9 @@ runs:
       shell: bash
       run: |
         case "${{ inputs.target }}" in
-          go|kotlin|swift) ;;
+          go|kotlin|swift|typescript) ;;
           *)
-            echo "::error::invalid target '${{ inputs.target }}' — must be one of: go, kotlin, swift"
+            echo "::error::invalid target '${{ inputs.target }}' — must be one of: go, kotlin, swift, typescript"
             exit 1
             ;;
         esac
@@ -88,14 +88,23 @@ runs:
         cd "$WORKDIR"
         # Bare package.json so npm doesn't walk up looking for the consumer's lockfile.
         echo '{"private":true,"type":"module"}' > package.json
-        # Generators declare @hey-api/* + @ahmedrowaihi/openapi-tools as peer
-        # deps so consumers can pin them; npm doesn't auto-install peers at
-        # the top level, so we name them explicitly here.
-        npm install --silent --no-audit --no-fund \
-          "@ahmedrowaihi/openapi-${TARGET}@${VERSION}" \
-          "@ahmedrowaihi/openapi-tools" \
-          "@hey-api/shared" \
-          "@hey-api/spec-types"
+        # Per-target peer dep set — generators declare them peer so
+        # consumers can pin, but npm doesn't auto-install peers at the
+        # top level, so we name them explicitly here.
+        if [ "$TARGET" = "typescript" ]; then
+          # The TypeScript wrapper delegates everything to @hey-api/openapi-ts,
+          # which is its only peer. No oas-core / openapi-tools / spec-types
+          # since the wrapper doesn't walk the IR itself.
+          npm install --silent --no-audit --no-fund \
+            "@ahmedrowaihi/openapi-typescript@${VERSION}" \
+            "@hey-api/openapi-ts"
+        else
+          npm install --silent --no-audit --no-fund \
+            "@ahmedrowaihi/openapi-${TARGET}@${VERSION}" \
+            "@ahmedrowaihi/openapi-tools" \
+            "@hey-api/shared" \
+            "@hey-api/spec-types"
+        fi
         echo "workdir=$WORKDIR" >> "$GITHUB_OUTPUT"
 
     - name: Generate SDK

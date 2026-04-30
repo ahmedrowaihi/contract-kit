@@ -45,6 +45,7 @@ const CATEGORY_BY_NAME = {
   "@ahmedrowaihi/openapi-kotlin": "Native client SDK generators",
   "@ahmedrowaihi/openapi-swift": "Native client SDK generators",
   "@ahmedrowaihi/openapi-go": "Native client SDK generators",
+  "@ahmedrowaihi/openapi-typescript": "Native client SDK generators",
   "@ahmedrowaihi/openapi-recon": "Spec discovery from traffic",
   "@ahmedrowaihi/glean": "Apps",
 };

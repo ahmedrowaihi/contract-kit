@@ -2,7 +2,7 @@
 
 [![pkg.pr.new](https://pkg.pr.new/badge/ahmedrowaihi/contract-kit)](https://pkg.pr.new)
 
-OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities, native client SDK generators (Go / Kotlin / Swift), and live spec discovery from traffic. Everything sits on top of the [`@hey-api`](https://github.com/hey-api/openapi-ts) IR so 2.0 / 3.0 / 3.1 inputs share one normalization layer.
+OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities, client SDK generators (Go / Kotlin / Swift native, TypeScript via a hey-api wrapper), and live spec discovery from traffic. Everything sits on top of the [`@hey-api`](https://github.com/hey-api/openapi-ts) IR so 2.0 / 3.0 / 3.1 inputs share one normalization layer.
 
 ## Packages
 
@@ -31,6 +31,7 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | [`@ahmedrowaihi/openapi-go`](./packages/openapi-go) | Generate idiomatic Go (net/http + encoding/json + context.Context) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi-kotlin) | Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
+| [`@ahmedrowaihi/openapi-typescript`](./packages/openapi-typescript) | Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline. |
 
 ### Spec discovery from traffic
 
