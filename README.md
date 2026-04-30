@@ -2,7 +2,7 @@
 
 [![pkg.pr.new](https://pkg.pr.new/badge/ahmedrowaihi/contract-kit)](https://pkg.pr.new)
 
-OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities, native client SDK generators (Kotlin / Swift), and live spec discovery from traffic. Everything sits on top of the [`@hey-api`](https://github.com/hey-api/openapi-ts) IR so 2.0 / 3.0 / 3.1 inputs share one normalization layer.
+OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities, native client SDK generators (Go / Kotlin / Swift), and live spec discovery from traffic. Everything sits on top of the [`@hey-api`](https://github.com/hey-api/openapi-ts) IR so 2.0 / 3.0 / 3.1 inputs share one normalization layer.
 
 ## Packages
 
@@ -53,7 +53,7 @@ The four `@hey-api/openapi-ts` plugins ship in lockstep (Changesets `fixed` conf
 
 | Example | Path | What it shows |
 | --- | --- | --- |
-| `petstore-sdk` | [`examples/petstore-sdk`](./examples/petstore-sdk) | Generate Kotlin + Swift client SDKs from the petstore spec; full `Example.kt` / `Example.swift` covering CRUD, auth, multipart, per-call options, `*WithResponse`, validators, transformers. |
+| `petstore-sdk` | [`examples/petstore-sdk`](./examples/petstore-sdk) | Generate Go / Kotlin / Swift client SDKs from the petstore spec; each language has a buildable consumer app under `<lang>/example/` exercising CRUD, auth, multipart, per-call options, `*WithResponse`, validators, transformers. |
 | `orpc-basic` | [`examples/orpc-basic`](./examples/orpc-basic) | Minimal `@ahmedrowaihi/openapi-ts-orpc` setup. |
 
 ## Contributing
