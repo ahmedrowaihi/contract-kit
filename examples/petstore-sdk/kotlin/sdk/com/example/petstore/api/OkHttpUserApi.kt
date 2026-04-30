@@ -174,7 +174,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("GET", null)
         for (header in options.headers) {
@@ -192,7 +192,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("GET", null)
         for (header in options.headers) {
@@ -211,7 +211,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("PUT", null)
         val payload = client.json.encodeToString(User.serializer(), body)
@@ -232,7 +232,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("PUT", null)
         val payload = client.json.encodeToString(User.serializer(), body)
@@ -252,7 +252,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("DELETE", null)
         for (header in options.headers) {
@@ -270,7 +270,7 @@ public class OkHttpUserApi(
         val baseUrl = options.baseUrl ?: client.baseUrl
         var urlBuilder = baseUrl.newBuilder()
         urlBuilder.addPathSegment("user")
-        urlBuilder.addPathSegment(username.toString())
+        urlBuilder.addPathSegment(username)
         val url = urlBuilder.build()
         val builder = Request.Builder().url(url).method("DELETE", null)
         for (header in options.headers) {

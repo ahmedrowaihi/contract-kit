@@ -66,18 +66,26 @@ function splitSegments(pathStr: string): string[] {
   return stripped.split("/").filter((s) => s.length > 0);
 }
 
+interface ParamPart {
+  expr: KtExpr;
+  isString: boolean;
+}
+
 function segmentExpr(
   seg: string,
   pathParams: ReadonlyArray<IR.ParameterObject>,
 ): KtExpr {
-  const parts: Array<string | KtExpr> = [];
+  const parts: Array<string | ParamPart> = [];
   const re = /\{([^}]+)\}/g;
   let lastEnd = 0;
   let m: RegExpExecArray | null;
   while ((m = re.exec(seg)) !== null) {
     if (m.index > lastEnd) parts.push(seg.slice(lastEnd, m.index));
     const matched = pathParams.find((p) => p.name === m![1]);
-    parts.push(ktIdent(paramIdent(matched ? matched.name : m[1]!)));
+    parts.push({
+      expr: ktIdent(paramIdent(matched ? matched.name : m[1]!)),
+      isString: matched?.schema.type === "string",
+    });
     lastEnd = m.index + m[0].length;
   }
   if (lastEnd < seg.length) parts.push(seg.slice(lastEnd));
@@ -85,9 +93,13 @@ function segmentExpr(
   if (parts.length === 0) return ktStr("");
   if (parts.length === 1 && typeof parts[0] === "string")
     return ktStr(parts[0]);
-  if (parts.length === 1)
-    return ktCall(ktMember(parts[0] as KtExpr, "toString"), []);
-  return ktInterp(parts);
+  if (parts.length === 1) {
+    const only = parts[0] as ParamPart;
+    return only.isString
+      ? only.expr
+      : ktCall(ktMember(only.expr, "toString"), []);
+  }
+  return ktInterp(parts.map((p) => (typeof p === "string" ? p : p.expr)));
 }
 
 function buildQueryStmt(p: IR.ParameterObject): KtStmt {

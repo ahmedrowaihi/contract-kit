@@ -81,7 +81,35 @@ describe("operationsToDecls", () => {
     const out = printDecl(cls!);
     assert.match(out, /baseUrl\.newBuilder\(\)/);
     assert.match(out, /urlBuilder\.addPathSegment\("users"\)/);
-    assert.match(out, /urlBuilder\.addPathSegment\(id\.toString\(\)\)/);
+    assert.match(out, /urlBuilder\.addPathSegment\(id\)/);
+  });
+
+  it("calls .toString() on numeric path params (addPathSegment needs String)", () => {
+    const m = ir({
+      paths: {
+        "/orders/{id}": {
+          get: {
+            tags: ["Orders"],
+            operationId: "getOrder",
+            parameters: [
+              {
+                name: "id",
+                in: "path",
+                required: true,
+                schema: { type: "integer", format: "int64" },
+              },
+            ],
+            responses: { 204: { description: "ok" } },
+          },
+        },
+      },
+    });
+    const { decls } = operationsToDecls(m.paths);
+    const cls = decls.find((d) => d.kind === "class")!;
+    assert.match(
+      printDecl(cls),
+      /urlBuilder\.addPathSegment\(id\.toString\(\)\)/,
+    );
   });
 
   it("threads required-first param ordering with optional defaults", () => {
