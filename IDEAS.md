@@ -15,10 +15,14 @@ Loose roadmap. Not a commitment — order shifts with whatever's actually useful
 - **`@ahmedrowaihi/openapi-swift`** — iOS Swift SDK generator: protocols + `Codable` structs + URLSession-backed async-throws impls. Same feature surface as `openapi-kotlin`.
 - **`@ahmedrowaihi/openapi-go`** — Go SDK generator: stdlib-only (`net/http` + `encoding/json` + `mime/multipart`), `context.Context`-first signatures, generics `Execute[T]`, per-tag interfaces with `*WithResponse` companions, sealed-style sum types via marker interface + concrete cases for multi-2xx ops.
 - **`@ahmedrowaihi/oas-core`** — shared building blocks for native-SDK generators: identifier transforms, ref helpers, `extractSecuritySchemeNames` walker, HTTP / media constants, filesystem safety. Excludes language-coupled bits (schema → decl translation, per-tag orchestration loop) — those remain per-package because parameterising over every DSL builder obscures more than it dedupes.
+- **`actions/sdk-regen` GitHub Action** — composite, regenerates a Go / Kotlin / Swift SDK on dispatch / push and either commits back, opens a PR, or leaves the diff. Polymorphic `manifest` input emits `go.mod` / Gradle files / `Package.swift` per target. Tagged `sdk-regen-v1`.
+- **`contract-kit-mux-demo` repo** — multi-language Mux SDK demo consuming the action via `workflow_dispatch` + per-language PR strategy. First public dogfood.
 
 ## Planned
 
-(no concrete native-generator additions queued — see Maintenance / cross-cutting for in-flight refactors.)
+- **CI guard for `examples/petstore-sdk/`** — run `pnpm gen:go|kotlin|swift` and `git diff --exit-code` on every PR. Fails CI when a generator change forgets to regen the example. Cheap, no published-version coupling.
+- **Real-world spec sweep** — Stripe, GitHub, OpenAI, Slack against all three generators in CI. Mux alone surfaced 2 bugs; a wider sweep would catch the long tail before users do.
+- **Mirror `sdk-regen` to a standalone repo** — only worth it for GitHub Marketplace listing, which requires `action.yml` at repo root. Defer until there's pull from outside contract-kit.
 
 ## Considered, declined
 
