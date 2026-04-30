@@ -17,9 +17,14 @@ const entry = resolve(WORKDIR, "node_modules", pkg, "dist", "index.js");
 
 const { generate } = await import(entry);
 
+// Pass http(s) URLs through verbatim; only resolve filesystem paths
+// against the consumer's repo root. The generators delegate to
+// @hey-api/json-schema-ref-parser which accepts both shapes.
+const isUrl = /^https?:\/\//i.test(SPEC);
+
 /** @type {Record<string, unknown>} */
 const opts = {
-  input: resolve(process.cwd(), SPEC),
+  input: isUrl ? SPEC : resolve(process.cwd(), SPEC),
   output: resolve(process.cwd(), OUTPUT),
 };
 if (PACKAGE_NAME) opts.packageName = PACKAGE_NAME;
