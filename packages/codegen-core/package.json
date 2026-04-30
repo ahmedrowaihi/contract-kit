@@ -1,15 +1,16 @@
 {
-  "name": "@ahmedrowaihi/oas-core",
+  "name": "@ahmedrowaihi/codegen-core",
   "version": "0.1.0",
-  "description": "Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift.",
+  "description": "Spec-agnostic codegen primitives shared by OpenAPI and AsyncAPI generator families — identifier transforms (pascal/camel/safeIdent), filesystem safety, project-name derivation. Pure functions, no spec dependencies.",
   "keywords": [
-    "openapi",
-    "oas",
     "codegen",
+    "openapi",
+    "asyncapi",
     "sdk",
-    "shared"
+    "shared",
+    "identifiers"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/oas-core",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/codegen-core",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
@@ -21,7 +22,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
-    "directory": "packages/oas-core"
+    "directory": "packages/codegen-core"
   },
   "type": "module",
   "sideEffects": false,
@@ -36,7 +37,6 @@
   },
   "files": [
     "dist",
-    "README.md",
     "LICENSE.md"
   ],
   "publishConfig": {
@@ -49,15 +49,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsc && node --test tests/*.test.ts"
   },
-  "dependencies": {
-    "@ahmedrowaihi/codegen-core": "workspace:*"
-  },
-  "peerDependencies": {
-    "@hey-api/shared": ">=0.3.0"
-  },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",
-    "@hey-api/shared": "catalog:",
     "@types/node": "catalog:"
   },
   "engines": {

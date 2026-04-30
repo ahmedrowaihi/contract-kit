@@ -3,6 +3,7 @@ packages:
   - "packages/openapi-tools"
   - "packages/openapi-recon"
   - "packages/oas-core"
+  - "packages/codegen-core"
   - "packages/openapi-kotlin"
   - "packages/openapi-swift"
   - "packages/openapi-go"
