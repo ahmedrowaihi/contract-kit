@@ -30,6 +30,13 @@ jobs:
           input: openapi.yaml
           output: sdk/go
           package-name: petstore
+          # Optional: emit go.mod / build.gradle.kts / Package.swift
+          # alongside the SDK so the output is a self-contained module.
+          # Per-target meaning of `manifest` —
+          #   go: the module path
+          #   kotlin: any non-empty string toggles gradle emission
+          #   swift: the package name
+          manifest: github.com/example/petstore-go-sdk
 ```
 
 ### Multiple targets in one workflow (matrix)
@@ -119,6 +126,7 @@ jobs:
 | `input` | yes | — | Path or URL to the OpenAPI 3.x spec |
 | `output` | yes | — | Directory the SDK is written to |
 | `package-name` | no | `''` | Override the generated package / module name (Go `package`, Kotlin package path; ignored for Swift) |
+| `manifest` | no | `''` | Emit a build manifest alongside the SDK. Per target: Go expects the module path (e.g. `github.com/foo/bar/sdk`) and emits `go.mod`; Kotlin treats any non-empty value as truthy and emits `build.gradle.kts` + `settings.gradle.kts`; Swift expects the package name and emits `Package.swift`. Empty (default) skips manifest emission so the output is a flat drop-in source tree. |
 | `generator-version` | no | `latest` | Pinned semver of `@ahmedrowaihi/openapi-<target>` |
 | `commit-strategy` | no | `pull-request` | `pull-request` \| `commit-back` \| `none` |
 | `commit-message` | no | `chore: regenerate ${target} SDK` | Commit message (`${target}` is substituted in `commit-back`) |

@@ -19,6 +19,10 @@ inputs:
     description: 'Override the generated package / module name. Per-target meaning: Go `package` directive, Kotlin package path (`com.example.api`), Swift unused (Swift uses module names from `Package.swift`).'
     required: false
     default: ''
+  manifest:
+    description: 'Emit a build manifest alongside the SDK. Per target: Go expects the module path (e.g. `github.com/foo/bar/sdk`) and emits `go.mod`; Kotlin treats any non-empty value as truthy and emits `build.gradle.kts` + `settings.gradle.kts`; Swift expects the package name (e.g. `MyClient`) and emits `Package.swift`. Empty string (default) skips manifest emission, matching the generators'' "drop into an existing module" mode.'
+    required: false
+    default: ''
   generator-version:
     description: 'Pinned semver of `@ahmedrowaihi/openapi-<target>` to install. Defaults to `latest`.'
     required: false
@@ -102,6 +106,7 @@ runs:
         SPEC: ${{ inputs.input }}
         OUTPUT: ${{ inputs.output }}
         PACKAGE_NAME: ${{ inputs.package-name }}
+        MANIFEST: ${{ inputs.manifest }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: node "$GITHUB_ACTION_PATH/regen.mjs"
 

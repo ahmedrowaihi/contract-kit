@@ -14,7 +14,7 @@ on:
 
 # Self-test: invoke the action against the petstore fixture for each target
 # in `commit-strategy: none` mode (just regen, no PR), then assert the output
-# is non-empty and the generator's signature files landed. Doesn't compare
+# is non-empty and the per-target signature files landed. Doesn't compare
 # byte-for-byte against `examples/petstore-sdk/` since the example regens
 # pin a specific package + module name; the fixture round-trip is enough to
 # catch a broken action.
@@ -29,22 +29,29 @@ jobs:
           - target: go
             output: tmp-sdk/go
             sentinel: pet.go
+            manifest: github.com/example/sdk
+            manifest-sentinel: go.mod
           - target: kotlin
             output: tmp-sdk/kotlin
             sentinel: com/example/api/api/PetApi.kt
+            manifest: 'true'
+            manifest-sentinel: build.gradle.kts
           - target: swift
             output: tmp-sdk/swift
             sentinel: API/PetAPI.swift
+            manifest: TestSDK
+            manifest-sentinel: Package.swift
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run sdk-regen
+      - name: Run sdk-regen (with manifest)
         id: regen
         uses: ./actions/sdk-regen
         with:
           target: ${{ matrix.target }}
           input: fixtures/petstore.yaml
           output: ${{ matrix.output }}
+          manifest: ${{ matrix.manifest }}
           commit-strategy: none
 
       - name: Assert outputs
@@ -52,6 +59,7 @@ jobs:
         env:
           OUTPUT: ${{ matrix.output }}
           SENTINEL: ${{ matrix.sentinel }}
+          MANIFEST_SENTINEL: ${{ matrix.manifest-sentinel }}
           CHANGED: ${{ steps.regen.outputs.changed }}
           FILES_CHANGED: ${{ steps.regen.outputs.files-changed }}
         run: |
@@ -65,8 +73,13 @@ jobs:
             exit 1
           fi
           if [ ! -f "$OUTPUT/$SENTINEL" ]; then
-            echo "::error::sentinel file missing: $OUTPUT/$SENTINEL"
+            echo "::error::SDK sentinel file missing: $OUTPUT/$SENTINEL"
             ls -la "$OUTPUT" || true
             exit 1
           fi
-          echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinel $SENTINEL present"
+          if [ ! -f "$OUTPUT/$MANIFEST_SENTINEL" ]; then
+            echo "::error::manifest sentinel file missing: $OUTPUT/$MANIFEST_SENTINEL"
+            ls -la "$OUTPUT" || true
+            exit 1
+          fi
+          echo "✓ ${{ matrix.target }} regen produced $FILES_CHANGED file(s); sentinels $SENTINEL + $MANIFEST_SENTINEL present"
