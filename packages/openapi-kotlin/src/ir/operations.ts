@@ -1,188 +1,217 @@
 import type { IR } from "@hey-api/shared";
 
 import {
-  ktAnnotation,
+  type KtDecl,
+  type KtFun,
+  type KtType,
+  ktArg,
+  ktCall,
+  ktExprStmt,
   ktFun,
-  ktFunParam,
+  ktIdent,
   ktInterface,
-  ktNullable,
-  ktUnit,
-} from "../kt-dsl/builders.js";
-import type {
-  KtAnnotation,
-  KtDecl,
-  KtFun,
-  KtFunParam,
-  KtType,
-} from "../kt-dsl/types.js";
-import { bodyToParams } from "./body.js";
-import { camel, paramIdent, pascal } from "./identifiers.js";
+  ktMember,
+  ktRef,
+  ktReturn,
+  ktTopLevelFun,
+} from "../kt-dsl/index.js";
+import { HTTP_METHODS, type HttpMethod } from "./constants.js";
+import { pascal } from "./identifiers.js";
+import { buildClientClass } from "./impl/index.js";
 import {
-  HTTP_METHODS,
-  type HttpMethod,
-  RETROFIT_HTTP,
-  RETROFIT_METHOD_ANNOTATION,
-} from "./retrofit.js";
-import { isMeaningless, schemaToType, type TypeCtx } from "./schema-to-type.js";
-
-const PARAM_LOCATIONS = ["path", "query", "header", "cookie"] as const;
-type ParamLocation = (typeof PARAM_LOCATIONS)[number];
+  type OperationSignature,
+  operationSignature,
+} from "./operation/index.js";
 
 export interface OperationsOptions {
   /** Default: `"Default"`. */
   defaultTag?: string;
   /** Default: `(tag) => `${PascalCase(tag)}Api``. */
   interfaceName?: (tag: string) => string;
+  /** Default: `(interfaceName) => `OkHttp${interfaceName}``. */
+  clientClassName?: (interfaceName: string) => string;
+  /** Skip emitting the OkHttp impl class. Default: `false`. */
+  interfaceOnly?: boolean;
+  /**
+   * Emit the impl class as `open` instead of `final` so consumers can
+   * subclass and override individual methods. Default: `false`.
+   */
+  openImpl?: boolean;
+  /**
+   * Per-operation security-scheme names, keyed by `${pathStr}|${method}`.
+   * The IR drops scheme names from `op.security`, so the caller (usually
+   * `generate()`) resolves them from the raw spec and threads the map
+   * here. Empty / missing entries → no auto-auth wiring for that op.
+   */
+  securitySchemeNames?: ReadonlyMap<string, ReadonlyArray<string>>;
+}
+
+/** Key used in `securitySchemeNames` for one (path, method) pair. */
+export const securityKey = (path: string, method: string): string =>
+  `${path}|${method}`;
+
+export interface OperationsResult {
+  decls: KtDecl[];
+  /** True when at least one impl class needs the `MultipartFormBody`
+   *  helper. The orchestrator uses this to decide whether to emit the
+   *  runtime file. */
+  needsMultipart: boolean;
+  /** True when at least one op declares `security` requirements. The
+   *  orchestrator uses this to decide whether to emit `Auth.kt` /
+   *  `APIKeyLocation.kt` and the `auth` field on `APIClient`. */
+  needsAuth: boolean;
 }
 
 /**
- * Translate `IR.Model.paths` into Retrofit interfaces grouped by each
- * operation's first tag. Inline body / response / param schemas are
- * promoted to synthetic top-level decls in the same output array.
+ * Translate `IR.Model.paths` into Kotlin interfaces (one per tag) and
+ * matching OkHttp + kotlinx-serialization impl classes. Inline body /
+ * response / param schemas are promoted to synthetic top-level decls
+ * in the same output array.
  */
 export function operationsToDecls(
   paths: IR.PathsObject | undefined,
   opts: OperationsOptions = {},
-): KtDecl[] {
+): OperationsResult {
   const defaultTag = opts.defaultTag ?? "Default";
   const interfaceName =
     opts.interfaceName ?? ((tag: string) => `${pascal(tag)}Api`);
+  const clientClassName = opts.clientClassName ?? ((p: string) => `OkHttp${p}`);
 
   const decls: KtDecl[] = [];
   const emit = (d: KtDecl) => decls.push(d);
-  const byTag = new Map<string, KtFun[]>();
+  const byTag = new Map<string, OperationSignature[]>();
 
   for (const [pathStr, pathItem] of Object.entries(paths ?? {})) {
     if (!pathItem) continue;
-
     for (const method of HTTP_METHODS) {
       const op = pathItem[method] as IR.OperationObject | undefined;
       if (!op) continue;
-
-      const fn = operationToFun(op, method, pathStr, emit);
+      const schemeNames =
+        opts.securitySchemeNames?.get(securityKey(pathStr, method)) ?? [];
+      const sig = operationSignature(
+        op,
+        method as HttpMethod,
+        pathStr,
+        emit,
+        schemeNames,
+      );
       const tag = op.tags?.[0] ?? defaultTag;
       const list = byTag.get(tag);
-      if (list) list.push(fn);
-      else byTag.set(tag, [fn]);
+      if (list) list.push(sig);
+      else byTag.set(tag, [sig]);
     }
   }
 
-  for (const [tag, funs] of byTag) {
-    decls.push(ktInterface({ name: interfaceName(tag), funs }));
-  }
-  return decls;
-}
-
-function operationToFun(
-  op: IR.OperationObject,
-  method: HttpMethod,
-  pathStr: string,
-  emit: TypeCtx["emit"],
-): KtFun {
-  const fnName = pickFnName(op, method, pathStr);
-  const ctxOwner = pascal(fnName);
-
-  const fnAnnotations: KtAnnotation[] = [
-    ktAnnotation(RETROFIT_METHOD_ANNOTATION[method], {
-      pkg: RETROFIT_HTTP,
-      args: [JSON.stringify(stripLeadingSlash(pathStr))],
-    }),
-  ];
-  const params: KtFunParam[] = [...nonBodyParams(op, ctxOwner, emit)];
-
-  if (op.body) {
-    const result = bodyToParams(op.body, {
-      emit,
-      ownerName: ctxOwner,
-      propPath: ["body"],
-    });
-    fnAnnotations.push(...result.fnAnnotations);
-    params.push(...result.params);
-  }
-
-  return ktFun({
-    name: camel(fnName),
-    params,
-    returnType: returnType(op, {
-      emit,
-      ownerName: ctxOwner,
-      propPath: ["response"],
-    }),
-    modifiers: ["suspend"],
-    annotations: fnAnnotations,
-  });
-}
-
-function nonBodyParams(
-  op: IR.OperationObject,
-  ctxOwner: string,
-  emit: TypeCtx["emit"],
-): KtFunParam[] {
-  const all: Array<{ p: IR.ParameterObject; loc: ParamLocation }> = [];
-  for (const loc of PARAM_LOCATIONS) {
-    const bucket = op.parameters?.[loc];
-    if (!bucket) continue;
-    for (const p of Object.values(bucket)) all.push({ p, loc });
-  }
-  // Required first so trailing optional defaults don't break positional calls.
-  all.sort((a, b) => Number(!a.p.required) - Number(!b.p.required));
-
-  const params: KtFunParam[] = [];
-  for (const { p, loc } of all) {
-    const annotation = paramAnnotation(p, loc);
-    if (!annotation) continue;
-    const t = schemaToType(p.schema, {
-      emit,
-      ownerName: ctxOwner,
-      propPath: ["param", p.name],
-    });
-    const finalType = p.required ? t : ktNullable(t);
-    params.push(
-      ktFunParam({
-        name: paramIdent(p.name),
-        type: finalType,
-        annotations: [annotation],
-        default: p.required ? undefined : "null",
+  let needsMultipart = false;
+  let needsAuth = false;
+  for (const [tag, sigs] of byTag) {
+    const ifaceName = interfaceName(tag);
+    const allSigs: ReadonlyArray<OperationSignature> = sigs.flatMap((s) => [
+      s,
+      withResponseSignature(s),
+    ]);
+    decls.push(
+      ktInterface({
+        name: ifaceName,
+        funs: allSigs.map(signatureToInterfaceFun),
       }),
     );
+    for (const sig of allSigs) {
+      decls.push(ktTopLevelFun(signatureToConvenienceFun(sig, ifaceName)));
+    }
+    if (sigs.some(hasSecurity)) needsAuth = true;
+    if (!opts.interfaceOnly) {
+      const result = buildClientClass(
+        clientClassName(ifaceName),
+        ifaceName,
+        allSigs,
+        {
+          open: opts.openImpl,
+        },
+      );
+      decls.push(result.class);
+      if (result.needsMultipart) needsMultipart = true;
+    }
   }
-  return params;
+  return { decls, needsMultipart, needsAuth };
 }
 
-function paramAnnotation(
-  p: IR.ParameterObject,
-  loc: ParamLocation,
-): KtAnnotation | undefined {
-  if (loc === "cookie") return undefined;
-  const name = loc === "path" ? "Path" : loc === "query" ? "Query" : "Header";
-  return ktAnnotation(name, {
-    pkg: RETROFIT_HTTP,
-    args: [JSON.stringify(p.name)],
+/**
+ * Derive the `*WithResponse` companion of a signature: name suffix
+ * `WithResponse`, and return type wraps the original alongside
+ * OkHttp's `Response`. Void operations bundle to just `Response`
+ * (no payload to pair with).
+ */
+function withResponseSignature(sig: OperationSignature): OperationSignature {
+  return {
+    ...sig,
+    name: `${sig.name}WithResponse`,
+    returnType: withResponseReturnType(sig.returnType),
+  };
+}
+
+function withResponseReturnType(t: KtType): KtType {
+  const isUnit = t.kind === "primitive" && t.name === "Unit";
+  return isUnit ? ktRef("Response") : ktRef("Pair", [t, ktRef("Response")]);
+}
+
+function hasSecurity(sig: OperationSignature): boolean {
+  return sig.securitySchemeNames.length > 0;
+}
+
+/**
+ * Strip defaults from interface-fun parameters. Kotlin allows defaults
+ * on interface methods, but the convention is to keep interface
+ * signatures lean and put defaults on the implementation; the
+ * convenience extension below provides the no-options overload.
+ */
+function signatureToInterfaceFun(sig: OperationSignature): KtFun {
+  const ifaceParams = sig.params.map((p) =>
+    p.default === undefined ? p : { ...p, default: undefined },
+  );
+  return ktFun({
+    name: sig.name,
+    params: ifaceParams,
+    returnType: sig.returnType,
+    modifiers: ["suspend"],
+    doc: sig.doc,
+    // No body — interface requirement.
   });
 }
 
-function returnType(op: IR.OperationObject, ctx: TypeCtx): KtType {
-  const responses = op.responses ?? {};
-  const successCode = Object.keys(responses).find((k) => /^2\d\d$/.test(k));
-  if (!successCode) return ktUnit;
-  const resp = responses[successCode];
-  if (!resp?.schema || isMeaningless(resp.schema)) return ktUnit;
-  return schemaToType(resp.schema, ctx);
-}
-
-function pickFnName(
-  op: IR.OperationObject,
-  method: HttpMethod,
-  path: string,
-): string {
-  if (op.operationId) return op.operationId;
-  const segments = path
-    .split("/")
-    .filter(Boolean)
-    .map((s) => s.replace(/[{}]/g, ""));
-  return [method, ...segments].join("_") || method;
-}
-
-function stripLeadingSlash(s: string): string {
-  return s.startsWith("/") ? s.slice(1) : s;
+/**
+ * Convenience overload emitted as a top-level extension fun. Drops the
+ * trailing `options` param and forwards with `RequestOptions()` defaults.
+ *
+ * @example
+ * ```kotlin
+ * public suspend fun PetApi.getPetById(petId: Long): Pet {
+ *     return getPetById(petId = petId, options = RequestOptions())
+ * }
+ * ```
+ */
+function signatureToConvenienceFun(
+  sig: OperationSignature,
+  receiverName: string,
+): KtFun {
+  // Drop the trailing options param — that's the whole point of the overload.
+  const baseParams = sig.params.slice(0, -1).map((p) =>
+    // The convenience overload also drops defaults — when callers reach
+    // for it, they already opted into the no-options shape.
+    p.default === undefined ? p : { ...p, default: undefined },
+  );
+  const callArgs = baseParams.map((p) => ktArg(ktIdent(p.name), p.name));
+  callArgs.push(ktArg(ktCall(ktIdent("RequestOptions"), []), "options"));
+  const forwarded = ktCall(ktMember(ktIdent("this"), sig.name), callArgs);
+  const isUnit =
+    sig.returnType.kind === "primitive" && sig.returnType.name === "Unit";
+  return ktFun({
+    name: sig.name,
+    params: baseParams,
+    returnType: sig.returnType,
+    modifiers: ["suspend"],
+    doc: sig.doc,
+    receiver: ktRef(receiverName),
+    body: [isUnit ? ktExprStmt(forwarded) : ktReturn(forwarded)],
+  });
 }
