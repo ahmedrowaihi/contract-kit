@@ -1,15 +1,16 @@
+import {
+  FORM_URLENCODED_MEDIA,
+  JSON_MEDIA_RE,
+  MULTIPART_FORM_MEDIA,
+} from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type KtFunParam,
   ktByteArray,
   ktFunParam,
   ktNullable,
 } from "../../kt-dsl/index.js";
-import {
-  FORM_URLENCODED_MEDIA,
-  JSON_MEDIA_RE,
-  MULTIPART_FORM_MEDIA,
-} from "../constants.js";
 import { paramIdent } from "../identifiers.js";
 import type { TypeCtx } from "../type/index.js";
 import { schemaToType } from "../type/index.js";

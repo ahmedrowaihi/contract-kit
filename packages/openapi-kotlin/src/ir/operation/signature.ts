@@ -1,12 +1,17 @@
+import {
+  camel,
+  HTTP_METHOD_LITERAL,
+  type HttpMethod,
+  pascal,
+} from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type KtFunParam,
   type KtType,
   ktFunParam,
   ktRef,
 } from "../../kt-dsl/index.js";
-import { HTTP_METHOD_LITERAL, type HttpMethod } from "../constants.js";
-import { camel, pascal } from "../identifiers.js";
 import type { TypeCtx } from "../type/index.js";
 import { buildBodyParams } from "./body.js";
 import { buildNonBodyParams, type LocatedParam } from "./params.js";

@@ -13,10 +13,12 @@ Loose roadmap. Not a commitment — order shifts with whatever's actually useful
 - **`@ahmedrowaihi/glean`** — DevTools extension that uses `openapi-recon` to emit live specs from browsing.
 - **`@ahmedrowaihi/openapi-kotlin`** — Android / JVM Kotlin SDK generator: OkHttp + kotlinx-serialization + suspend, with multipart/form/binary body support, per-call options, composable interceptors, typed errors, multi-2xx sum-type returns, and per-op security auto-wiring.
 - **`@ahmedrowaihi/openapi-swift`** — iOS Swift SDK generator: protocols + `Codable` structs + URLSession-backed async-throws impls. Same feature surface as `openapi-kotlin`.
+- **`@ahmedrowaihi/openapi-go`** — Go SDK generator: stdlib-only (`net/http` + `encoding/json` + `mime/multipart`), `context.Context`-first signatures, generics `Execute[T]`, per-tag interfaces with `*WithResponse` companions, sealed-style sum types via marker interface + concrete cases for multi-2xx ops.
+- **`@ahmedrowaihi/oas-core`** — shared building blocks for native-SDK generators: identifier transforms, ref helpers, `extractSecuritySchemeNames` walker, HTTP / media constants, filesystem safety. Excludes language-coupled bits (schema → decl translation, per-tag orchestration loop) — those remain per-package because parameterising over every DSL builder obscures more than it dedupes.
 
 ## Planned
 
-- **`@ahmedrowaihi/openapi-go`** — third native-client generator. Same shape as kotlin/swift (IR → AST → printer pipeline, runtime helpers, per-call options, multi-2xx returns), idiomatic = stdlib `net/http` + `encoding/json` (zero deps), `context.Context` for cancellation/timeout, generics for `Execute[T]`. Strategic value: third data point that tells us whether to extract a shared "SDK contract IR" between the language packages.
+(no concrete native-generator additions queued — see Maintenance / cross-cutting for in-flight refactors.)
 
 ## Considered, declined
 
@@ -27,8 +29,7 @@ Loose roadmap. Not a commitment — order shifts with whatever's actually useful
 
 ## Maintenance / cross-cutting
 
-- **Shared codegen utilities (between native generators).** `openapi-kotlin` and `openapi-swift` byte-duplicate `constants.ts`, `ref.ts`, `identifiers.ts` core helpers, the `extractSecuritySchemeNames` walker, and the orchestration loop in `operations.ts`. Extract into a small `openapi-codegen-shared` once Go lands so we have three data points instead of two.
-- **SDK contract IR.** A heavier refactor: an intermediate AST between hey-api's IR and per-language DSLs, capturing tag → interface, op signatures with abstract types, body strategy, multi-2xx shape. Defer until at least one more language ships — two languages aren't enough to validate the abstraction.
+- **SDK contract IR.** A heavier refactor: an intermediate AST between hey-api's IR and per-language DSLs, capturing tag → interface, op signatures with abstract types, body strategy, multi-2xx shape. Held off on after the `oas-core` extraction landed — the structurally-identical `schemasToDecls` and per-tag orchestration loop turned out to be too tightly coupled to per-language Decl types to share without a heavier abstraction. Revisit if a fourth language target ships and the duplication cost outweighs the abstraction cost.
 
 ## Glean polish (incremental)
 

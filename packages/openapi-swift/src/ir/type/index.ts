@@ -1,4 +1,6 @@
+import { refName, synthName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import type { SwType } from "../../sw-dsl/index.js";
 import {
   swAny,
@@ -7,8 +9,6 @@ import {
   swRef,
   swVoid,
 } from "../../sw-dsl/index.js";
-import { synthName } from "../identifiers.js";
-import { refName } from "../ref.js";
 import type { TypeCtx } from "./context.js";
 import { buildEnumFromIR } from "./enum.js";
 import { inlineObjectType } from "./object.js";

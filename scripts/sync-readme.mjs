@@ -41,6 +41,7 @@ const CATEGORY_BY_NAME = {
   "@ahmedrowaihi/openapi-ts-paths": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-ts-typia": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-tools": "OpenAPI runtime utilities",
+  "@ahmedrowaihi/oas-core": "Native client SDK generators",
   "@ahmedrowaihi/openapi-kotlin": "Native client SDK generators",
   "@ahmedrowaihi/openapi-swift": "Native client SDK generators",
   "@ahmedrowaihi/openapi-go": "Native client SDK generators",

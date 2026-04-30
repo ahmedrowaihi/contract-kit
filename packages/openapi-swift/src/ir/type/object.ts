@@ -1,4 +1,6 @@
+import { pascal, synthName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import type {
   SwCodingKeysEntry,
   SwStruct,
@@ -15,7 +17,6 @@ import {
   swString,
   swStruct,
 } from "../../sw-dsl/index.js";
-import { pascal, synthName } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 import { schemaToType } from "./index.js";
 import { propertyName } from "./property-naming.js";

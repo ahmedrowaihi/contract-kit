@@ -1,4 +1,6 @@
+import { refName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type KtDecl,
   ktAny,
@@ -7,7 +9,6 @@ import {
   ktString,
   ktTypeAlias,
 } from "../kt-dsl/index.js";
-import { refName } from "./ref.js";
 import { buildEnumFromIR, buildStruct, schemaToType } from "./type/index.js";
 
 /**

@@ -1,6 +1,10 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join, parse as parsePath, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
+import {
+  assertSafeOutputDir,
+  extractSecuritySchemeNames,
+} from "@ahmedrowaihi/oas-core";
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
 
@@ -8,7 +12,6 @@ import {
   type OperationsOptions,
   operationsToDecls,
   schemasToDecls,
-  securityKey,
 } from "./ir/index.js";
 import { buildRuntimeFiles } from "./ir/runtime/index.js";
 import {
@@ -95,45 +98,4 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
     await writeFile(full, file.content);
   }
   return { files, output: out };
-}
-
-/**
- * Walk the bundled spec to extract per-operation security-scheme NAMES
- * keyed by `${path}|${method}`. Needed because the IR drops scheme
- * names from `op.security` (it inlines the resolved scheme objects),
- * leaving the orchestrator with no way to wire `client.Auth["<name>"]`.
- */
-function extractSecuritySchemeNames(
-  spec: Record<string, unknown>,
-): Map<string, ReadonlyArray<string>> {
-  const map = new Map<string, ReadonlyArray<string>>();
-  const paths = (spec.paths ?? {}) as Record<string, unknown>;
-  for (const [pathStr, pathItem] of Object.entries(paths)) {
-    if (!pathItem || typeof pathItem !== "object") continue;
-    for (const [method, op] of Object.entries(
-      pathItem as Record<string, unknown>,
-    )) {
-      if (!op || typeof op !== "object") continue;
-      const security = (op as { security?: unknown }).security;
-      if (!Array.isArray(security)) continue;
-      const names = new Set<string>();
-      for (const requirement of security) {
-        if (requirement && typeof requirement === "object") {
-          for (const name of Object.keys(requirement)) names.add(name);
-        }
-      }
-      if (names.size > 0) {
-        map.set(securityKey(pathStr, method), [...names]);
-      }
-    }
-  }
-  return map;
-}
-
-function assertSafeOutputDir(out: string): void {
-  if (out === process.cwd() || out === parsePath(out).root) {
-    throw new Error(
-      `Refusing to clean output directory: ${out} (would wipe cwd or filesystem root). Use a dedicated subdirectory.`,
-    );
-  }
 }

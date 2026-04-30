@@ -1,3 +1,9 @@
+import {
+  HTTP_METHODS,
+  type HttpMethod,
+  pascal,
+  securityKey,
+} from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
 
 import {
@@ -15,8 +21,6 @@ import {
   ktReturn,
   ktTopLevelFun,
 } from "../kt-dsl/index.js";
-import { HTTP_METHODS, type HttpMethod } from "./constants.js";
-import { pascal } from "./identifiers.js";
 import { buildClientClass } from "./impl/index.js";
 import {
   type OperationSignature,
@@ -45,10 +49,6 @@ export interface OperationsOptions {
    */
   securitySchemeNames?: ReadonlyMap<string, ReadonlyArray<string>>;
 }
-
-/** Key used in `securitySchemeNames` for one (path, method) pair. */
-export const securityKey = (path: string, method: string): string =>
-  `${path}|${method}`;
 
 export interface OperationsResult {
   decls: KtDecl[];

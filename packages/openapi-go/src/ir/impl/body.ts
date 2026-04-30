@@ -1,4 +1,10 @@
+import {
+  FORM_URLENCODED_MEDIA,
+  JSON_MEDIA_RE,
+  MULTIPART_FORM_MEDIA,
+} from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import {
   type GoStmt,
   goAssign,
@@ -13,11 +19,6 @@ import {
   goShort,
   goStr,
 } from "../../go-dsl/index.js";
-import {
-  FORM_URLENCODED_MEDIA,
-  JSON_MEDIA_RE,
-  MULTIPART_FORM_MEDIA,
-} from "../constants.js";
 import { paramIdent } from "../identifiers.js";
 import { isOpaqueJsonBody } from "../operation/body.js";
 import type { ErrCheckFn } from "./errors.js";

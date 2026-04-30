@@ -1,4 +1,4 @@
-import { camel } from "../identifiers.js";
+import { camel } from "@ahmedrowaihi/oas-core";
 
 export interface PropertyName {
   /** The original key as it appears in the OpenAPI schema / JSON wire format. */

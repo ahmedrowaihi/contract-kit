@@ -1,4 +1,6 @@
+import { safeCaseName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
+
 import type { SwType } from "../../sw-dsl/index.js";
 import {
   swEnum,
@@ -7,7 +9,6 @@ import {
   swRef,
   swString,
 } from "../../sw-dsl/index.js";
-import { safeCaseName } from "../identifiers.js";
 import type { TypeCtx } from "./context.js";
 
 /**

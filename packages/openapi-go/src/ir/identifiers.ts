@@ -1,28 +1,20 @@
-/**
- * PascalCase / camelCase / safe-identifier helpers for Go codegen.
- * Same shape as swift/kotlin (will likely be extracted to a shared
- * package once go ships), with Go-specific tweaks:
- *
- *  - Exported names start with an uppercase letter (Go's visibility
- *    rule). `exportedIdent` ensures that.
- *  - Reserved-word escaping uses underscore suffix (`type` →
- *    `type_`) since Go doesn't have backtick-escaping.
- *  - `synthName` keeps underscores so synthesized names stay
- *    distinguishable from regular PascalCase composites; matches
- *    swift/kotlin output.
- */
-export function pascal(s: string): string {
-  return s
-    .replace(/^[^a-zA-Z0-9]+/, "")
-    .replace(/[^a-zA-Z0-9]+$/, "")
-    .replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) => c.toUpperCase())
-    .replace(/^./, (c) => c.toUpperCase());
-}
+import { camel, pascal } from "@ahmedrowaihi/oas-core";
 
-export function camel(s: string): string {
-  const p = pascal(s);
-  return p.length > 0 ? p[0]!.toLowerCase() + p.slice(1) : p;
-}
+/**
+ * Go-specific identifier transforms. Generic case helpers (`pascal`,
+ * `camel`, `safeIdent`, `safeCaseName`) live in `@ahmedrowaihi/oas-core`
+ * and are used directly by Go-targeted code. The exports here cover
+ * what's actually unique to Go:
+ *
+ *  - `exportedIdent` enforces Go's visibility rule (uppercase first
+ *    letter = exported).
+ *  - `paramIdent` escapes reserved keywords with a trailing underscore
+ *    (Go has no backtick-escape form, unlike Swift / Kotlin).
+ *  - `synthName` joins with no separator since `go vet` lints
+ *    underscored type names.
+ *  - `enumEntrySuffix` normalizes a raw enum value into the second
+ *    half of a typed-const name (`StatusAvailable`).
+ */
 
 /** Returns a PascalCase identifier safe for an exported name (starts with
  *  an uppercase letter, leading underscore prepended if it would start

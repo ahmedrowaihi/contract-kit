@@ -58,6 +58,7 @@
     "@hey-api/spec-types": ">=0.2.0"
   },
   "dependencies": {
+    "@ahmedrowaihi/oas-core": "workspace:*",
     "@hey-api/json-schema-ref-parser": "catalog:"
   },
   "devDependencies": {
