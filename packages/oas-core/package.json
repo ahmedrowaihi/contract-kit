@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/oas-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift.",
   "keywords": [
     "openapi",
