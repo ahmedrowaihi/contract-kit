@@ -64,6 +64,34 @@ Skips the PR step. The default `GITHUB_TOKEN` cannot trigger downstream workflow
     commit-strategy: commit-back
 ```
 
+### Pull the spec from a URL on a daily cron
+
+Useful when the source-of-truth spec lives on the API provider's own site (e.g. Mux, Stripe). The action passes `http(s)://` inputs straight through to the generator's bundler, no filesystem resolution.
+
+```yaml
+name: Daily SDK regen
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ahmedrowaihi/contract-kit/actions/sdk-regen@sdk-regen-v1
+        with:
+          target: go
+          input: https://www.mux.com/full-combined-spec.json
+          output: sdk
+          package-name: mux
+```
+
 ### Just regenerate, leave the diff for following steps
 
 `commit-strategy: none` runs the generator and exits. Useful if you want to bundle the regen into a larger PR your own workflow opens, or to fail CI when the committed SDK is stale:
