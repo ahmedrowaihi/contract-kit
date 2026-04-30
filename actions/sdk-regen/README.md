@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ahmedrowaihi/contract-kit/actions/sdk-regen@v1
+      - uses: ahmedrowaihi/contract-kit/actions/sdk-regen@sdk-regen-v1
         with:
           target: go
           input: openapi.yaml
@@ -43,7 +43,7 @@ jobs:
         target: [go, kotlin, swift]
     steps:
       - uses: actions/checkout@v4
-      - uses: ahmedrowaihi/contract-kit/actions/sdk-regen@v1
+      - uses: ahmedrowaihi/contract-kit/actions/sdk-regen@sdk-regen-v1
         with:
           target: ${{ matrix.target }}
           input: openapi.yaml
@@ -56,7 +56,7 @@ jobs:
 Skips the PR step. The default `GITHUB_TOKEN` cannot trigger downstream workflows on the push it creates — pass a PAT or App token via `token:` if you need that.
 
 ```yaml
-- uses: ahmedrowaihi/contract-kit/actions/sdk-regen@v1
+- uses: ahmedrowaihi/contract-kit/actions/sdk-regen@sdk-regen-v1
   with:
     target: go
     input: openapi.yaml
@@ -69,7 +69,7 @@ Skips the PR step. The default `GITHUB_TOKEN` cannot trigger downstream workflow
 `commit-strategy: none` runs the generator and exits. Useful if you want to bundle the regen into a larger PR your own workflow opens, or to fail CI when the committed SDK is stale:
 
 ```yaml
-- uses: ahmedrowaihi/contract-kit/actions/sdk-regen@v1
+- uses: ahmedrowaihi/contract-kit/actions/sdk-regen@sdk-regen-v1
   id: regen
   with:
     target: go
