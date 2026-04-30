@@ -9,7 +9,7 @@ import {
 import { ir } from "./_helpers.ts";
 
 describe("buildGoProject", () => {
-  it("emits one file per type with package directive + needed imports", () => {
+  it("consolidates schema-derived types into models.go", () => {
     const m = ir({
       components: {
         schemas: {
@@ -21,6 +21,11 @@ describe("buildGoProject", () => {
               startedAt: { type: "string", format: "date-time" },
             },
           },
+          Pet: {
+            type: "object",
+            required: ["name"],
+            properties: { name: { type: "string" } },
+          },
         },
       },
     });
@@ -28,12 +33,14 @@ describe("buildGoProject", () => {
       packageName: "petstore",
     });
     assert.equal(files.length, 1);
-    assert.equal(files[0]!.path, "user.go");
+    assert.equal(files[0]!.path, "models.go");
     assert.match(files[0]!.content, /^package petstore\n/);
     assert.match(files[0]!.content, /import "time"/);
+    assert.match(files[0]!.content, /type User struct/);
+    assert.match(files[0]!.content, /type Pet struct/);
   });
 
-  it("groups impl methods by receiver into one file", () => {
+  it("groups each tag's interface + impl + methods into <tag>.go", () => {
     const m = ir({
       paths: {
         "/users/{id}": {
@@ -68,31 +75,32 @@ describe("buildGoProject", () => {
     });
     const { decls } = operationsToDecls(m.paths);
     const files = buildGoProject(decls, { packageName: "petstore" });
-    const implFile = files.find((f) => f.path === "net_http_users_api.go");
-    assert.ok(implFile, "expected per-receiver impl file");
-    // All four methods (get + delete + their *WithResponse) collapse here.
-    assert.match(implFile!.content, /func \(a \*NetHTTPUsersAPI\) GetUser\(/);
+    const tagFile = files.find((f) => f.path === "users.go");
+    assert.ok(tagFile, "expected per-tag file");
+    // Interface + impl struct + constructor + every method (incl.
+    // *WithResponse twins) all collapse into the same file.
+    assert.match(tagFile!.content, /type UsersAPI interface/);
+    assert.match(tagFile!.content, /type NetHTTPUsersAPI struct/);
+    assert.match(tagFile!.content, /func NewNetHTTPUsersAPI\(/);
+    assert.match(tagFile!.content, /func \(a \*NetHTTPUsersAPI\) GetUser\(/);
     assert.match(
-      implFile!.content,
+      tagFile!.content,
       /func \(a \*NetHTTPUsersAPI\) GetUserWithResponse\(/,
     );
+    assert.match(tagFile!.content, /func \(a \*NetHTTPUsersAPI\) DeleteUser\(/);
     assert.match(
-      implFile!.content,
-      /func \(a \*NetHTTPUsersAPI\) DeleteUser\(/,
-    );
-    assert.match(
-      implFile!.content,
+      tagFile!.content,
       /func \(a \*NetHTTPUsersAPI\) DeleteUserWithResponse\(/,
     );
   });
 
-  it("snake_case respects acronyms (NetHTTPPetAPI → net_http_pet_api)", () => {
+  it("snake_case respects acronyms when forming the tag filename", () => {
     const m = ir({
       paths: {
-        "/pets": {
+        "/x": {
           get: {
-            tags: ["Pet"],
-            operationId: "listPets",
+            tags: ["VideoStream"],
+            operationId: "x",
             responses: { 204: { description: "ok" } },
           },
         },
@@ -100,27 +108,7 @@ describe("buildGoProject", () => {
     });
     const { decls } = operationsToDecls(m.paths);
     const files = buildGoProject(decls, { packageName: "petstore" });
-    assert.ok(files.some((f) => f.path === "net_http_pet_api.go"));
-  });
-
-  it("emits the constructor in the same file as the receiver type", () => {
-    const m = ir({
-      paths: {
-        "/things": {
-          get: {
-            tags: ["Thing"],
-            operationId: "thing",
-            responses: { 204: { description: "ok" } },
-          },
-        },
-      },
-    });
-    const { decls } = operationsToDecls(m.paths);
-    const files = buildGoProject(decls, { packageName: "petstore" });
-    const implFile = files.find((f) => f.path === "net_http_thing_api.go");
-    assert.ok(implFile);
-    assert.match(implFile!.content, /func NewNetHTTPThingAPI\(/);
-    assert.match(implFile!.content, /type NetHTTPThingAPI struct/);
+    assert.ok(files.some((f) => f.path === "video_stream.go"));
   });
 
   it("rejects fileLocation overrides that escape the SDK root", () => {
