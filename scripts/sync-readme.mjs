@@ -29,6 +29,7 @@ const END = "<!-- @packages-end -->";
 const CATEGORIES = [
   "`@hey-api/openapi-ts` plugins",
   "OpenAPI runtime utilities",
+  "Codegen primitives",
   "Native client SDK generators",
   "Spec discovery from traffic",
   "Apps",
@@ -41,6 +42,7 @@ const CATEGORY_BY_NAME = {
   "@ahmedrowaihi/openapi-ts-paths": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-ts-typia": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-tools": "OpenAPI runtime utilities",
+  "@ahmedrowaihi/codegen-core": "Codegen primitives",
   "@ahmedrowaihi/oas-core": "Native client SDK generators",
   "@ahmedrowaihi/openapi-kotlin": "Native client SDK generators",
   "@ahmedrowaihi/openapi-swift": "Native client SDK generators",
