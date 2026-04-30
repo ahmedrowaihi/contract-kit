@@ -6,6 +6,7 @@ packages:
   - "packages/openapi-kotlin"
   - "packages/openapi-swift"
   - "packages/openapi-go"
+  - "packages/openapi-typescript"
   - "apps/*"
   - "examples/*"
   - "tooling/*"
