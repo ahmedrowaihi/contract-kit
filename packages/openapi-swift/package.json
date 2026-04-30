@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-swift",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec.",
   "keywords": [
     "openapi",
