@@ -13,6 +13,7 @@ export function importsForSource(source: string): ReadonlyArray<string> {
   if (/\bjson\.\b/.test(source)) set.add("encoding/json");
   if (/\bbytes\.\b/.test(source)) set.add("bytes");
   if (/\bio\.\b/.test(source)) set.add("io");
+  if (/\berrors\.\b/.test(source)) set.add("errors");
   if (/\bfmt\.\b/.test(source)) set.add("fmt");
   if (/\bpath\.\b/.test(source)) set.add("path");
   if (/\btime\.\b/.test(source)) set.add("time");

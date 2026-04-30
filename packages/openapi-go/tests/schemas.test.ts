@@ -65,7 +65,7 @@ describe("schemasToDecls", () => {
     assert.match(out, /Big int64 /);
   });
 
-  it("maps date-time / date to time.Time; uuid → string", () => {
+  it("date-time → time.Time; date / uuid → string", () => {
     const m = ir({
       components: {
         schemas: {
@@ -83,7 +83,8 @@ describe("schemasToDecls", () => {
     });
     const out = printDecl(schemasToDecls(m.components?.schemas ?? {})[0]!);
     assert.match(out, /StartedAt time\.Time /);
-    assert.match(out, /Day time\.Time /);
+    // date-only doesn't unmarshal into time.Time; stay on string.
+    assert.match(out, /Day string /);
     assert.match(out, /Id string /);
   });
 

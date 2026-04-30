@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -68,6 +69,10 @@ func (a *NetHTTPPetAPI) AddPet(ctx context.Context, body *Pet, opts RequestOptio
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -109,6 +114,10 @@ func (a *NetHTTPPetAPI) AddPetWithResponse(ctx context.Context, body *Pet, opts 
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -152,6 +161,10 @@ func (a *NetHTTPPetAPI) UpdatePet(ctx context.Context, body *Pet, opts RequestOp
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -193,6 +206,10 @@ func (a *NetHTTPPetAPI) UpdatePetWithResponse(ctx context.Context, body *Pet, op
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -236,6 +253,10 @@ func (a *NetHTTPPetAPI) FindPetsByStatus(ctx context.Context, status FindPetsByS
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -272,6 +293,10 @@ func (a *NetHTTPPetAPI) FindPetsByStatusWithResponse(ctx context.Context, status
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -310,6 +335,10 @@ func (a *NetHTTPPetAPI) FindPetsByTags(ctx context.Context, tags []string, opts 
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -346,6 +375,10 @@ func (a *NetHTTPPetAPI) FindPetsByTagsWithResponse(ctx context.Context, tags []s
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -384,6 +417,10 @@ func (a *NetHTTPPetAPI) GetPetById(ctx context.Context, petId int64, opts Reques
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -393,7 +430,7 @@ func (a *NetHTTPPetAPI) GetPetById(ctx context.Context, petId int64, opts Reques
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -418,6 +455,10 @@ func (a *NetHTTPPetAPI) GetPetByIdWithResponse(ctx context.Context, petId int64,
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -427,7 +468,7 @@ func (a *NetHTTPPetAPI) GetPetByIdWithResponse(ctx context.Context, petId int64,
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -452,6 +493,10 @@ func (a *NetHTTPPetAPI) UpdatePetWithForm(ctx context.Context, petId int64, name
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -461,7 +506,7 @@ func (a *NetHTTPPetAPI) UpdatePetWithForm(ctx context.Context, petId int64, name
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	q := u.Query()
 	URLEncoding.AddScalar(q, "name", name)
 	URLEncoding.AddScalar(q, "status", status)
@@ -490,6 +535,10 @@ func (a *NetHTTPPetAPI) UpdatePetWithFormWithResponse(ctx context.Context, petId
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -499,7 +548,7 @@ func (a *NetHTTPPetAPI) UpdatePetWithFormWithResponse(ctx context.Context, petId
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	q := u.Query()
 	URLEncoding.AddScalar(q, "name", name)
 	URLEncoding.AddScalar(q, "status", status)
@@ -528,6 +577,10 @@ func (a *NetHTTPPetAPI) DeletePet(ctx context.Context, petId int64, apiKey *stri
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -537,7 +590,7 @@ func (a *NetHTTPPetAPI) DeletePet(ctx context.Context, petId int64, apiKey *stri
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -565,6 +618,10 @@ func (a *NetHTTPPetAPI) DeletePetWithResponse(ctx context.Context, petId int64, 
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -574,7 +631,7 @@ func (a *NetHTTPPetAPI) DeletePetWithResponse(ctx context.Context, petId int64, 
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId))
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -602,6 +659,10 @@ func (a *NetHTTPPetAPI) UploadFile(ctx context.Context, petId int64, additionalM
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -611,7 +672,7 @@ func (a *NetHTTPPetAPI) UploadFile(ctx context.Context, petId int64, additionalM
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId), "uploadImage")
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)), "uploadImage")
 	q := u.Query()
 	URLEncoding.AddScalar(q, "additionalMetadata", additionalMetadata)
 	u.RawQuery = q.Encode()
@@ -642,6 +703,10 @@ func (a *NetHTTPPetAPI) UploadFileWithResponse(ctx context.Context, petId int64,
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -651,7 +716,7 @@ func (a *NetHTTPPetAPI) UploadFileWithResponse(ctx context.Context, petId int64,
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId), "uploadImage")
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)), "uploadImage")
 	q := u.Query()
 	URLEncoding.AddScalar(q, "additionalMetadata", additionalMetadata)
 	u.RawQuery = q.Encode()
@@ -682,6 +747,10 @@ func (a *NetHTTPPetAPI) UploadPetDocument(ctx context.Context, petId int64, file
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -691,7 +760,7 @@ func (a *NetHTTPPetAPI) UploadPetDocument(ctx context.Context, petId int64, file
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId), "uploadDocument")
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)), "uploadDocument")
 	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -728,6 +797,10 @@ func (a *NetHTTPPetAPI) UploadPetDocumentWithResponse(ctx context.Context, petId
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -737,7 +810,7 @@ func (a *NetHTTPPetAPI) UploadPetDocumentWithResponse(ctx context.Context, petId
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "pet", fmt.Sprint(petId), "uploadDocument")
+	u.Path = path.Join(u.Path, "pet", url.PathEscape(fmt.Sprint(petId)), "uploadDocument")
 	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -774,6 +847,10 @@ func (a *NetHTTPPetAPI) SubmitTags(ctx context.Context, body *SubmitTagsBody, op
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -808,6 +885,10 @@ func (a *NetHTTPPetAPI) SubmitTagsWithResponse(ctx context.Context, body *Submit
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {

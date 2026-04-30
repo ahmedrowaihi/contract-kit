@@ -102,7 +102,10 @@ describe("operationsToDecls", () => {
       (d) => d.kind === "func" && d.name === "GetUser",
     )!;
     const out = printDecl(method);
-    assert.match(out, /u\.Path = path\.Join\(u\.Path, "users", id\)/);
+    assert.match(
+      out,
+      /u\.Path = path\.Join\(u\.Path, "users", url\.PathEscape\(id\)\)/,
+    );
   });
 
   it("emits Unit-equivalent (no return type) for ops with no 2xx body", () => {

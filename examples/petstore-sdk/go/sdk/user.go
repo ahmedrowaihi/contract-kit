@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -59,6 +60,10 @@ func (a *NetHTTPUserAPI) CreateUser(ctx context.Context, body *User, opts Reques
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -93,6 +98,10 @@ func (a *NetHTTPUserAPI) CreateUserWithResponse(ctx context.Context, body *User,
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -129,6 +138,10 @@ func (a *NetHTTPUserAPI) CreateUsersWithListInput(ctx context.Context, body *[]U
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -163,6 +176,10 @@ func (a *NetHTTPUserAPI) CreateUsersWithListInputWithResponse(ctx context.Contex
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -199,6 +216,10 @@ func (a *NetHTTPUserAPI) LoginUser(ctx context.Context, username *string, passwo
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -229,6 +250,10 @@ func (a *NetHTTPUserAPI) LoginUserWithResponse(ctx context.Context, username *st
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -261,6 +286,10 @@ func (a *NetHTTPUserAPI) LogoutUser(ctx context.Context, opts RequestOptions) (e
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -287,6 +316,10 @@ func (a *NetHTTPUserAPI) LogoutUserWithResponse(ctx context.Context, opts Reques
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -315,6 +348,10 @@ func (a *NetHTTPUserAPI) GetUserByName(ctx context.Context, username string, opt
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -324,7 +361,7 @@ func (a *NetHTTPUserAPI) GetUserByName(ctx context.Context, username string, opt
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -342,6 +379,10 @@ func (a *NetHTTPUserAPI) GetUserByNameWithResponse(ctx context.Context, username
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -351,7 +392,7 @@ func (a *NetHTTPUserAPI) GetUserByNameWithResponse(ctx context.Context, username
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -369,6 +410,10 @@ func (a *NetHTTPUserAPI) UpdateUser(ctx context.Context, username string, body *
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -378,7 +423,7 @@ func (a *NetHTTPUserAPI) UpdateUser(ctx context.Context, username string, body *
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "PUT", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -404,6 +449,10 @@ func (a *NetHTTPUserAPI) UpdateUserWithResponse(ctx context.Context, username st
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -413,7 +462,7 @@ func (a *NetHTTPUserAPI) UpdateUserWithResponse(ctx context.Context, username st
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "PUT", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -439,6 +488,10 @@ func (a *NetHTTPUserAPI) DeleteUser(ctx context.Context, username string, opts R
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -448,7 +501,7 @@ func (a *NetHTTPUserAPI) DeleteUser(ctx context.Context, username string, opts R
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -466,6 +519,10 @@ func (a *NetHTTPUserAPI) DeleteUserWithResponse(ctx context.Context, username st
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -475,7 +532,7 @@ func (a *NetHTTPUserAPI) DeleteUserWithResponse(ctx context.Context, username st
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "user", username)
+	u.Path = path.Join(u.Path, "user", url.PathEscape(username))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -492,6 +549,10 @@ func (a *NetHTTPUserAPI) UpdateProfile(ctx context.Context, body *UpdateProfileB
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -527,6 +588,10 @@ func (a *NetHTTPUserAPI) UpdateProfileWithResponse(ctx context.Context, body *Up
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {

@@ -21,7 +21,7 @@ export function printExpr(e: GoExpr): string {
       return String(e.value);
     case "float": {
       const s = String(e.value);
-      return s.includes(".") ? s : `${s}.0`;
+      return /[.eE]/.test(s) ? s : `${s}.0`;
     }
     case "bool":
       return e.value ? "true" : "false";

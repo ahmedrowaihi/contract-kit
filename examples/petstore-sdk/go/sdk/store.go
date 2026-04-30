@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -52,6 +53,10 @@ func (a *NetHTTPStoreAPI) GetInventory(ctx context.Context, opts RequestOptions)
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -86,6 +91,10 @@ func (a *NetHTTPStoreAPI) GetInventoryWithResponse(ctx context.Context, opts Req
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -119,6 +128,10 @@ func (a *NetHTTPStoreAPI) PlaceOrder(ctx context.Context, body *Order, opts Requ
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -155,6 +168,10 @@ func (a *NetHTTPStoreAPI) PlaceOrderWithResponse(ctx context.Context, body *Orde
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -190,6 +207,10 @@ func (a *NetHTTPStoreAPI) GetOrderById(ctx context.Context, orderId int64, opts 
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -199,7 +220,7 @@ func (a *NetHTTPStoreAPI) GetOrderById(ctx context.Context, orderId int64, opts 
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "store", "order", fmt.Sprint(orderId))
+	u.Path = path.Join(u.Path, "store", "order", url.PathEscape(fmt.Sprint(orderId)))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -217,6 +238,10 @@ func (a *NetHTTPStoreAPI) GetOrderByIdWithResponse(ctx context.Context, orderId 
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -226,7 +251,7 @@ func (a *NetHTTPStoreAPI) GetOrderByIdWithResponse(ctx context.Context, orderId 
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "store", "order", fmt.Sprint(orderId))
+	u.Path = path.Join(u.Path, "store", "order", url.PathEscape(fmt.Sprint(orderId)))
 	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -244,6 +269,10 @@ func (a *NetHTTPStoreAPI) DeleteOrder(ctx context.Context, orderId int64, opts R
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -253,7 +282,7 @@ func (a *NetHTTPStoreAPI) DeleteOrder(ctx context.Context, orderId int64, opts R
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "store", "order", fmt.Sprint(orderId))
+	u.Path = path.Join(u.Path, "store", "order", url.PathEscape(fmt.Sprint(orderId)))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -271,6 +300,10 @@ func (a *NetHTTPStoreAPI) DeleteOrderWithResponse(ctx context.Context, orderId i
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -280,7 +313,7 @@ func (a *NetHTTPStoreAPI) DeleteOrderWithResponse(ctx context.Context, orderId i
 		err = Wrap(APIErrorKindTransport, err)
 		return
 	}
-	u.Path = path.Join(u.Path, "store", "order", fmt.Sprint(orderId))
+	u.Path = path.Join(u.Path, "store", "order", url.PathEscape(fmt.Sprint(orderId)))
 	req, err := http.NewRequestWithContext(ctx, "DELETE", u.String(), nil)
 	if err != nil {
 		err = Wrap(APIErrorKindTransport, err)
@@ -297,6 +330,10 @@ func (a *NetHTTPStoreAPI) CreateShape(ctx context.Context, body []byte, opts Req
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -328,6 +365,10 @@ func (a *NetHTTPStoreAPI) CreateShapeWithResponse(ctx context.Context, body []by
 	if client == nil {
 		client = a.client
 	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
+	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
 		baseURL = client.BaseURL
@@ -357,6 +398,10 @@ func (a *NetHTTPStoreAPI) SubmitMeasurement(ctx context.Context, body *SubmitMea
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {
@@ -392,6 +437,10 @@ func (a *NetHTTPStoreAPI) SubmitMeasurementWithResponse(ctx context.Context, bod
 	client := opts.Client
 	if client == nil {
 		client = a.client
+	}
+	if client == nil {
+		err = Wrap(APIErrorKindTransport, errors.New("APIClient is nil"))
+		return
 	}
 	baseURL := opts.BaseURL
 	if baseURL == "" {

@@ -220,21 +220,11 @@ function formUrlEncodedBody(schema: IR.SchemaObject): GoStmt[] {
     goShort(
       ["payload"],
       [
-        goCall(
-          goSelector(goCall(goSelector(goIdent("form"), "Encode"), []), ""),
-          [],
-        ),
+        goCall(goIdent("[]byte"), [
+          { expr: goCall(goSelector(goIdent("form"), "Encode"), []) },
+        ]),
       ],
     ),
-  );
-  // The form.Encode() returns a string; wrap as []byte.
-  stmts[stmts.length - 1] = goShort(
-    ["payload"],
-    [
-      goCall(goIdent("[]byte"), [
-        { expr: goCall(goSelector(goIdent("form"), "Encode"), []) },
-      ]),
-    ],
   );
   stmts.push(
     ...setBodyAndContentType("payload", "application/x-www-form-urlencoded"),

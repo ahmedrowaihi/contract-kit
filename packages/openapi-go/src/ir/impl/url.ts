@@ -101,9 +101,10 @@ function segmentExpr(
     return goStr(parts[0]);
   if (parts.length === 1) {
     const only = parts[0] as { id: string; isString: boolean };
-    return only.isString
+    const ident = only.isString
       ? goIdent(only.id)
       : goCall(SPRINT, [{ expr: goIdent(only.id) }]);
+    return urlPathEscape(ident);
   }
   const fmtParts: string[] = [];
   const args: GoExpr[] = [];
@@ -114,10 +115,16 @@ function segmentExpr(
       args.push(goIdent(p.id));
     }
   }
-  return goCall(goSelector(goIdent("fmt"), "Sprintf"), [
-    { expr: goStr(fmtParts.join("")) },
-    ...args.map((a) => ({ expr: a })),
-  ]);
+  return urlPathEscape(
+    goCall(goSelector(goIdent("fmt"), "Sprintf"), [
+      { expr: goStr(fmtParts.join("")) },
+      ...args.map((a) => ({ expr: a })),
+    ]),
+  );
+}
+
+function urlPathEscape(value: GoExpr): GoExpr {
+  return goCall(goSelector(goIdent("url"), "PathEscape"), [{ expr: value }]);
 }
 
 function buildQueryStmt(p: IR.ParameterObject): GoStmt {
@@ -133,7 +140,11 @@ function buildQueryStmt(p: IR.ParameterObject): GoStmt {
     args.push({
       expr: goIdent(`QueryStyle${queryStyleEntry(p.style)}`),
     });
-    args.push({ expr: goBoolLit(p.explode ?? true) });
+    // OpenAPI 3.x: `explode` defaults to true for `form` (and unspecified
+    // style, which defaults to form), false for `spaceDelimited` /
+    // `pipeDelimited`.
+    const defaultExplode = p.style === undefined || p.style === "form";
+    args.push({ expr: goBoolLit(p.explode ?? defaultExplode) });
   }
   return goExprStmt(goCall(goSelector(goIdent("URLEncoding"), helper), args));
 }

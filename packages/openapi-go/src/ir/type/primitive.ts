@@ -14,22 +14,13 @@ import {
 
 /**
  * OpenAPI string `format` → Go type. Unknown formats fall back to
- * `string`.
- *
- *  - `date-time` / `date`  → `time.Time` (stdlib `time` — JSON-marshals
- *                            as RFC 3339).
- *  - `uuid`                → `string`. stdlib has no `uuid` type;
- *                            consumers using `github.com/google/uuid`
- *                            can wrap it themselves.
- *  - `binary` / `byte`     → `[]byte` (matches multipart binary fields
- *                            and raw octet-stream bodies).
- *  - `uri` / `url`         → `string`. stdlib `net/url.URL` is rarely
- *                            put into JSON DTOs in practice.
+ * `string`. `date-time` maps to `time.Time` (RFC 3339); `date` stays
+ * on `string` since date-only values are outside RFC 3339 and
+ * `time.Time` can't unmarshal them.
  */
 function typeForStringFormat(format: string | undefined): GoType {
   switch (format) {
     case "date-time":
-    case "date":
       return goRef("time.Time");
     case "binary":
     case "byte":

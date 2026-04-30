@@ -59,9 +59,10 @@ export function synthName(owner: string, path: ReadonlyArray<string>): string {
  * separately; this helper just normalizes the raw value.
  */
 export function enumEntrySuffix(rawValue: string): string {
-  const cleaned = rawValue.replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) =>
-    c.toUpperCase(),
-  );
+  const cleaned = rawValue
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/[^a-zA-Z0-9]+$/, "")
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) => c.toUpperCase());
   const cap = cleaned.replace(/^./, (c) => c.toUpperCase());
   return /^[0-9]/.test(cap) ? `_${cap}` : cap || "Empty";
 }

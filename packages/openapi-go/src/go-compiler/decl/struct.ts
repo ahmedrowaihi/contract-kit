@@ -9,7 +9,11 @@ export function printStruct(d: GoStruct): string {
   }
   const lines: string[] = [];
   for (const f of d.fields) {
-    if (f.doc) lines.push(`${INDENT}// ${f.doc}`);
+    if (f.doc) {
+      for (const docLine of f.doc.split("\n")) {
+        lines.push(`${INDENT}// ${docLine}`);
+      }
+    }
     const tag = f.tag ? ` ${f.tag}` : "";
     lines.push(`${INDENT}${f.name} ${printType(f.type)}${tag}`);
   }

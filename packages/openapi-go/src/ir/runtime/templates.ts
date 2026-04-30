@@ -243,7 +243,6 @@ const MULTIPART_GO = `package __PACKAGE__
 import (
 \t"bytes"
 \t"mime/multipart"
-\t"net/textproto"
 )
 
 // MultipartFormBody assembles a multipart/form-data request body.
@@ -266,14 +265,10 @@ func (m *MultipartFormBody) AppendText(name, value string) error {
 \treturn m.writer.WriteField(name, value)
 }
 
-// AppendFile writes a binary form field. mimeType is set to
-// application/octet-stream when empty.
+// AppendFile writes a binary form field. Uses CreateFormFile so name
+// and filename are properly escaped/quoted.
 func (m *MultipartFormBody) AppendFile(name, filename string, content []byte) error {
-\th := make(textproto.MIMEHeader)
-\th.Set("Content-Disposition",
-\t\t"form-data; name=\\""+name+"\\"; filename=\\""+filename+"\\"")
-\th.Set("Content-Type", "application/octet-stream")
-\tw, err := m.writer.CreatePart(h)
+\tw, err := m.writer.CreateFormFile(name, filename)
 \tif err != nil {
 \t\treturn err
 \t}

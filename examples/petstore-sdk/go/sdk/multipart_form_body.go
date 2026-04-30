@@ -3,7 +3,6 @@ package petstore
 import (
 	"bytes"
 	"mime/multipart"
-	"net/textproto"
 )
 
 // MultipartFormBody assembles a multipart/form-data request body.
@@ -26,14 +25,10 @@ func (m *MultipartFormBody) AppendText(name, value string) error {
 	return m.writer.WriteField(name, value)
 }
 
-// AppendFile writes a binary form field. mimeType is set to
-// application/octet-stream when empty.
+// AppendFile writes a binary form field. Uses CreateFormFile so name
+// and filename are properly escaped/quoted.
 func (m *MultipartFormBody) AppendFile(name, filename string, content []byte) error {
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition",
-		"form-data; name=\""+name+"\"; filename=\""+filename+"\"")
-	h.Set("Content-Type", "application/octet-stream")
-	w, err := m.writer.CreatePart(h)
+	w, err := m.writer.CreateFormFile(name, filename)
 	if err != nil {
 		return err
 	}

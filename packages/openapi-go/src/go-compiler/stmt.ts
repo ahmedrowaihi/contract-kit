@@ -58,11 +58,12 @@ function printIf(s: Extract<GoStmt, { kind: "if" }>, indent: string): string {
   const init = s.init ? `${printStmt(s.init, "").trimStart()}; ` : "";
   const head = `${indent}if ${init}${printExpr(s.cond)} ${printBlock(s.then, indent)}`;
   if (!s.else_) return head;
-  // `else_` is a statement list — emit as `else { ... }`. (The
-  // `if-else if` chain is composed by callers nesting another `if`
-  // statement inside the else body.)
   if (Array.isArray(s.else_)) {
     return `${head} else ${printBlock(s.else_, indent)}`;
+  }
+  if ("kind" in s.else_ && s.else_.kind === "ifElse") {
+    const nested = printStmt(s.else_.stmt, indent).trimStart();
+    return `${head} else ${nested}`;
   }
   return head;
 }

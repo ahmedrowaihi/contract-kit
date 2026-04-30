@@ -182,6 +182,22 @@ function resolveOverrideStmts(): GoStmt[] {
     goIf(goEqNil(goIdent("client")), [
       goAssign([goIdent("client")], [goSelector(goIdent("a"), "client")]),
     ]),
+    goIf(goEqNil(goIdent("client")), [
+      goAssign(
+        [goIdent("err")],
+        [
+          goCall(goIdent("Wrap"), [
+            { expr: goIdent("APIErrorKindTransport") },
+            {
+              expr: goCall(goSelector(goIdent("errors"), "New"), [
+                { expr: goStr("APIClient is nil") },
+              ]),
+            },
+          ]),
+        ],
+      ),
+      { kind: "return", values: [] },
+    ]),
     goShort(["baseURL"], [goSelector(goIdent("opts"), "BaseURL")]),
     goIf(goEqEmpty(goIdent("baseURL")), [
       goAssign(
@@ -250,5 +266,3 @@ function applyAuthStmts(schemeNames: ReadonlyArray<string>): GoStmt[] {
     goAssign([goSelector(goIdent("req"), "URL")], [goIdent("u")]),
   ];
 }
-
-void goSliceLit;
