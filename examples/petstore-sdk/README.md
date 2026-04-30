@@ -2,14 +2,14 @@
 
 End-to-end demo: **one OpenAPI spec → multiple platform SDKs**, the central use case for the native-client codegen story in this repo.
 
-The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstore.yaml) (also consumed by `examples/orpc-basic`). Each platform has its own `*.gen.ts` that calls into the matching generator package and writes a `sdk-<lang>/` tree.
+The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstore.yaml) (also consumed by `examples/orpc-basic`). Each platform has its own `<lang>/` directory containing a `gen.ts` script, the generated `sdk/` tree, and (where wired) an `example/` consumer demo. New languages drop in as siblings without disturbing the others.
 
 ## Targets
 
 | Target | Status | Generator | Stack |
 |---|---|---|---|
 | Kotlin (Android) | ✓ | [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi-kotlin) | Retrofit 2 + kotlinx-serialization + suspend |
-| Swift (iOS) | _planned_ | `@ahmedrowaihi/openapi-swift` | URLSession + Codable + async throws |
+| Swift (iOS) | ✓ | [`@ahmedrowaihi/openapi-swift`](../../packages/openapi-swift) | Protocols + `Codable` + async/throws + emitted URLSession impl |
 
 ## Run
 
@@ -17,33 +17,50 @@ The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstor
 # from repo root
 pnpm install
 pnpm --filter @ahmedrowaihi/openapi-kotlin build
+pnpm --filter @ahmedrowaihi/openapi-swift build
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen        # all targets
 # or one at a time:
 pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:kotlin
+pnpm --filter @ahmedrowaihi/example-petstore-sdk gen:swift
 ```
 
 Each `sdk-<lang>/` directory is committed so PRs can review codegen diffs whenever a generator changes.
 
 ## Layout
 
+One subdir per target language. Each follows the same shape:
+
 ```
 examples/petstore-sdk/
-├── kotlin.gen.ts       ← reads fixtures/petstore.yaml → emits sdk-kotlin/
-├── swift.gen.ts        ← (when openapi-swift lands)
-└── sdk-kotlin/
-    └── com/example/petstore/
-        ├── PetApi.kt           ← Retrofit interface, suspend funs
-        ├── StoreApi.kt
-        ├── UserApi.kt
-        └── model/
-            ├── Pet.kt          ← @Serializable data class
-            ├── Category.kt
+├── kotlin/
+│   ├── gen.ts                         ← reads fixtures/petstore.yaml → emits sdk/
+│   └── sdk/
+│       └── com/example/petstore/
+│           ├── PetApi.kt              ← Retrofit interface, suspend funs
+│           ├── StoreApi.kt
+│           └── model/
+│               ├── Pet.kt             ← @Serializable data class
+│               └── …
+└── swift/
+    ├── gen.ts                         ← reads fixtures/petstore.yaml → emits sdk/
+    └── sdk/
+        ├── API/
+        │   ├── PetAPI.swift           ← protocol with async-throws funcs
+        │   ├── URLSessionPetAPI.swift ← default impl (one per tag)
+        │   ├── APIClient.swift        ← runtime helper: session, codecs, dispatch
+        │   ├── APIError.swift         ← typed errors (4XX/5XX/decode/transport)
+        │   ├── Auth.swift             ← bearer / apiKey / basic
+        │   └── …
+        └── Models/
+            ├── Pet.swift              ← Codable struct
             └── …
 ```
 
+Adding a new language is a copy of the pattern: `<lang>/gen.ts` writes into `<lang>/sdk/`.
+
 ## Adopting in a real Android project
 
-Copy `sdk-kotlin/com/example/petstore/` into your module's `src/main/kotlin/`, then add the runtime dependencies. The generated SDK is **pure contract** — interfaces and DTOs only. You bring the networking layer.
+Copy `kotlin/sdk/com/example/petstore/` into your module's `src/main/kotlin/`, then add the runtime dependencies. The generated SDK is **pure contract** — interfaces and DTOs only. You bring the networking layer.
 
 ### Gradle deps
 
@@ -176,14 +193,33 @@ when (val r = apiCall { api.getPetById(1L) }) {
 }
 ```
 
+## Adopting in a real iOS project
+
+Two consumption modes, picked at gen time:
+
+- **Drop into an Xcode target** (default) — paste `swift/sdk/API/` + `swift/sdk/Models/` into your app's target sources. Same module, no `import` needed inside your own files. The petstore demo emits this shape.
+- **Standalone SwiftPM library** — pass `package: { name: "YourSDK" }` to `generate()` and a `Package.swift` is emitted alongside the source. Consumers reach for it via `.package(path: …)` (or a git URL once published) and `import YourSDK`. Use this when the SDK is shared across apps or lives in its own repo.
+
+The SDK is self-contained — Foundation only, no third-party deps either way.
+
 ## Customizing
 
-Each `*.gen.ts` is a thin wrapper. To customize Kotlin output (package name, layout, file placement), edit [`kotlin.gen.ts`](./kotlin.gen.ts):
+Each `<lang>/gen.ts` is a thin wrapper. To customize Kotlin output (package name, layout, file placement), edit [`kotlin/gen.ts`](./kotlin/gen.ts):
 
 ```ts
 const files = buildKotlinProject([...schemaDecls, ...opDecls], {
     packageName: "com.example.petstore",
     layout: "split",            // or "flat"
+    fileLocation: (decl) => …,  // full per-decl override
+});
+```
+
+Swift output ([`swift/gen.ts`](./swift/gen.ts)) accepts the same shape — `layout`, `fileLocation`, plus `openImpl: true` to emit the URLSession impl class as `open` (subclassable) instead of `final`:
+
+```ts
+const files = buildSwiftProject([...schemaDecls, ...opDecls], {
+    layout: "split",            // API/ + Models/ (default), or "flat"
+    openImpl: true,             // for projects that override impl methods in tests
     fileLocation: (decl) => …,  // full per-decl override
 });
 ```

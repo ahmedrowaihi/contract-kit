@@ -32,6 +32,7 @@ Toolkit for OpenAPI / AsyncAPI / SDK contract codegen.
 | --- | --- |
 | [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi-kotlin) | Generate idiomatic Kotlin (Retrofit + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-recon`](./packages/openapi-recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
+| [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
 
 <!-- @packages-end -->

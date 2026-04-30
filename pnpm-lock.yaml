@@ -189,6 +189,9 @@ importers:
       '@ahmedrowaihi/openapi-kotlin':
         specifier: workspace:*
         version: link:../../packages/openapi-kotlin
+      '@ahmedrowaihi/openapi-swift':
+        specifier: workspace:*
+        version: link:../../packages/openapi-swift
       '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
@@ -228,6 +231,28 @@ importers:
         version: link:../../tooling/tsconfig
       '@hey-api/spec-types':
         specifier: ^0.2.0
+        version: 0.2.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+
+  packages/openapi-swift:
+    dependencies:
+      '@hey-api/json-schema-ref-parser':
+        specifier: 'catalog:'
+        version: 1.4.1
+    devDependencies:
+      '@ahmedrowaihi/openapi-tools':
+        specifier: workspace:*
+        version: link:../openapi-tools
+      '@ahmedrowaihi/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@hey-api/shared':
+        specifier: 'catalog:'
+        version: 0.4.2(magicast@0.5.2)
+      '@hey-api/spec-types':
+        specifier: 'catalog:'
         version: 0.2.0
       '@types/node':
         specifier: 'catalog:'
