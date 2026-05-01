@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
 import { printDecl, schemasToDecls } from "../dist/index.js";
 import { ir } from "./_helpers.ts";

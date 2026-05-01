@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { after, before, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { afterAll, beforeAll, describe, it } from "vitest";
 
 import { generate } from "../dist/index.js";
 
@@ -13,11 +13,11 @@ const SPEC = resolve(here, "../../../fixtures/petstore.yaml");
 describe("generate (default plugins)", () => {
   let outDir: string;
 
-  before(async () => {
+  beforeAll(async () => {
     outDir = await mkdtemp(join(tmpdir(), "openapi-ts-wrapper-"));
   });
 
-  after(async () => {
+  afterAll(async () => {
     await rm(outDir, { recursive: true, force: true });
   });
 
@@ -43,11 +43,11 @@ describe("generate (default plugins)", () => {
 describe("generate (plugin override)", () => {
   let outDir: string;
 
-  before(async () => {
+  beforeAll(async () => {
     outDir = await mkdtemp(join(tmpdir(), "openapi-ts-wrapper-"));
   });
 
-  after(async () => {
+  afterAll(async () => {
     await rm(outDir, { recursive: true, force: true });
   });
 
