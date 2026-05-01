@@ -17,7 +17,7 @@ import {
   goString,
   goStruct,
   printFile,
-} from "../dist/index.js";
+} from "../src/index.ts";
 
 describe("printer", () => {
   it("emits a struct with json struct tags", () => {

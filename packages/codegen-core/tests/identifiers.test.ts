@@ -7,7 +7,7 @@ import {
   safeCaseName,
   safeIdent,
   synthName,
-} from "../dist/identifiers.js";
+} from "../src/identifiers.ts";
 
 describe("pascal", () => {
   it("upper-cases first letter", () => {

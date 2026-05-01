@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, it } from "vitest";
 
-import { generate } from "../dist/index.js";
+import { generate } from "../src/index.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SPEC = resolve(here, "../../../fixtures/petstore.yaml");

@@ -5,7 +5,7 @@ import {
   buildSwiftProject,
   operationsToDecls,
   schemasToDecls,
-} from "../dist/index.js";
+} from "../src/index.ts";
 import { ir } from "./_helpers.ts";
 
 describe("buildSwiftProject", () => {

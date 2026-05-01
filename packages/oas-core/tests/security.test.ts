@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 
-import { extractSecuritySchemeNames, securityKey } from "../dist/security.js";
+import { extractSecuritySchemeNames, securityKey } from "../src/security.ts";
 
 describe("securityKey", () => {
   it("joins path and method with a pipe", () => {

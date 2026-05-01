@@ -16,7 +16,7 @@ import {
   swRef,
   swString,
   swStruct,
-} from "../dist/index.js";
+} from "../src/index.ts";
 
 describe("printer", () => {
   it("emits a public Codable struct with required + optional props", () => {

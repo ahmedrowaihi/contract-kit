@@ -17,7 +17,7 @@ import {
   ktRef,
   ktString,
   printFile,
-} from "../dist/index.js";
+} from "../src/index.ts";
 
 describe("printer", () => {
   it("emits a public @Serializable data class with required + optional props", () => {
