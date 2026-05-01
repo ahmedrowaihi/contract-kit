@@ -47,10 +47,10 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test tests/*.test.ts"
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@ahmedrowaihi/openapi-tools": ">=1.2.0",
@@ -58,6 +58,7 @@
     "@hey-api/spec-types": ">=0.2.0"
   },
   "dependencies": {
+    "@ahmedrowaihi/codegen-core": "workspace:*",
     "@ahmedrowaihi/oas-core": "workspace:*",
     "@hey-api/json-schema-ref-parser": "catalog:"
   },
@@ -66,7 +67,8 @@
     "@ahmedrowaihi/tsconfig": "workspace:*",
     "@hey-api/shared": "catalog:",
     "@hey-api/spec-types": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=20.19.0"

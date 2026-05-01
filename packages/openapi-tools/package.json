@@ -75,10 +75,10 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test tests/*.test.ts"
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@hey-api/codegen-core": ">=0.7.0",
@@ -90,7 +90,8 @@
     "@hey-api/codegen-core": "catalog:",
     "@hey-api/shared": "catalog:",
     "@hey-api/spec-types": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "urlpattern-polyfill": "^10.1.0"

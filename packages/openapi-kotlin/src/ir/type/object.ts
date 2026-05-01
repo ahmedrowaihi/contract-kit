@@ -1,4 +1,4 @@
-import { pascal, synthName } from "@ahmedrowaihi/oas-core";
+import { pascal, synthName } from "@ahmedrowaihi/codegen-core";
 import type { IR } from "@hey-api/shared";
 
 import {

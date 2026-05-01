@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
-import { isMeaningless, refName } from "../dist/ref.js";
+import { isMeaningless, refName } from "../src/ref.ts";
 
 describe("refName", () => {
   it("strips the components/schemas prefix", () => {

@@ -23,6 +23,12 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | --- | --- |
 | [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
 
+### Codegen primitives
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/codegen-core`](./packages/codegen-core) | Spec-agnostic codegen primitives shared by OpenAPI and AsyncAPI generator families — identifier transforms (pascal/camel/safeIdent), filesystem safety, project-name derivation. Pure functions, no spec dependencies. |
+
 ### Native client SDK generators
 
 | Package | Description |
@@ -32,6 +38,12 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi-kotlin) | Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-typescript`](./packages/openapi-typescript) | Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline. |
+
+### AsyncAPI primitives
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/aas-core`](./packages/aas-core) | Shared AsyncAPI 3.0 parsing primitives for codegen — thin wrapper around @asyncapi/parser exposing a uniform parseSpec entry point. Mirror of @ahmedrowaihi/oas-core for the AsyncAPI track. |
 
 ### Spec discovery from traffic
 
@@ -44,6 +56,12 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | Package | Description |
 | --- | --- |
 | [`@ahmedrowaihi/glean`](./apps/glean) | Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools. |
+
+### Other
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/asyncapi-tools`](./packages/asyncapi-tools) | AsyncAPI utilities — AMQP binding extractors, routing-key matching, payload validation, CloudEvents envelope helpers, spec diffing. Used by the asyncapi-* generator family and consumable directly from service code. |
 
 <!-- @packages-end -->
 

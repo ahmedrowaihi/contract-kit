@@ -1,0 +1,103 @@
+asyncapi: 3.0.0
+info:
+  title: User Events
+  version: 1.0.0
+  description: Domain events emitted by the identity service. CloudEvents 1.0 envelope.
+
+servers:
+  rabbitmq:
+    host: rabbitmq.example.com:5672
+    protocol: amqp
+
+channels:
+  userAccountCreated:
+    address: user.account.created.*
+    description: Fired after a user account is created.
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: user.events
+          type: topic
+          durable: true
+        bindingVersion: 0.3.0
+    messages:
+      UserAccountCreated:
+        $ref: '#/components/messages/UserAccountCreated'
+
+  userAccountDeleted:
+    address: user.account.deleted.*
+    description: Fired after a user account is deleted.
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: user.events
+          type: topic
+          durable: true
+        bindingVersion: 0.3.0
+    messages:
+      UserAccountDeleted:
+        $ref: '#/components/messages/UserAccountDeleted'
+
+operations:
+  publishUserAccountCreated:
+    action: send
+    channel:
+      $ref: '#/channels/userAccountCreated'
+    summary: identity-service publishes account creation events.
+
+  publishUserAccountDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/userAccountDeleted'
+
+components:
+  messages:
+    UserAccountCreated:
+      name: UserAccountCreated
+      title: user.account.created.v1
+      contentType: application/cloudevents+json
+      payload:
+        type: object
+        required: [specversion, id, source, type, time, data]
+        properties:
+          specversion: { const: '1.0' }
+          id: { type: string }
+          source: { type: string }
+          type: { const: user.account.created.v1 }
+          time: { type: string, format: date-time }
+          data: { $ref: '#/components/schemas/UserAccountCreatedData' }
+
+    UserAccountDeleted:
+      name: UserAccountDeleted
+      title: user.account.deleted.v1
+      contentType: application/cloudevents+json
+      payload:
+        type: object
+        required: [specversion, id, source, type, time, data]
+        properties:
+          specversion: { const: '1.0' }
+          id: { type: string }
+          source: { type: string }
+          type: { const: user.account.deleted.v1 }
+          time: { type: string, format: date-time }
+          data: { $ref: '#/components/schemas/UserAccountDeletedData' }
+
+  schemas:
+    UserAccountCreatedData:
+      type: object
+      required: [userId, email, createdAt]
+      properties:
+        userId: { type: string }
+        email: { type: string, format: email }
+        phoneNumber: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    UserAccountDeletedData:
+      type: object
+      required: [userId, deletedAt]
+      properties:
+        userId: { type: string }
+        archiveId: { type: string }
+        deletedAt: { type: string, format: date-time }

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
 import {
   buildGoProject,
   operationsToDecls,
   schemasToDecls,
-} from "../dist/index.js";
+} from "../src/index.ts";
 import { ir } from "./_helpers.ts";
 
 describe("buildGoProject", () => {

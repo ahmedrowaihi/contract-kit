@@ -3,6 +3,9 @@ packages:
   - "packages/openapi-tools"
   - "packages/openapi-recon"
   - "packages/oas-core"
+  - "packages/aas-core"
+  - "packages/asyncapi-tools"
+  - "packages/codegen-core"
   - "packages/openapi-kotlin"
   - "packages/openapi-swift"
   - "packages/openapi-go"
@@ -12,12 +15,14 @@ packages:
   - "tooling/*"
 
 catalog:
+  "@asyncapi/parser": "^3.6.0"
   "@hey-api/codegen-core": "^0.8.1"
   "@hey-api/json-schema-ref-parser": "^1.4.1"
   "@hey-api/openapi-ts": "^0.97.0"
   "@hey-api/shared": "^0.4.2"
   "@hey-api/spec-types": "^0.2.0"
   "@types/node": "^22"
+  vitest: "^4.0.0"
 
 patchedDependencies:
   "@ryoppippi/unplugin-typia": patches/@ryoppippi__unplugin-typia.patch

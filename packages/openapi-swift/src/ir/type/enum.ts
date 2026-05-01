@@ -1,4 +1,4 @@
-import { safeCaseName } from "@ahmedrowaihi/oas-core";
+import { safeCaseName } from "@ahmedrowaihi/codegen-core";
 import type { IR } from "@hey-api/shared";
 
 import type { SwType } from "../../sw-dsl/index.js";

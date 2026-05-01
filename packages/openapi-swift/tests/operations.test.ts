@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
-import { operationsToDecls, printFile, swFile } from "../dist/index.js";
+import { operationsToDecls, printFile, swFile } from "../src/index.ts";
 import { ir, securityNamesMap } from "./_helpers.ts";
 
 const decls = (

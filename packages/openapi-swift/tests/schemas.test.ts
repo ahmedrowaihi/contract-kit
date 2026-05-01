@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
-import { printFile, schemasToDecls, swFile } from "../dist/index.js";
+import { printFile, schemasToDecls, swFile } from "../src/index.ts";
 import { ir } from "./_helpers.ts";
 
 const decls = (components: Record<string, unknown>) =>

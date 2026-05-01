@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
 import {
   goField,
@@ -17,7 +17,7 @@ import {
   goString,
   goStruct,
   printFile,
-} from "../dist/index.js";
+} from "../src/index.ts";
 
 describe("printer", () => {
   it("emits a struct with json struct tags", () => {

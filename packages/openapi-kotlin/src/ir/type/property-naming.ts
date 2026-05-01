@@ -1,4 +1,4 @@
-import { camel } from "@ahmedrowaihi/oas-core";
+import { camel } from "@ahmedrowaihi/codegen-core";
 
 import { paramIdent } from "../identifiers.js";
 

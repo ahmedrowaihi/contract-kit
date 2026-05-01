@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, it } from "vitest";
 
 import {
   buildSwiftProject,
+  generate,
   operationsToDecls,
   schemasToDecls,
-} from "../dist/index.js";
+} from "../src/index.ts";
 import { ir } from "./_helpers.ts";
 
 describe("buildSwiftProject", () => {
@@ -187,12 +191,7 @@ describe("buildSwiftProject", () => {
   });
 
   it("package option emits a Package.swift describing a SwiftPM library", async () => {
-    const { generate } = await import("../dist/index.js");
-    const { mkdtemp, rm: rmDir, readFile } = await import("node:fs/promises");
-    const { tmpdir } = await import("node:os");
-    const path = await import("node:path");
-
-    const out = await mkdtemp(path.join(tmpdir(), "openapi-swift-pkg-"));
+    const out = await mkdtemp(join(tmpdir(), "openapi-swift-pkg-"));
     try {
       await generate({
         input: {
@@ -213,7 +212,7 @@ describe("buildSwiftProject", () => {
         package: { name: "MyAPIClient" },
       });
 
-      const pkg = await readFile(path.join(out, "Package.swift"), "utf8");
+      const pkg = await readFile(join(out, "Package.swift"), "utf8");
       assert.match(pkg, /^\/\/ swift-tools-version:5\.9\b/);
       assert.match(pkg, /name: "MyAPIClient"/);
       assert.match(
@@ -223,7 +222,7 @@ describe("buildSwiftProject", () => {
       assert.match(pkg, /sources: \["API", "Models"\]/);
       assert.match(pkg, /\.iOS\(\.v15\), \.macOS\(\.v13\)/);
     } finally {
-      await rmDir(out, { recursive: true, force: true });
+      await rm(out, { recursive: true, force: true });
     }
   });
 

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 
 import {
   printFile,
@@ -16,7 +16,7 @@ import {
   swRef,
   swString,
   swStruct,
-} from "../dist/index.js";
+} from "../src/index.ts";
 
 describe("printer", () => {
   it("emits a public Codable struct with required + optional props", () => {
