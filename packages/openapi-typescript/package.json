@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-typescript",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline.",
   "keywords": [
     "openapi",

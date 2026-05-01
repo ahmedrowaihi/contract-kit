@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/aas-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared AsyncAPI 3.0 parsing primitives for codegen — thin wrapper around @asyncapi/parser exposing a uniform parseSpec entry point. Mirror of @ahmedrowaihi/oas-core for the AsyncAPI track.",
   "keywords": [
     "asyncapi",
