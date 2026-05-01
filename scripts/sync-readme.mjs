@@ -31,6 +31,7 @@ const CATEGORIES = [
   "OpenAPI runtime utilities",
   "Codegen primitives",
   "Native client SDK generators",
+  "AsyncAPI primitives",
   "Spec discovery from traffic",
   "Apps",
   "Other",
@@ -48,6 +49,7 @@ const CATEGORY_BY_NAME = {
   "@ahmedrowaihi/openapi-swift": "Native client SDK generators",
   "@ahmedrowaihi/openapi-go": "Native client SDK generators",
   "@ahmedrowaihi/openapi-typescript": "Native client SDK generators",
+  "@ahmedrowaihi/aas-core": "AsyncAPI primitives",
   "@ahmedrowaihi/openapi-recon": "Spec discovery from traffic",
   "@ahmedrowaihi/glean": "Apps",
 };

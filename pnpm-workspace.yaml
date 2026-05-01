@@ -3,6 +3,7 @@ packages:
   - "packages/openapi-tools"
   - "packages/openapi-recon"
   - "packages/oas-core"
+  - "packages/aas-core"
   - "packages/codegen-core"
   - "packages/openapi-kotlin"
   - "packages/openapi-swift"
@@ -13,6 +14,7 @@ packages:
   - "tooling/*"
 
 catalog:
+  "@asyncapi/parser": "^3.6.0"
   "@hey-api/codegen-core": "^0.8.1"
   "@hey-api/json-schema-ref-parser": "^1.4.1"
   "@hey-api/openapi-ts": "^0.97.0"

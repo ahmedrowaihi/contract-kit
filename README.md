@@ -39,6 +39,12 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 | [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
 | [`@ahmedrowaihi/openapi-typescript`](./packages/openapi-typescript) | Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline. |
 
+### AsyncAPI primitives
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/aas-core`](./packages/aas-core) | Shared AsyncAPI 3.0 parsing primitives for codegen — thin wrapper around @asyncapi/parser exposing a uniform parseSpec entry point. Mirror of @ahmedrowaihi/oas-core for the AsyncAPI track. |
+
 ### Spec discovery from traffic
 
 | Package | Description |
