@@ -1,6 +1,12 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 
+import {
+  type NormalizeOptions,
+  normalizeSpec,
+  SAFE_NORMALIZE,
+} from "@ahmedrowaihi/oas-core";
+import { $RefParser } from "@hey-api/json-schema-ref-parser";
 import { createClient, type UserConfig } from "@hey-api/openapi-ts";
 
 /**
@@ -40,6 +46,12 @@ export interface GenerateOptions {
    * wins over the defaults set here.
    */
   heyApi?: Partial<UserConfig>;
+  /**
+   * Pre-codegen spec normalization. When enabled, the spec is bundled
+   * + normalized before being handed to hey-api as a parsed object,
+   * so all four targets share the same normalization logic.
+   */
+  normalize?: boolean | NormalizeOptions;
 }
 
 export interface BuiltFile {
@@ -62,8 +74,11 @@ export interface GenerateResult {
  */
 export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
   const out = resolve(process.cwd(), opts.output);
+  const input = opts.normalize
+    ? await bundleAndNormalize(opts.input, opts.normalize)
+    : opts.input;
   const config: UserConfig = {
-    input: opts.input,
+    input,
     output: out,
     plugins: (opts.plugins ?? DEFAULT_PLUGINS) as UserConfig["plugins"],
     ...opts.heyApi,
@@ -71,6 +86,20 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
   await createClient(config);
   const files = await collectFiles(out);
   return { output: out, files };
+}
+
+async function bundleAndNormalize(
+  input: string,
+  normalize: true | NormalizeOptions,
+): Promise<Record<string, unknown>> {
+  const parser = new $RefParser();
+  const bundled = (await parser.bundle({
+    pathOrUrlOrSchema: input,
+  })) as Record<string, unknown>;
+  return normalizeSpec(
+    bundled,
+    normalize === true ? SAFE_NORMALIZE : normalize,
+  );
 }
 
 /**

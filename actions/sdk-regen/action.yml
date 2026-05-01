@@ -27,6 +27,10 @@ inputs:
     description: 'Pinned semver of `@ahmedrowaihi/openapi-<target>` to install. Defaults to `latest`.'
     required: false
     default: 'latest'
+  normalize:
+    description: 'Run the spec normalization pipeline (allOf collapse + enum dedup + scoped prune) before codegen. Cuts duplicate inline-extracted types in Swift / Kotlin output. Default: `false`.'
+    required: false
+    default: 'false'
   commit-strategy:
     description: '`pull-request` (open a PR via peter-evans/create-pull-request, default), `commit-back` (push directly to the triggering branch — requires `contents: write`), or `none` (regen and exit; following workflow steps own the diff).'
     required: false
@@ -116,6 +120,7 @@ runs:
         OUTPUT: ${{ inputs.output }}
         PACKAGE_NAME: ${{ inputs.package-name }}
         MANIFEST: ${{ inputs.manifest }}
+        NORMALIZE: ${{ inputs.normalize }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: node "$GITHUB_ACTION_PATH/regen.mjs"
 
