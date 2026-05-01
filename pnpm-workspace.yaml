@@ -4,6 +4,7 @@ packages:
   - "packages/openapi-recon"
   - "packages/oas-core"
   - "packages/aas-core"
+  - "packages/asyncapi-tools"
   - "packages/codegen-core"
   - "packages/openapi-kotlin"
   - "packages/openapi-swift"
