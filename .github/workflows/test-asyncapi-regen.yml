@@ -6,22 +6,67 @@ on:
     paths:
       - 'actions/asyncapi-regen/**'
       - '.github/workflows/test-asyncapi-regen.yml'
+      - 'packages/asyncapi/**'
+      - 'packages/shared/codegen-core/**'
   pull_request:
     branches: [main]
     paths:
       - 'actions/asyncapi-regen/**'
       - '.github/workflows/test-asyncapi-regen.yml'
+      - 'packages/asyncapi/**'
+      - 'packages/shared/codegen-core/**'
 
-# Self-test: invoke the action against the user-events fixture in
-# `commit-strategy: none` mode (just regen, no PR), then assert the
-# emitted file set matches expectations and the playground still
-# compiles against the freshly-regen'd output.
+# Self-test: pack the three first-party packages from the working tree
+# and invoke the action against them via its `tarball-dir` input. This
+# validates the proposed action + package changes together rather than
+# whatever's already published on npm.
 
 jobs:
-  full-pipeline:
+  pack:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build first-party packages
+        run: pnpm turbo run build --filter='@ahmedrowaihi/codegen-core' --filter='@ahmedrowaihi/asyncapi-core' --filter='@ahmedrowaihi/asyncapi-typescript'
+
+      - name: Pack tarballs
+        run: |
+          set -e
+          mkdir -p tarballs
+          for pkg in packages/shared/codegen-core packages/asyncapi/core packages/asyncapi/typescript; do
+            (cd "$pkg" && pnpm pack --pack-destination "$GITHUB_WORKSPACE/tarballs")
+          done
+          ls -la tarballs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asyncapi-regen-tarballs
+          path: tarballs/*.tgz
+          retention-days: 1
+
+  full-pipeline:
+    needs: pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: asyncapi-regen-tarballs
+          path: tarballs
 
       - name: Run asyncapi-regen (full plugin set)
         id: regen
@@ -30,6 +75,7 @@ jobs:
           input: fixtures/user-events.yaml
           output: tmp-sdk/full
           commit-strategy: none
+          tarball-dir: tarballs
 
       - name: Assert all-plugin output
         env:
@@ -52,9 +98,15 @@ jobs:
           echo "✓ asyncapi-regen produced $FILES_CHANGED file(s); all 7 expected files present"
 
   subset:
+    needs: pack
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: asyncapi-regen-tarballs
+          path: tarballs
 
       - name: Run asyncapi-regen (types + events + index only)
         id: regen
@@ -64,6 +116,7 @@ jobs:
           output: tmp-sdk/subset
           plugins: 'typescript,events,index'
           commit-strategy: none
+          tarball-dir: tarballs
 
       - name: Assert subset output
         env:

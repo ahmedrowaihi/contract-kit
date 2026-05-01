@@ -1,2 +1,2 @@
-export { amqplib } from "./plugin";
-export type { AmqplibPluginConfig, AmqplibResolvedConfig } from "./types";
+export { amqplib } from "./plugin.js";
+export type { AmqplibPluginConfig, AmqplibResolvedConfig } from "./types.js";

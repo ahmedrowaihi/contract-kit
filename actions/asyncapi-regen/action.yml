@@ -20,6 +20,10 @@ inputs:
     description: 'Pinned semver of `@ahmedrowaihi/asyncapi-typescript` to install. Defaults to `latest`.'
     required: false
     default: 'latest'
+  tarball-dir:
+    description: 'Internal: directory containing pre-packed `.tgz` tarballs of asyncapi-typescript / asyncapi-core / codegen-core. When set, the action installs from those tarballs instead of npm — used by the in-repo self-test workflow to validate proposed changes against their own packed output. End users should leave this unset.'
+    required: false
+    default: ''
   commit-strategy:
     description: '`pull-request` (open a PR via peter-evans/create-pull-request, default), `commit-back` (push directly to the triggering branch — requires `contents: write`), or `none` (regen and exit; following workflow steps own the diff).'
     required: false
@@ -62,21 +66,44 @@ runs:
       shell: bash
       env:
         VERSION: ${{ inputs.generator-version }}
+        TARBALL_DIR: ${{ inputs.tarball-dir }}
       run: |
         set -e
         WORKDIR="${RUNNER_TEMP}/asyncapi-regen"
         mkdir -p "$WORKDIR"
         cd "$WORKDIR"
         echo '{"private":true,"type":"module"}' > package.json
-        npm install --silent --no-audit --no-fund \
-          "@ahmedrowaihi/asyncapi-typescript@${VERSION}" \
-          "@ahmedrowaihi/asyncapi-core" \
-          "@ahmedrowaihi/codegen-core" \
-          "@asyncapi/modelina" \
-          "@asyncapi/parser" \
-          "@hey-api/codegen-core" \
-          "amqplib" \
-          "typescript"
+        if [ -n "$TARBALL_DIR" ]; then
+          # Resolve relative to GITHUB_WORKSPACE so callers can pass a repo-relative path
+          if [ -d "$GITHUB_WORKSPACE/$TARBALL_DIR" ]; then
+            ABS_TARBALL_DIR="$GITHUB_WORKSPACE/$TARBALL_DIR"
+          else
+            ABS_TARBALL_DIR="$TARBALL_DIR"
+          fi
+          tarballs=("$ABS_TARBALL_DIR"/*.tgz)
+          if [ ! -e "${tarballs[0]}" ]; then
+            echo "::error::tarball-dir is set but no .tgz found under $ABS_TARBALL_DIR"
+            exit 1
+          fi
+          echo "::notice::asyncapi-regen — installing from local tarballs in $ABS_TARBALL_DIR"
+          npm install --silent --no-audit --no-fund \
+            "${tarballs[@]}" \
+            "@asyncapi/modelina" \
+            "@asyncapi/parser" \
+            "@hey-api/codegen-core" \
+            "amqplib" \
+            "typescript"
+        else
+          npm install --silent --no-audit --no-fund \
+            "@ahmedrowaihi/asyncapi-typescript@${VERSION}" \
+            "@ahmedrowaihi/asyncapi-core" \
+            "@ahmedrowaihi/codegen-core" \
+            "@asyncapi/modelina" \
+            "@asyncapi/parser" \
+            "@hey-api/codegen-core" \
+            "amqplib" \
+            "typescript"
+        fi
         echo "workdir=$WORKDIR" >> "$GITHUB_OUTPUT"
 
     - name: Generate SDK

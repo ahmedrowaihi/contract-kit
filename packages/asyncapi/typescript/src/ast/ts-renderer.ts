@@ -1,8 +1,8 @@
 import type { RenderContext, Renderer } from "@hey-api/codegen-core";
 import ts from "typescript";
 
-import { RawTextNode } from "./raw-text-node";
-import { TsStatementNode } from "./ts-node";
+import { RawTextNode } from "./raw-text-node.js";
+import { TsStatementNode } from "./ts-node.js";
 
 const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 const blank = ts.createSourceFile(

@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, posix, relative } from "node:path";
 
-import type { GeneratedFile } from "../plugin";
+import type { GeneratedFile } from "../plugin.js";
 
 /**
  * Recursively walk a `bundle/` directory and return the files it contains
@@ -43,14 +43,4 @@ async function walk(
       out.push({ path: relativePath, content });
     }
   }
-}
-
-/**
- * Drop `.template` from a path, e.g. `handlers.gen.template.ts` →
- * `handlers.gen.ts`. Used for files that aren't typecheckable inside the
- * package (because their imports point at sibling files that don't yet
- * exist) but are valid TypeScript once emitted into the user's output.
- */
-export function stripTemplateMarker(filePath: string): string {
-  return filePath.replace(/\.template\.ts$/, ".ts");
 }

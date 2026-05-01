@@ -1,2 +1,2 @@
-export { dispatch } from "./plugin";
-export type { DispatchPluginConfig, DispatchResolvedConfig } from "./types";
+export { dispatch } from "./plugin.js";
+export type { DispatchPluginConfig, DispatchResolvedConfig } from "./types.js";

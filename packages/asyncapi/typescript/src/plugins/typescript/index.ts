@@ -1,5 +1,5 @@
-export { typescript } from "./plugin";
+export { typescript } from "./plugin.js";
 export type {
   TypescriptPluginConfig,
   TypescriptResolvedConfig,
-} from "./types";
+} from "./types.js";

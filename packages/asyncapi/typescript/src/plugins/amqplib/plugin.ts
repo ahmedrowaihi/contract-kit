@@ -1,10 +1,10 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { definePluginConfig } from "../../plugin";
-import { readBundle, stripTemplateMarker } from "../../runtime/copy-bundle";
+import { definePluginConfig } from "../../plugin.js";
+import { readBundle } from "../../runtime/copy-bundle.js";
 
-import { defaultConfig } from "./config";
-import type { AmqplibPluginConfig, AmqplibResolvedConfig } from "./types";
+import { defaultConfig } from "./config.js";
+import type { AmqplibPluginConfig, AmqplibResolvedConfig } from "./types.js";
 
 const bundleDir = resolve(dirname(fileURLToPath(import.meta.url)), "bundle");
 
@@ -20,10 +20,7 @@ export const amqplib = definePluginConfig<
   dependsOn: ["events"],
   async handler(plugin) {
     for (const file of await readBundle(bundleDir)) {
-      plugin.emit({
-        path: stripTemplateMarker(file.path),
-        content: file.content,
-      });
+      plugin.emit(file);
     }
   },
 });

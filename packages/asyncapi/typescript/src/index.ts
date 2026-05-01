@@ -2,7 +2,7 @@ export {
   type GenerateOptions,
   type GenerateResult,
   generate,
-} from "./orchestrator";
+} from "./orchestrator.js";
 export {
   type AnyRegisteredPlugin,
   definePluginConfig,
@@ -14,34 +14,34 @@ export {
   type PluginHooks,
   type PluginInstance,
   type RegisteredPlugin,
-} from "./plugin";
+} from "./plugin.js";
 export type {
   AmqplibPluginConfig,
   AmqplibResolvedConfig,
-} from "./plugins/amqplib";
-export { amqplib } from "./plugins/amqplib";
+} from "./plugins/amqplib/index.js";
+export { amqplib } from "./plugins/amqplib/index.js";
 export type {
   DispatchPluginConfig,
   DispatchResolvedConfig,
-} from "./plugins/dispatch";
-export { dispatch } from "./plugins/dispatch";
+} from "./plugins/dispatch/index.js";
+export { dispatch } from "./plugins/dispatch/index.js";
 export type {
   EventMapPluginConfig,
   EventMapResolvedConfig,
-} from "./plugins/event-map";
-export { eventMap } from "./plugins/event-map";
+} from "./plugins/event-map/index.js";
+export { eventMap } from "./plugins/event-map/index.js";
 export type {
   EventsPluginConfig,
   EventsResolvedConfig,
-} from "./plugins/events";
-export { events } from "./plugins/events";
+} from "./plugins/events/index.js";
+export { events } from "./plugins/events/index.js";
 export type {
   IndexBarrelConfig,
   IndexBarrelResolvedConfig,
-} from "./plugins/index-barrel";
-export { indexBarrel } from "./plugins/index-barrel";
+} from "./plugins/index-barrel/index.js";
+export { indexBarrel } from "./plugins/index-barrel/index.js";
 export type {
   TypescriptPluginConfig,
   TypescriptResolvedConfig,
-} from "./plugins/typescript";
-export { typescript } from "./plugins/typescript";
+} from "./plugins/typescript/index.js";
+export { typescript } from "./plugins/typescript/index.js";

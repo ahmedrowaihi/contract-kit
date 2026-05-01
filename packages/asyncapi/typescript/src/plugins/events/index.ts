@@ -1,2 +1,2 @@
-export { events } from "./plugin";
-export type { EventsPluginConfig, EventsResolvedConfig } from "./types";
+export { events } from "./plugin.js";
+export type { EventsPluginConfig, EventsResolvedConfig } from "./types.js";
