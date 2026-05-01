@@ -53,6 +53,10 @@
   "peerDependencies": {
     "@hey-api/openapi-ts": ">=0.97.0"
   },
+  "dependencies": {
+    "@ahmedrowaihi/oas-core": "workspace:*",
+    "@hey-api/json-schema-ref-parser": "catalog:"
+  },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",
     "@hey-api/openapi-ts": "catalog:",
