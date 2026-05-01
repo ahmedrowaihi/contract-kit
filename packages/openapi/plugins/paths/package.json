@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-paths",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching",
   "keywords": [
     "openapi",
