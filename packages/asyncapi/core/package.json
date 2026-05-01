@@ -1,0 +1,76 @@
+{
+  "name": "@ahmedrowaihi/asyncapi-core",
+  "version": "0.1.0",
+  "description": "Shared AsyncAPI 3.0 primitives for codegen — uniform parseSpec entry point on top of @asyncapi/parser, plus AMQP binding extractors and routing-key matching. Mirror of @ahmedrowaihi/openapi-core for the AsyncAPI track.",
+  "keywords": [
+    "asyncapi",
+    "amqp",
+    "rabbitmq",
+    "cloudevents",
+    "events",
+    "codegen",
+    "shared"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/asyncapi/core",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/asyncapi/core"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./bindings": {
+      "types": "./dist/bindings.d.ts",
+      "import": "./dist/bindings.js"
+    },
+    "./match": {
+      "types": "./dist/match.d.ts",
+      "import": "./dist/match.js"
+    },
+    "./parse": {
+      "types": "./dist/parse.d.ts",
+      "import": "./dist/parse.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@asyncapi/parser": "catalog:"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

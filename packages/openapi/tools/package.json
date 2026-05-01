@@ -1,0 +1,102 @@
+{
+  "name": "@ahmedrowaihi/openapi-tools",
+  "version": "1.2.0",
+  "description": "OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend",
+  "keywords": [
+    "openapi",
+    "matcher",
+    "url-pattern",
+    "diff",
+    "parser",
+    "spec",
+    "tooling",
+    "typescript"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi/tools",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi/tools"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./match": {
+      "types": "./dist/match.d.ts",
+      "import": "./dist/match.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
+    },
+    "./parse": {
+      "types": "./dist/parse.d.ts",
+      "import": "./dist/parse.js"
+    },
+    "./diff": {
+      "types": "./dist/diff.d.ts",
+      "import": "./dist/diff.js"
+    },
+    "./ir": {
+      "types": "./dist/ir.d.ts",
+      "import": "./dist/ir.js"
+    },
+    "./route": {
+      "types": "./dist/route.d.ts",
+      "import": "./dist/route.js"
+    },
+    "./merge": {
+      "types": "./dist/merge.d.ts",
+      "import": "./dist/merge.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@hey-api/codegen-core": ">=0.7.0",
+    "@hey-api/shared": ">=0.3.0",
+    "@hey-api/spec-types": ">=0.2.0"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@hey-api/codegen-core": "catalog:",
+    "@hey-api/shared": "catalog:",
+    "@hey-api/spec-types": "catalog:",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "urlpattern-polyfill": "^10.1.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

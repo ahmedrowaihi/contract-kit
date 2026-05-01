@@ -27,30 +27,33 @@ const END = "<!-- @packages-end -->";
  * get categorized explicitly.
  */
 const CATEGORIES = [
-  "`@hey-api/openapi-ts` plugins",
+  "Codegen shared",
+  "OpenAPI primitives",
   "OpenAPI runtime utilities",
-  "Codegen primitives",
-  "Native client SDK generators",
+  "`@hey-api/openapi-ts` plugins",
+  "OpenAPI generators",
+  "OpenAPI spec discovery",
   "AsyncAPI primitives",
-  "Spec discovery from traffic",
+  "AsyncAPI generators",
   "Apps",
   "Other",
 ];
 
 const CATEGORY_BY_NAME = {
+  "@ahmedrowaihi/codegen-core": "Codegen shared",
+  "@ahmedrowaihi/openapi-core": "OpenAPI primitives",
+  "@ahmedrowaihi/openapi-tools": "OpenAPI runtime utilities",
   "@ahmedrowaihi/openapi-ts-orpc": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-ts-faker": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-ts-paths": "`@hey-api/openapi-ts` plugins",
   "@ahmedrowaihi/openapi-ts-typia": "`@hey-api/openapi-ts` plugins",
-  "@ahmedrowaihi/openapi-tools": "OpenAPI runtime utilities",
-  "@ahmedrowaihi/codegen-core": "Codegen primitives",
-  "@ahmedrowaihi/oas-core": "Native client SDK generators",
-  "@ahmedrowaihi/openapi-kotlin": "Native client SDK generators",
-  "@ahmedrowaihi/openapi-swift": "Native client SDK generators",
-  "@ahmedrowaihi/openapi-go": "Native client SDK generators",
-  "@ahmedrowaihi/openapi-typescript": "Native client SDK generators",
-  "@ahmedrowaihi/aas-core": "AsyncAPI primitives",
-  "@ahmedrowaihi/openapi-recon": "Spec discovery from traffic",
+  "@ahmedrowaihi/openapi-go": "OpenAPI generators",
+  "@ahmedrowaihi/openapi-kotlin": "OpenAPI generators",
+  "@ahmedrowaihi/openapi-swift": "OpenAPI generators",
+  "@ahmedrowaihi/openapi-typescript": "OpenAPI generators",
+  "@ahmedrowaihi/openapi-recon": "OpenAPI spec discovery",
+  "@ahmedrowaihi/asyncapi-core": "AsyncAPI primitives",
+  "@ahmedrowaihi/asyncapi-typescript": "AsyncAPI generators",
   "@ahmedrowaihi/glean": "Apps",
 };
 
