@@ -1,5 +1,19 @@
 # @ahmedrowaihi/openapi-kotlin
 
+## 1.1.0
+
+### Minor Changes
+
+- 26296d2: Add spec normalization pipeline (`normalizeSpec`) — passes for allOf collapse, inline-enum dedup, structural object dedup (opt-in), and scoped prune. Each generator gains a `normalize?: boolean | NormalizeOptions` option (`true` = safe preset). `sdk-regen` action gains a `normalize` input.
+
+### Patch Changes
+
+- 16676d9: Extract spec-agnostic primitives (identifier transforms, filesystem safety) into new `@ahmedrowaihi/codegen-core`. `oas-core` no longer re-exports them — consumers must import `pascal`, `camel`, `safeIdent`, `safeCaseName`, `synthName`, `assertSafeOutputDir`, `defaultProjectName` from `@ahmedrowaihi/codegen-core` directly.
+- Updated dependencies [16676d9]
+- Updated dependencies [26296d2]
+  - @ahmedrowaihi/codegen-core@0.2.0
+  - @ahmedrowaihi/oas-core@1.0.0
+
 ## 1.0.2
 
 ### Patch Changes

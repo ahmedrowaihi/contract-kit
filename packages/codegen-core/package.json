@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/codegen-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Spec-agnostic codegen primitives shared by OpenAPI and AsyncAPI generator families — identifier transforms (pascal/camel/safeIdent), filesystem safety, project-name derivation. Pure functions, no spec dependencies.",
   "keywords": [
     "codegen",

@@ -1,5 +1,17 @@
 # @ahmedrowaihi/openapi-typescript
 
+## 0.2.0
+
+### Minor Changes
+
+- 26296d2: Add spec normalization pipeline (`normalizeSpec`) — passes for allOf collapse, inline-enum dedup, structural object dedup (opt-in), and scoped prune. Each generator gains a `normalize?: boolean | NormalizeOptions` option (`true` = safe preset). `sdk-regen` action gains a `normalize` input.
+
+### Patch Changes
+
+- Updated dependencies [16676d9]
+- Updated dependencies [26296d2]
+  - @ahmedrowaihi/oas-core@1.0.0
+
 ## 0.1.0
 
 ### Minor Changes

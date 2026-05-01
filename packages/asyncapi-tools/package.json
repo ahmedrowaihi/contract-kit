@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/asyncapi-tools",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AsyncAPI utilities — AMQP binding extractors, routing-key matching, payload validation, CloudEvents envelope helpers, spec diffing. Used by the asyncapi-* generator family and consumable directly from service code.",
   "keywords": [
     "asyncapi",
@@ -58,7 +58,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@ahmedrowaihi/aas-core": ">=0.1.0",
+    "@ahmedrowaihi/aas-core": ">=0.2.0",
     "@asyncapi/parser": ">=3.0.0"
   },
   "devDependencies": {
