@@ -2,7 +2,7 @@
 
 Chrome / Firefox DevTools extension that reverse-engineers an OpenAPI 3.1 spec from the network traffic of whatever site you're inspecting. Open DevTools → Glean panel → browse around → copy out a spec.
 
-Built on [`@ahmedrowaihi/openapi-recon`](../../packages/openapi-recon) for the inference engine, [`@scalar/api-reference-react`](https://github.com/scalar/scalar) for the rendered spec view, and [WXT](https://wxt.dev) for the cross-browser extension shell.
+Built on [`@ahmedrowaihi/openapi-recon`](../../packages/openapi/recon) for the inference engine, [`@scalar/api-reference-react`](https://github.com/scalar/scalar) for the rendered spec view, and [WXT](https://wxt.dev) for the cross-browser extension shell.
 
 Not published to npm — install from source or grab the packaged `.zip` from the GitHub releases when one's posted.
 

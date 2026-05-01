@@ -33,3 +33,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Test
+        run: pnpm test
+        env:
+          INTEGRATION_TEST: "true"

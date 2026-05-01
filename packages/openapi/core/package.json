@@ -1,0 +1,63 @@
+{
+  "name": "@ahmedrowaihi/openapi-core",
+  "version": "1.0.0",
+  "description": "Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift.",
+  "keywords": [
+    "openapi",
+    "codegen",
+    "sdk",
+    "shared"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi/core",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi/core"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@hey-api/shared": ">=0.3.0"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@hey-api/shared": "catalog:",
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

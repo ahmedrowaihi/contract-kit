@@ -1,9 +1,0 @@
-{
-  "extends": "@ahmedrowaihi/tsconfig/lib.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "allowImportingTsExtensions": true
-  },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
-}

@@ -2,7 +2,14 @@ asyncapi: 3.0.0
 info:
   title: User Events
   version: 1.0.0
-  description: Domain events emitted by the identity service. CloudEvents 1.0 envelope.
+  description: |
+    Domain events emitted by the identity service.
+
+    Demonstrates two coexisting payload styles in one spec:
+      - userAccountCreated uses a CloudEvents 1.0 envelope.
+      - userAccountDeleted uses a custom envelope.
+    The generator stays envelope-agnostic — each message's TS type
+    matches its payload schema verbatim.
 
 servers:
   rabbitmq:
@@ -12,7 +19,7 @@ servers:
 channels:
   userAccountCreated:
     address: user.account.created.*
-    description: Fired after a user account is created.
+    description: Fired after a user account is created. Payload is a CloudEvents 1.0 envelope.
     bindings:
       amqp:
         is: routingKey
@@ -27,7 +34,7 @@ channels:
 
   userAccountDeleted:
     address: user.account.deleted.*
-    description: Fired after a user account is deleted.
+    description: Fired after a user account is deleted. Payload is a custom envelope.
     bindings:
       amqp:
         is: routingKey
@@ -45,7 +52,6 @@ operations:
     action: send
     channel:
       $ref: '#/channels/userAccountCreated'
-    summary: identity-service publishes account creation events.
 
   publishUserAccountDeleted:
     action: send
@@ -54,6 +60,7 @@ operations:
 
 components:
   messages:
+    # ---------- CloudEvents 1.0 envelope ----------
     UserAccountCreated:
       name: UserAccountCreated
       title: user.account.created.v1
@@ -67,22 +74,26 @@ components:
           source: { type: string }
           type: { const: user.account.created.v1 }
           time: { type: string, format: date-time }
+          datacontenttype: { type: string }
+          subject: { type: string }
           data: { $ref: '#/components/schemas/UserAccountCreatedData' }
 
+    # ---------- Custom envelope ----------
     UserAccountDeleted:
       name: UserAccountDeleted
       title: user.account.deleted.v1
-      contentType: application/cloudevents+json
+      contentType: application/json
       payload:
         type: object
-        required: [specversion, id, source, type, time, data]
+        required: [eventId, type, timestamp, source, version, payload]
         properties:
-          specversion: { const: '1.0' }
-          id: { type: string }
-          source: { type: string }
+          eventId: { type: string }
           type: { const: user.account.deleted.v1 }
-          time: { type: string, format: date-time }
-          data: { $ref: '#/components/schemas/UserAccountDeletedData' }
+          timestamp: { type: string, format: date-time }
+          source: { type: string }
+          version: { const: v1 }
+          correlationId: { type: string }
+          payload: { $ref: '#/components/schemas/UserAccountDeletedData' }
 
   schemas:
     UserAccountCreatedData:

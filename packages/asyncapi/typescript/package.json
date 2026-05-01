@@ -1,0 +1,84 @@
+{
+  "name": "@ahmedrowaihi/asyncapi-typescript",
+  "version": "0.1.0",
+  "description": "AsyncAPI 3.0 → TypeScript generator. Plugin-compose architecture: a small core orchestrates parser → IR → registered plugins, each emitting one slice of generated code (types, Events const, dispatch helpers, AMQP helpers, framework adapters). Parser via @asyncapi/parser, JSON Schema → TS via @asyncapi/modelina, file orchestration via @hey-api/codegen-core.",
+  "keywords": [
+    "asyncapi",
+    "typescript",
+    "codegen",
+    "events",
+    "amqp",
+    "rabbitmq"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/asyncapi/typescript",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/asyncapi/typescript"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-bundles.mjs",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@ahmedrowaihi/asyncapi-core": ">=0.1.0",
+    "@ahmedrowaihi/codegen-core": ">=0.1.0",
+    "@asyncapi/modelina": ">=5.0.0",
+    "@asyncapi/parser": ">=3.0.0",
+    "@hey-api/codegen-core": ">=0.8.0",
+    "amqplib": ">=0.10.0",
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "amqplib": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/asyncapi-core": "workspace:*",
+    "@ahmedrowaihi/codegen-core": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@asyncapi/modelina": "catalog:",
+    "@asyncapi/parser": "catalog:",
+    "@hey-api/codegen-core": "catalog:",
+    "@testcontainers/rabbitmq": "^11.14.0",
+    "@types/amqplib": "^0.10.5",
+    "@types/node": "catalog:",
+    "amqplib": "^0.10.4",
+    "testcontainers": "^11.14.0",
+    "typescript": "^5.9.3",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

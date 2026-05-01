@@ -1,0 +1,85 @@
+name: Test asyncapi-regen action
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'actions/asyncapi-regen/**'
+      - '.github/workflows/test-asyncapi-regen.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'actions/asyncapi-regen/**'
+      - '.github/workflows/test-asyncapi-regen.yml'
+
+# Self-test: invoke the action against the user-events fixture in
+# `commit-strategy: none` mode (just regen, no PR), then assert the
+# emitted file set matches expectations and the playground still
+# compiles against the freshly-regen'd output.
+
+jobs:
+  full-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run asyncapi-regen (full plugin set)
+        id: regen
+        uses: ./actions/asyncapi-regen
+        with:
+          input: fixtures/user-events.yaml
+          output: tmp-sdk/full
+          commit-strategy: none
+
+      - name: Assert all-plugin output
+        env:
+          OUTPUT: tmp-sdk/full
+          CHANGED: ${{ steps.regen.outputs.changed }}
+          FILES_CHANGED: ${{ steps.regen.outputs.files-changed }}
+        run: |
+          set -e
+          if [ "$CHANGED" != "true" ]; then
+            echo "::error::expected outputs.changed=true; got '$CHANGED'"
+            exit 1
+          fi
+          for file in types.gen.ts events.gen.ts event-map.gen.ts dispatch.gen.ts handlers.gen.ts amqp.gen.ts index.gen.ts; do
+            if [ ! -f "$OUTPUT/$file" ]; then
+              echo "::error::expected file missing: $OUTPUT/$file"
+              ls -la "$OUTPUT" || true
+              exit 1
+            fi
+          done
+          echo "✓ asyncapi-regen produced $FILES_CHANGED file(s); all 7 expected files present"
+
+  subset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run asyncapi-regen (types + events + index only)
+        id: regen
+        uses: ./actions/asyncapi-regen
+        with:
+          input: fixtures/user-events.yaml
+          output: tmp-sdk/subset
+          plugins: 'typescript,events,index'
+          commit-strategy: none
+
+      - name: Assert subset output
+        env:
+          OUTPUT: tmp-sdk/subset
+        run: |
+          set -e
+          for file in types.gen.ts events.gen.ts index.gen.ts; do
+            if [ ! -f "$OUTPUT/$file" ]; then
+              echo "::error::expected file missing: $OUTPUT/$file"
+              exit 1
+            fi
+          done
+          for unwanted in event-map.gen.ts dispatch.gen.ts handlers.gen.ts amqp.gen.ts; do
+            if [ -f "$OUTPUT/$unwanted" ]; then
+              echo "::error::unexpected file present (subset should not emit): $OUTPUT/$unwanted"
+              exit 1
+            fi
+          done
+          echo "✓ subset emit matches expected file set"

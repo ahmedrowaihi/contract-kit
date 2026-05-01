@@ -1,0 +1,22 @@
+{
+  "name": "@ahmedrowaihi/example-asyncapi-events-playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Hand-written stand-in for what asyncapi-typescript would emit from fixtures/user-events.yaml. Used to evaluate the surface (Events.X.publish/subscribe) end-to-end against a real RabbitMQ before wiring up the generator.",
+  "scripts": {
+    "broker:up": "docker compose up -d",
+    "broker:down": "docker compose down",
+    "producer": "jiti src/producer.ts",
+    "consumer": "jiti src/consumer.ts"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@types/amqplib": "^0.10.5",
+    "@types/node": "catalog:",
+    "jiti": "^2.6.1"
+  }
+}

@@ -8,60 +8,65 @@ OpenAPI contract toolchain — `@hey-api/openapi-ts` plugins, runtime utilities,
 
 <!-- @packages-start -->
 
-### `@hey-api/openapi-ts` plugins
+### Codegen shared
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/openapi-ts-faker`](./packages/openapi-ts-plugins/faker) | Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs |
-| [`@ahmedrowaihi/openapi-ts-orpc`](./packages/openapi-ts-plugins/orpc) | oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs |
-| [`@ahmedrowaihi/openapi-ts-paths`](./packages/openapi-ts-plugins/paths) | Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching |
-| [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi-ts-plugins/typia) | Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs |
+| [`@ahmedrowaihi/codegen-core`](./packages/shared/codegen-core) | Spec-agnostic codegen primitives shared by OpenAPI and AsyncAPI generator families — identifier transforms (pascal/camel/safeIdent), filesystem safety, project-name derivation. Pure functions, no spec dependencies. |
+
+### OpenAPI primitives
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-core`](./packages/openapi/core) | Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift. |
 
 ### OpenAPI runtime utilities
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/openapi-tools`](./packages/openapi-tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
+| [`@ahmedrowaihi/openapi-tools`](./packages/openapi/tools) | OpenAPI utilities — request matching, spec diffing, parsing. Tree-shakable, pure functions, works on frontend or backend |
 
-### Codegen primitives
-
-| Package | Description |
-| --- | --- |
-| [`@ahmedrowaihi/codegen-core`](./packages/codegen-core) | Spec-agnostic codegen primitives shared by OpenAPI and AsyncAPI generator families — identifier transforms (pascal/camel/safeIdent), filesystem safety, project-name derivation. Pure functions, no spec dependencies. |
-
-### Native client SDK generators
+### `@hey-api/openapi-ts` plugins
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/oas-core`](./packages/oas-core) | Shared building blocks for native-client SDK generators on top of OpenAPI 3.x — identifier transforms, security-scheme walkers, ref helpers, filesystem safety. Used by @ahmedrowaihi/openapi-go, @ahmedrowaihi/openapi-kotlin, @ahmedrowaihi/openapi-swift. |
-| [`@ahmedrowaihi/openapi-go`](./packages/openapi-go) | Generate idiomatic Go (net/http + encoding/json + context.Context) client SDKs from an OpenAPI 3.x spec. |
-| [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi-kotlin) | Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
-| [`@ahmedrowaihi/openapi-swift`](./packages/openapi-swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
-| [`@ahmedrowaihi/openapi-typescript`](./packages/openapi-typescript) | Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline. |
+| [`@ahmedrowaihi/openapi-ts-faker`](./packages/openapi/plugins/faker) | Faker.js plugin for @hey-api/openapi-ts - Generate realistic mock data factories from OpenAPI specs |
+| [`@ahmedrowaihi/openapi-ts-orpc`](./packages/openapi/plugins/orpc) | oRPC plugin for @hey-api/openapi-ts - Generate type-safe RPC clients and servers from OpenAPI specs |
+| [`@ahmedrowaihi/openapi-ts-paths`](./packages/openapi/plugins/paths) | Plugin for @hey-api/openapi-ts — emit per-operation route consts (spec template, URLPattern, method, operationId) for tree-shakable runtime routing and matching |
+| [`@ahmedrowaihi/openapi-ts-typia`](./packages/openapi/plugins/typia) | Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs |
+
+### OpenAPI generators
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-go`](./packages/openapi/go) | Generate idiomatic Go (net/http + encoding/json + context.Context) client SDKs from an OpenAPI 3.x spec. |
+| [`@ahmedrowaihi/openapi-kotlin`](./packages/openapi/kotlin) | Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec. |
+| [`@ahmedrowaihi/openapi-swift`](./packages/openapi/swift) | Generate idiomatic Swift (Codable + URLSession + async throws) client SDKs from an OpenAPI 3.x spec. |
+| [`@ahmedrowaihi/openapi-typescript`](./packages/openapi/typescript) | Thin programmatic wrapper around @hey-api/openapi-ts that ships a `generate()` matching the shape of @ahmedrowaihi/openapi-{go,kotlin,swift}, so the same sdk-regen workflow can target TypeScript clients (types + sdk + schemas + transformers + validators + ...) via hey-api's plugin pipeline. |
+
+### OpenAPI spec discovery
+
+| Package | Description |
+| --- | --- |
+| [`@ahmedrowaihi/openapi-recon`](./packages/openapi/recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
 
 ### AsyncAPI primitives
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/aas-core`](./packages/aas-core) | Shared AsyncAPI 3.0 parsing primitives for codegen — thin wrapper around @asyncapi/parser exposing a uniform parseSpec entry point. Mirror of @ahmedrowaihi/oas-core for the AsyncAPI track. |
+| [`@ahmedrowaihi/asyncapi-core`](./packages/asyncapi/core) | Shared AsyncAPI 3.0 primitives for codegen — uniform parseSpec entry point on top of @asyncapi/parser, plus AMQP binding extractors and routing-key matching. Mirror of @ahmedrowaihi/openapi-core for the AsyncAPI track. |
 
-### Spec discovery from traffic
+### AsyncAPI generators
 
 | Package | Description |
 | --- | --- |
-| [`@ahmedrowaihi/openapi-recon`](./packages/openapi-recon) | Reverse-engineer an OpenAPI 3.1 spec from observed HTTP traffic — runtime-agnostic, accepts standard Request/Response, works in browsers, Node, edge runtimes |
+| [`@ahmedrowaihi/asyncapi-typescript`](./packages/asyncapi/typescript) | AsyncAPI 3.0 → TypeScript generator. Plugin-compose architecture: a small core orchestrates parser → IR → registered plugins, each emitting one slice of generated code (types, Events const, dispatch helpers, AMQP helpers, framework adapters). Parser via @asyncapi/parser, JSON Schema → TS via @asyncapi/modelina, file orchestration via @hey-api/codegen-core. |
 
 ### Apps
 
 | Package | Description |
 | --- | --- |
 | [`@ahmedrowaihi/glean`](./apps/glean) | Glean — reverse-engineer OpenAPI 3.1 specs from traffic observed in your DevTools. |
-
-### Other
-
-| Package | Description |
-| --- | --- |
-| [`@ahmedrowaihi/asyncapi-tools`](./packages/asyncapi-tools) | AsyncAPI utilities — AMQP binding extractors, routing-key matching, payload validation, CloudEvents envelope helpers, spec diffing. Used by the asyncapi-* generator family and consumable directly from service code. |
 
 <!-- @packages-end -->
 

@@ -1,0 +1,92 @@
+{
+  "name": "@ahmedrowaihi/openapi-ts-typia",
+  "version": "4.0.0",
+  "description": "Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs",
+  "keywords": [
+    "openapi",
+    "openapi-ts",
+    "typia",
+    "standard-schema",
+    "validator",
+    "codegen",
+    "type-safe",
+    "plugin"
+  ],
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/openapi/plugins/typia",
+  "bugs": {
+    "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Ahmed Rowaihi",
+    "email": "ahmedrowaihi@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
+    "directory": "packages/openapi/plugins/typia"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./orpc": {
+      "types": "./dist/orpc/index.d.ts",
+      "import": "./dist/orpc/index.js",
+      "require": "./dist/orpc/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "sync-tags": "jiti scripts/sync-tags.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@hey-api/codegen-core": ">=0.7.0",
+    "@hey-api/openapi-ts": ">=0.95.0",
+    "@hey-api/shared": ">=0.3.0",
+    "@orpc/contract": ">=1.13.0",
+    "@orpc/openapi": ">=1.13.0",
+    "@standard-schema/spec": "^1.0.0",
+    "typia": "^12.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@orpc/contract": {
+      "optional": true
+    },
+    "@orpc/openapi": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@hey-api/codegen-core": "catalog:",
+    "@hey-api/openapi-ts": "catalog:",
+    "@hey-api/shared": "catalog:",
+    "@orpc/contract": "^1.13.14",
+    "@orpc/openapi": "^1.13.14",
+    "@standard-schema/spec": "^1.1.0",
+    "@types/node": "catalog:",
+    "jiti": "^2.6.1",
+    "typia": "12.0.2"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

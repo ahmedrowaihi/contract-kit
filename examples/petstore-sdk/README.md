@@ -8,10 +8,10 @@ The shared spec lives at [`../../fixtures/petstore.yaml`](../../fixtures/petstor
 
 | Target | Status | Generator | Stack |
 |---|---|---|---|
-| Kotlin (Android / JVM) | ✓ | [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi-kotlin) | OkHttp + kotlinx-serialization + suspend |
-| Swift (iOS / macOS) | ✓ | [`@ahmedrowaihi/openapi-swift`](../../packages/openapi-swift) | URLSession + `Codable` + async throws |
-| Go | ✓ | [`@ahmedrowaihi/openapi-go`](../../packages/openapi-go) | net/http + encoding/json + context.Context |
-| TypeScript | ✓ | [`@ahmedrowaihi/openapi-typescript`](../../packages/openapi-typescript) (wraps [`@hey-api/openapi-ts`](https://www.npmjs.com/package/@hey-api/openapi-ts)) | fetch + `@hey-api/client-fetch` + per-op functions |
+| Kotlin (Android / JVM) | ✓ | [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi/kotlin) | OkHttp + kotlinx-serialization + suspend |
+| Swift (iOS / macOS) | ✓ | [`@ahmedrowaihi/openapi-swift`](../../packages/openapi/swift) | URLSession + `Codable` + async throws |
+| Go | ✓ | [`@ahmedrowaihi/openapi-go`](../../packages/openapi/go) | net/http + encoding/json + context.Context |
+| TypeScript | ✓ | [`@ahmedrowaihi/openapi-typescript`](../../packages/openapi/typescript) (wraps [`@hey-api/openapi-ts`](https://www.npmjs.com/package/@hey-api/openapi-ts)) | fetch + `@hey-api/client-fetch` + per-op functions |
 
 ## Run
 
@@ -111,6 +111,6 @@ See:
 
 Each `<lang>/gen.ts` is a thin wrapper over the generator's `generate(...)`. See the per-package READMEs for the full options table:
 
-- [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi-kotlin/README.md)
-- [`@ahmedrowaihi/openapi-swift`](../../packages/openapi-swift/README.md)
-- [`@ahmedrowaihi/openapi-go`](../../packages/openapi-go/README.md)
+- [`@ahmedrowaihi/openapi-kotlin`](../../packages/openapi/kotlin/README.md)
+- [`@ahmedrowaihi/openapi-swift`](../../packages/openapi/swift/README.md)
+- [`@ahmedrowaihi/openapi-go`](../../packages/openapi/go/README.md)
