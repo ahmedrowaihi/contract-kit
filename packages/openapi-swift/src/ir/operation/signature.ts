@@ -1,9 +1,5 @@
-import {
-  camel,
-  HTTP_METHOD_LITERAL,
-  type HttpMethod,
-  pascal,
-} from "@ahmedrowaihi/oas-core";
+import { camel, pascal } from "@ahmedrowaihi/codegen-core";
+import { HTTP_METHOD_LITERAL, type HttpMethod } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
 
 import type { SwFunParam, SwType } from "../../sw-dsl/index.js";

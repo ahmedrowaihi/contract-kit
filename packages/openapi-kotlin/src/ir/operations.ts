@@ -1,7 +1,7 @@
+import { pascal } from "@ahmedrowaihi/codegen-core";
 import {
   HTTP_METHODS,
   type HttpMethod,
-  pascal,
   securityKey,
 } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";

@@ -4,8 +4,8 @@ import { dirname, join, resolve } from "node:path";
 import {
   assertSafeOutputDir,
   defaultProjectName,
-  extractSecuritySchemeNames,
-} from "@ahmedrowaihi/oas-core";
+} from "@ahmedrowaihi/codegen-core";
+import { extractSecuritySchemeNames } from "@ahmedrowaihi/oas-core";
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
 

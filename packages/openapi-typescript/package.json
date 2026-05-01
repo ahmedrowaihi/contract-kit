@@ -48,7 +48,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "peerDependencies": {
     "@hey-api/openapi-ts": ">=0.97.0"
@@ -59,6 +59,6 @@
     "@types/node": "catalog:"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.6.0"
   }
 }

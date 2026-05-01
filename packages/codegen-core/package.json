@@ -47,13 +47,13 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",
     "@types/node": "catalog:"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.6.0"
   }
 }

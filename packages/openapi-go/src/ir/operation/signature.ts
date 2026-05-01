@@ -1,8 +1,5 @@
-import {
-  HTTP_METHOD_LITERAL,
-  type HttpMethod,
-  pascal,
-} from "@ahmedrowaihi/oas-core";
+import { pascal } from "@ahmedrowaihi/codegen-core";
+import { HTTP_METHOD_LITERAL, type HttpMethod } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
 
 import {

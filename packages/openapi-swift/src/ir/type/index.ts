@@ -1,4 +1,5 @@
-import { refName, synthName } from "@ahmedrowaihi/oas-core";
+import { synthName } from "@ahmedrowaihi/codegen-core";
+import { refName } from "@ahmedrowaihi/oas-core";
 import type { IR } from "@hey-api/shared";
 
 import type { SwType } from "../../sw-dsl/index.js";

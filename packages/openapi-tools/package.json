@@ -78,7 +78,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "tsc && node --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "peerDependencies": {
     "@hey-api/codegen-core": ">=0.7.0",
@@ -96,6 +96,6 @@
     "urlpattern-polyfill": "^10.1.0"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.6.0"
   }
 }

@@ -218,10 +218,6 @@ importers:
         version: 22.19.17
 
   packages/oas-core:
-    dependencies:
-      '@ahmedrowaihi/codegen-core':
-        specifier: workspace:*
-        version: link:../codegen-core
     devDependencies:
       '@ahmedrowaihi/tsconfig':
         specifier: workspace:*
@@ -235,6 +231,9 @@ importers:
 
   packages/openapi-go:
     dependencies:
+      '@ahmedrowaihi/codegen-core':
+        specifier: workspace:*
+        version: link:../codegen-core
       '@ahmedrowaihi/oas-core':
         specifier: workspace:*
         version: link:../oas-core
@@ -260,6 +259,9 @@ importers:
 
   packages/openapi-kotlin:
     dependencies:
+      '@ahmedrowaihi/codegen-core':
+        specifier: workspace:*
+        version: link:../codegen-core
       '@ahmedrowaihi/oas-core':
         specifier: workspace:*
         version: link:../oas-core
@@ -297,6 +299,9 @@ importers:
 
   packages/openapi-swift:
     dependencies:
+      '@ahmedrowaihi/codegen-core':
+        specifier: workspace:*
+        version: link:../codegen-core
       '@ahmedrowaihi/oas-core':
         specifier: workspace:*
         version: link:../oas-core

@@ -1,10 +1,8 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
-import {
-  assertSafeOutputDir,
-  extractSecuritySchemeNames,
-} from "@ahmedrowaihi/oas-core";
+import { assertSafeOutputDir } from "@ahmedrowaihi/codegen-core";
+import { extractSecuritySchemeNames } from "@ahmedrowaihi/oas-core";
 import { parseSpec } from "@ahmedrowaihi/openapi-tools/parse";
 import { $RefParser } from "@hey-api/json-schema-ref-parser";
 
