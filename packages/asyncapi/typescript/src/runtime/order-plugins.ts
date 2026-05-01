@@ -1,4 +1,4 @@
-import type { AnyRegisteredPlugin } from "../plugin";
+import type { AnyRegisteredPlugin } from "../plugin.js";
 
 /**
  * Topological sort by `dependsOn`. Cycles throw. Missing dependencies

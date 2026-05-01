@@ -1,16 +1,16 @@
 import type { AsyncAPIDocumentInterface } from "@asyncapi/parser";
 import type { Project } from "@hey-api/codegen-core";
 import type ts from "typescript";
-import { attachHeader } from "../ast/attach-header";
-import { RawTextNode } from "../ast/raw-text-node";
-import { TsStatementNode } from "../ast/ts-node";
+import { attachHeader } from "../ast/attach-header.js";
+import { RawTextNode } from "../ast/raw-text-node.js";
+import { TsStatementNode } from "../ast/ts-node.js";
 import {
   type ForEachEvent,
   type ForEachKind,
   type GeneratedFile,
   iterateDocument,
   type PluginInstance,
-} from "../plugin";
+} from "../plugin.js";
 
 interface BuildOptions {
   document: AsyncAPIDocumentInterface;

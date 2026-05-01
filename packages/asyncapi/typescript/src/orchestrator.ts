@@ -11,11 +11,11 @@ import {
   simpleNameConflictResolver,
 } from "@hey-api/codegen-core";
 
-import { RawTextRenderer, TsStatementRenderer } from "./ast/ts-renderer";
-import { type AnyRegisteredPlugin, type GeneratedFile } from "./plugin";
-import { loadDocument } from "./runtime/load-document";
-import { orderPlugins } from "./runtime/order-plugins";
-import { createPluginInstance } from "./runtime/plugin-instance";
+import { RawTextRenderer, TsStatementRenderer } from "./ast/ts-renderer.js";
+import { type AnyRegisteredPlugin, type GeneratedFile } from "./plugin.js";
+import { loadDocument } from "./runtime/load-document.js";
+import { orderPlugins } from "./runtime/order-plugins.js";
+import { createPluginInstance } from "./runtime/plugin-instance.js";
 
 export interface GenerateOptions {
   input: string | AsyncAPIDocumentInterface;

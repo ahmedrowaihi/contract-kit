@@ -1,2 +1,2 @@
-export { eventMap } from "./plugin";
-export type { EventMapPluginConfig, EventMapResolvedConfig } from "./types";
+export { eventMap } from "./plugin.js";
+export type { EventMapPluginConfig, EventMapResolvedConfig } from "./types.js";
