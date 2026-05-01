@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/asyncapi-typescript",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AsyncAPI 3.0 → TypeScript generator. Plugin-compose architecture: a small core orchestrates parser → IR → registered plugins, each emitting one slice of generated code (types, Events const, dispatch helpers, AMQP helpers, framework adapters). Parser via @asyncapi/parser, JSON Schema → TS via @asyncapi/modelina, file orchestration via @hey-api/codegen-core.",
   "keywords": [
     "asyncapi",
@@ -50,8 +50,8 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@ahmedrowaihi/asyncapi-core": ">=0.1.0",
-    "@ahmedrowaihi/codegen-core": ">=0.1.0",
+    "@ahmedrowaihi/asyncapi-core": ">=1.0.0",
+    "@ahmedrowaihi/codegen-core": ">=0.2.1",
     "@asyncapi/modelina": ">=5.0.0",
     "@asyncapi/parser": ">=3.0.0",
     "@hey-api/codegen-core": ">=0.8.0",

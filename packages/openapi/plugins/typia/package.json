@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-ts-typia",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Typia plugin for @hey-api/openapi-ts — generate compile-time Standard Schema validators from OpenAPI specs",
   "keywords": [
     "openapi",

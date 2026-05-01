@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/openapi-kotlin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Generate idiomatic Kotlin (OkHttp + kotlinx-serialization + suspend) client SDKs from an OpenAPI 3.x spec.",
   "keywords": [
     "openapi",
@@ -53,7 +53,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@ahmedrowaihi/openapi-tools": ">=1.2.0",
+    "@ahmedrowaihi/openapi-tools": ">=1.2.1",
     "@hey-api/shared": ">=0.3.0",
     "@hey-api/spec-types": ">=0.2.0"
   },

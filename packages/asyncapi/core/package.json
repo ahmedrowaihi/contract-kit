@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/asyncapi-core",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Shared AsyncAPI 3.0 primitives for codegen — uniform parseSpec entry point on top of @asyncapi/parser, plus AMQP binding extractors and routing-key matching. Mirror of @ahmedrowaihi/openapi-core for the AsyncAPI track.",
   "keywords": [
     "asyncapi",
