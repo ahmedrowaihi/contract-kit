@@ -1,7 +1,6 @@
 import type { AsyncAPIDocumentInterface } from "@asyncapi/parser";
 import type { Project } from "@hey-api/codegen-core";
 import type ts from "typescript";
-import { attachHeader } from "../ast/attach-header.js";
 import { RawTextNode } from "../ast/raw-text-node.js";
 import { TsStatementNode } from "../ast/ts-node.js";
 import {
@@ -17,6 +16,7 @@ interface BuildOptions {
   project: Project;
   files: GeneratedFile[];
   apiRegistry: Map<string, unknown>;
+  headers: Map<string, string>;
 }
 
 /**
@@ -30,7 +30,7 @@ export function createPluginInstance(
   pluginApi: unknown,
   options: BuildOptions,
 ): PluginInstance {
-  const { document, project, files, apiRegistry } = options;
+  const { document, project, files, apiRegistry, headers } = options;
 
   return {
     name: pluginName,
@@ -54,10 +54,31 @@ export function createPluginInstance(
         logicalFilePath: stripTsExtension(path),
         language: "typescript",
       });
-      const tagged = opts.header
-        ? attachHeader([...statements], opts.header)
-        : statements;
-      for (const [i, stmt] of [...tagged].entries()) {
+      for (const group of opts.imports ?? []) {
+        const sourceFile = project.files.get({
+          logicalFilePath: group.from,
+          language: "typescript",
+        });
+        if (!sourceFile) {
+          throw new Error(
+            `${pluginName}: emitTs(${path}) imports from "${group.from}", but no file with that logical path is registered yet. Add a dependsOn on the plugin that emits it.`,
+          );
+        }
+        projectFile.addImport({
+          from: sourceFile,
+          kind: "named",
+          isTypeOnly: group.isType ?? false,
+          imports: group.names.map((n) => ({
+            sourceName: n.name,
+            localName: n.name,
+            isTypeOnly: n.isType ?? false,
+          })),
+        });
+      }
+      if (opts.header) {
+        headers.set(stripTsExtension(path), opts.header);
+      }
+      for (const [i, stmt] of statements.entries()) {
         projectFile.addNode(
           new TsStatementNode(stmt as ts.Statement, {
             name: `${pluginName}-${i}`,

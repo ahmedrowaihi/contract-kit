@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import ts from "typescript";
 
-import { exportConst, importNamedFrom, tn } from "../../ast/ts-build.js";
+import { exportConst, tn } from "../../ast/ts-build.js";
 import { definePluginConfig } from "../../plugin.js";
 import { readBundle } from "../../runtime/copy-bundle.js";
 
@@ -42,19 +42,25 @@ export const dispatch = definePluginConfig<
 
     plugin.emitTs(
       "handlers.gen.ts",
-      [
-        importNamedFrom(
-          [
-            { name: "createRegistry" },
-            { name: "RegistryOptions", isType: true },
-          ],
-          "./dispatch.gen",
-        ),
-        importNamedFrom([{ name: "EventMap" }], "./event-map.gen", true),
-        importNamedFrom([{ name: "Events" }], "./events.gen"),
-        exportConst("handlers", buildHandlersFactory()),
-      ],
-      { header: HEADER },
+      [exportConst("handlers", buildHandlersFactory())],
+      {
+        header: HEADER,
+        imports: [
+          {
+            from: "dispatch.gen",
+            names: [
+              { name: "createRegistry" },
+              { name: "RegistryOptions", isType: true },
+            ],
+          },
+          {
+            from: "event-map.gen",
+            isType: true,
+            names: [{ name: "EventMap" }],
+          },
+          { from: "events.gen", names: [{ name: "Events" }] },
+        ],
+      },
     );
   },
 });

@@ -33,6 +33,27 @@ export interface GeneratedFile {
   content: string;
 }
 
+/**
+ * One named-import group. The `from` path is the logical (extension-free)
+ * file path of another plugin's file in the same project — e.g. the
+ * `events` plugin emits `events.gen.ts`, so reference it as `"events.gen"`.
+ * The renderer resolves that to a relative path between source and importer
+ * at print time.
+ */
+export interface EmitTsImportGroup {
+  /** Logical path of the source file (no extension). */
+  from: string;
+  /** Names being imported. `isType` adds a per-specifier `type` modifier. */
+  names: ReadonlyArray<{ name: string; isType?: boolean }>;
+  /** Top-level `import type { ... }` (vs `import { ..., type X }`). */
+  isType?: boolean;
+}
+
+export interface EmitTsOptions {
+  header?: string;
+  imports?: ReadonlyArray<EmitTsImportGroup>;
+}
+
 export type ForEachKind = "message" | "channel" | "operation";
 
 export type ForEachEvent =
@@ -62,11 +83,17 @@ export interface PluginInstance<Config = unknown, Api = unknown> {
    * `TsStatementRenderer` prints them at render time. Optional `header`
    * is attached as a leading comment on the first statement. Use this
    * over `emit` for plugin output you construct via `ts.factory`.
+   *
+   * Cross-file imports go through `options.imports` (graph-driven), not
+   * inline `ts.factory.createImportDeclaration` calls — the underlying
+   * codegen-core `File.addImport` resolves source files into relative
+   * paths at print time, so imports survive file moves and rename
+   * collision resolution.
    */
   emitTs(
     path: string,
     statements: ReadonlyArray<ts.Statement>,
-    options?: { header?: string },
+    options?: EmitTsOptions,
   ): void;
   /** Look up another plugin's api by name. Returns `undefined` if absent. */
   getApi<T = unknown>(name: string): T | undefined;
