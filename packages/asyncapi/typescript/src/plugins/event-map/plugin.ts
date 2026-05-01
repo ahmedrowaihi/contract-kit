@@ -1,7 +1,7 @@
 import type { MessageInterface } from "@asyncapi/parser";
 import ts from "typescript";
 
-import { exportInterface, importNamedFrom, tn } from "../../ast/ts-build.js";
+import { exportInterface, tn } from "../../ast/ts-build.js";
 import { definePluginConfig } from "../../plugin.js";
 
 import { defaultConfig } from "./config.js";
@@ -34,14 +34,6 @@ export const eventMap = definePluginConfig<
       );
     }
 
-    const importsDecl = importNamedFrom(
-      Array.from(importNames)
-        .sort()
-        .map((name) => ({ name, isType: false })),
-      "./types.gen",
-      true,
-    );
-
     const anyMessageAlias = f.createTypeAliasDeclaration(
       [f.createModifier(ts.SyntaxKind.ExportKeyword)],
       "AnyMessage",
@@ -55,12 +47,22 @@ export const eventMap = definePluginConfig<
     plugin.emitTs(
       "event-map.gen.ts",
       [
-        importsDecl,
         exportInterface("EventMap", eventMapMembers),
         anyMessageAlias,
         buildIsMessageOfType(),
       ],
-      { header: HEADER },
+      {
+        header: HEADER,
+        imports: [
+          {
+            from: "types.gen",
+            isType: true,
+            names: Array.from(importNames)
+              .sort()
+              .map((name) => ({ name })),
+          },
+        ],
+      },
     );
   },
 });

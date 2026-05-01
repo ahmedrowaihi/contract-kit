@@ -33,6 +33,9 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
   const outputDir = resolve(opts.output);
   assertSafeOutputDir(outputDir);
 
+  // Plugin → renderer side channel; codegen-core File has no metadata slot.
+  const headers = new Map<string, string>();
+
   const project = new Project({
     root: outputDir,
     defaultFileName: "index",
@@ -40,7 +43,7 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
     extensions: defaultExtensions,
     moduleEntryNames: defaultModuleEntryNames,
     nameConflictResolvers: defaultNameConflictResolvers,
-    renderers: [new TsStatementRenderer(), new RawTextRenderer()],
+    renderers: [new TsStatementRenderer(headers), new RawTextRenderer()],
   });
 
   const apiRegistry = new Map<string, unknown>();
@@ -59,6 +62,7 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
       project,
       files: filesEmitted,
       apiRegistry,
+      headers,
     });
 
     if (def.hooks?.before) await def.hooks.before(instance);

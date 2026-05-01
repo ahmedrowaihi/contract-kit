@@ -118,30 +118,6 @@ export function exportTypeStarFrom(module: string): ts.ExportDeclaration {
   );
 }
 
-export function importNamedFrom(
-  named: ReadonlyArray<{ name: string; isType?: boolean }>,
-  module: string,
-  isAllType = false,
-): ts.ImportDeclaration {
-  return f.createImportDeclaration(
-    undefined,
-    f.createImportClause(
-      isAllType,
-      undefined,
-      f.createNamedImports(
-        named.map((n) =>
-          f.createImportSpecifier(
-            n.isType ?? false,
-            undefined,
-            f.createIdentifier(n.name),
-          ),
-        ),
-      ),
-    ),
-    f.createStringLiteral(module),
-  );
-}
-
 // ============================================================
 //  Type nodes
 // ============================================================
