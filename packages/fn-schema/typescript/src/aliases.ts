@@ -37,11 +37,19 @@ const PRIMITIVE_DEFAULTS: Record<string, JSONSchema> = {
   bigint: { type: "integer" },
 };
 
+export interface SourceLocation {
+  file: string;
+  line: number;
+  column: number;
+}
+
 export interface ResolvedAlias {
   text: string;
   imports: AliasImport[];
   hasUnresolvedGenerics: boolean;
   notes: AliasNote[];
+  /** Per-named-type declaration sites — used for the source-location keyword. */
+  sources: Record<string, SourceLocation>;
 }
 
 const TYPE_FLAG_ES_SYMBOL = 4096;
@@ -55,6 +63,7 @@ export function resolveTypeExpression(
 ): ResolvedAlias {
   const acc = new ImportAccumulator(hostFile, virtualDir);
   const notes: AliasNote[] = [];
+  const sources: Record<string, SourceLocation> = {};
 
   if (!type.isLiteral()) {
     const flags = type.compilerType.flags;
@@ -64,7 +73,7 @@ export function resolveTypeExpression(
   }
 
   if (typeNode) {
-    collectFromTypeNode(typeNode, acc, notes);
+    collectFromTypeNode(typeNode, acc, notes, sources);
     const { text, brand, primitive } = stripBrand(typeNode.getText());
     if (brand) {
       notes.push({
@@ -78,6 +87,7 @@ export function resolveTypeExpression(
       imports: acc.toList(),
       hasUnresolvedGenerics: typeContainsTypeParameter(type),
       notes,
+      sources,
     };
   }
 
@@ -97,6 +107,7 @@ export function resolveTypeExpression(
     imports: [],
     hasUnresolvedGenerics: typeContainsTypeParameter(type),
     notes,
+    sources,
   };
 }
 
@@ -160,15 +171,17 @@ function collectFromTypeNode(
   node: TypeNode,
   acc: ImportAccumulator,
   notes: AliasNote[],
+  sources: Record<string, SourceLocation>,
 ): void {
   const visit = (n: Node): void => {
     if (Node.isTypeReference(n)) {
       const nameNode = n.getTypeName();
       const ident = leftmostIdentifier(nameNode);
-      if (ident) registerIdentifier(ident, acc, notes);
+      if (ident) registerIdentifier(ident, acc, notes, sources);
     } else if (Node.isExpressionWithTypeArguments(n)) {
       const expr = n.getExpression();
-      if (Node.isIdentifier(expr)) registerIdentifier(expr, acc, notes);
+      if (Node.isIdentifier(expr))
+        registerIdentifier(expr, acc, notes, sources);
     }
     n.forEachChild(visit);
   };
@@ -185,6 +198,7 @@ function registerIdentifier(
   ident: Node,
   acc: ImportAccumulator,
   notes: AliasNote[],
+  sources: Record<string, SourceLocation>,
 ): void {
   if (!Node.isIdentifier(ident)) return;
   const name = ident.getText();
@@ -193,6 +207,16 @@ function registerIdentifier(
 
   const sourceFile = ident.getSourceFile();
   const decls = ident.getSymbol()?.getDeclarations() ?? [];
+
+  for (const decl of decls) {
+    if (decl.getSourceFile().isDeclarationFile()) continue;
+    const target = canonicalDecl(decl);
+    if (!target) continue;
+    const sf = target.getSourceFile();
+    const { line, column } = sf.getLineAndColumnAtPos(target.getStart());
+    sources[name] = { file: sf.getFilePath(), line, column };
+    break;
+  }
 
   const allAmbient =
     decls.length > 0 &&
@@ -209,8 +233,8 @@ function registerIdentifier(
   if (allAmbient) return;
 
   for (const decl of decls) {
-    // Imported binding's declaration source file is the host, so check the
-    // import-ancestor branch before the host-declared branch.
+    // Import bindings live in the host file, so check ImportDeclaration
+    // first — otherwise they'd be misclassified as host-declared.
     const importDecl = decl.getFirstAncestorByKind(
       SyntaxKind.ImportDeclaration,
     );
@@ -251,8 +275,25 @@ function registerIdentifier(
   }
 }
 
-// `import { Foo as Bar }` — the virtual file must use the exported name `Foo`,
-// not the host's local alias `Bar`.
+/** Follow import bindings up to the original declaration so source locations
+ *  point at the actual definition, not the import site in the host file. */
+function canonicalDecl(decl: Node): Node | null {
+  if (
+    Node.isImportSpecifier(decl) ||
+    Node.isImportClause(decl) ||
+    Node.isNamespaceImport(decl)
+  ) {
+    const sym = (decl as Node).getSymbol();
+    if (!sym) return decl;
+    const aliasedSym = sym.getAliasedSymbol?.();
+    if (!aliasedSym) return decl;
+    const target = aliasedSym.getDeclarations()[0];
+    return target ?? decl;
+  }
+  return decl;
+}
+
+/** `import { Foo as Bar }` — the virtual file uses the exported name `Foo`. */
 function exportedNameFromDecl(decl: Node, fallback: string): string {
   if (Node.isImportSpecifier(decl)) {
     const propertyName = decl.compilerNode.propertyName;
@@ -261,8 +302,7 @@ function exportedNameFromDecl(decl: Node, fallback: string): string {
   return fallback;
 }
 
-// Relative specifiers are written from the host's POV; the virtual file lives
-// in a sibling directory and needs them re-expressed.
+/** Relative specifiers in the host get re-expressed against the virtual file's directory. */
 function retargetSpecifier(
   spec: string,
   hostFile: SourceFile,
@@ -361,11 +401,14 @@ function rewriteImportQualifications(
     imports: acc.toList(),
     hasUnresolvedGenerics: false,
     notes,
+    sources: {},
   };
 }
 
+/** Substitute well-known names with sentinels, but skip text inside string
+ *  literals so `"Date" | "URL"` literal-type unions stay intact. */
 function rewriteWellKnown(text: string, notes: AliasNote[]): string {
-  let out = text;
+  const parts = splitOutsideStrings(text);
   const dynamicNames = new Set(
     notes.filter((n) => n.kind === "well-known").map((n) => n.name),
   );
@@ -373,24 +416,67 @@ function rewriteWellKnown(text: string, notes: AliasNote[]): string {
     notes.filter((n) => n.kind === "lossy").map((n) => n.name),
   );
   const allNames = new Set<string>([...WELL_KNOWN_NAMES, ...dynamicNames]);
-  for (const name of allNames) {
-    const re = new RegExp(`\\b${escapeRegExp(name)}\\b`, "g");
-    if (re.test(out)) {
-      if (!dynamicNames.has(name)) {
-        notes.push({ kind: "well-known", name });
-        dynamicNames.add(name);
+
+  return parts
+    .map((part) => {
+      if (part.kind === "string") return part.text;
+      let out = part.text;
+      for (const name of allNames) {
+        const re = new RegExp(`\\b${escapeRegExp(name)}\\b`, "g");
+        if (re.test(out)) {
+          if (!dynamicNames.has(name)) {
+            notes.push({ kind: "well-known", name });
+            dynamicNames.add(name);
+          }
+          const lossyReason = LOSSY_REASONS[name];
+          if (lossyReason && !lossySeen.has(name)) {
+            notes.push({ kind: "lossy", name, reason: lossyReason });
+            lossySeen.add(name);
+          }
+          out = out.replace(
+            new RegExp(`\\b${escapeRegExp(name)}\\b`, "g"),
+            sentinelTypeAlias(name),
+          );
+        }
       }
-      const lossyReason = LOSSY_REASONS[name];
-      if (lossyReason && !lossySeen.has(name)) {
-        notes.push({ kind: "lossy", name, reason: lossyReason });
-        lossySeen.add(name);
+      return out;
+    })
+    .join("");
+}
+
+function splitOutsideStrings(
+  text: string,
+): { kind: "code" | "string"; text: string }[] {
+  const out: { kind: "code" | "string"; text: string }[] = [];
+  let buf = "";
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i]!;
+    if (c === '"' || c === "'" || c === "`") {
+      if (buf) {
+        out.push({ kind: "code", text: buf });
+        buf = "";
       }
-      out = out.replace(
-        new RegExp(`\\b${escapeRegExp(name)}\\b`, "g"),
-        sentinelTypeAlias(name),
-      );
+      let lit = c;
+      i++;
+      while (i < text.length) {
+        const k = text[i]!;
+        lit += k;
+        i++;
+        if (k === "\\" && i < text.length) {
+          lit += text[i];
+          i++;
+          continue;
+        }
+        if (k === c) break;
+      }
+      out.push({ kind: "string", text: lit });
+      continue;
     }
+    buf += c;
+    i++;
   }
+  if (buf) out.push({ kind: "code", text: buf });
   return out;
 }
 
@@ -400,11 +486,11 @@ function stripBrand(text: string): {
   primitive: string | null;
 } {
   const brandRe =
-    /^(.+?)\s*&\s*\{\s*(?:readonly\s+)?(?:__brand|_brand|brand|kind)\s*:\s*"([^"]+)"\s*;?\s*\}\s*$/;
+    /^(.+?)\s*&\s*\{\s*(?:readonly\s+)?(?:__brand|_brand|brand|kind)\s*:\s*(["'])(.*?)\2\s*;?\s*\}\s*$/;
   const m = text.match(brandRe);
   if (!m) return { text, brand: null, primitive: null };
   const stripped = m[1]!.trim();
-  return { text: stripped, brand: m[2]!, primitive: stripped };
+  return { text: stripped, brand: m[3]!, primitive: stripped };
 }
 
 /**

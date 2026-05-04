@@ -16,7 +16,12 @@ import {
 } from "ts-json-schema-generator";
 import type { Project as TsMorphProject } from "ts-morph";
 import type { Program } from "typescript";
-import { type AliasImport, type AliasNote, renderImports } from "./aliases.js";
+import {
+  type AliasImport,
+  type AliasNote,
+  renderImports,
+  type SourceLocation,
+} from "./aliases.js";
 import type {
   DiscoveredFunction,
   OverloadSignature,
@@ -25,7 +30,9 @@ import type {
 import {
   detectSentinel,
   renderSentinelDeclaration,
+  type TransportHint,
   WELL_KNOWN_SCHEMAS,
+  WELL_KNOWN_TRANSPORT,
 } from "./well-known.js";
 
 export const VIRTUAL_DIR = "__fn_schema_virtual__";
@@ -74,6 +81,11 @@ export function buildSchemas(
     ...o.parameters.flatMap((p) => p.alias.notes),
     ...o.returnAlias.notes,
   ]);
+  const allSources: Record<string, SourceLocation> = {};
+  for (const o of filteredOverloads) {
+    for (const p of o.parameters) Object.assign(allSources, p.alias.sources);
+    Object.assign(allSources, o.returnAlias.sources);
+  }
   const wellKnownNames = uniqueNames(allNotes, "well-known");
   const inferredDefaults: Record<string, JSONSchema> = {};
   for (const n of allNotes) {
@@ -119,12 +131,32 @@ export function buildSchemas(
   mergeDefinitions(definitions, rawOutput.definitions);
   const output = stripWrapper(rawOutput);
 
+  const annotations: AnnotationOptions = {
+    identity: ctx.schema.identity,
+    transport: ctx.schema.transport,
+    sourceLocations: ctx.schema.sourceLocations,
+    sources: allSources,
+  };
+
   for (let i = 0; i < inputSchemas.length; i++) {
-    inputSchemas[i] = applyTypeMappers(inputSchemas[i]!, mappers) as JSONSchema;
+    inputSchemas[i] = applyTypeMappers(
+      inputSchemas[i]!,
+      mappers,
+      annotations,
+    ) as JSONSchema;
   }
-  const mappedOutput = applyTypeMappers(output, mappers) as JSONSchema;
+  const mappedOutput = applyTypeMappers(
+    output,
+    mappers,
+    annotations,
+  ) as JSONSchema;
   for (const k of Object.keys(definitions)) {
-    definitions[k] = applyTypeMappers(definitions[k]!, mappers) as JSONSchema;
+    const mapped = applyTypeMappers(
+      definitions[k]!,
+      mappers,
+      annotations,
+    ) as JSONSchema;
+    definitions[k] = annotateNamedDefinition(mapped, k, annotations);
   }
 
   const primary = filteredOverloads[filteredOverloads.length - 1]!;
@@ -165,23 +197,72 @@ function uniqueNames(notes: AliasNote[], kind: AliasNote["kind"]): string[] {
   return [...seen];
 }
 
+interface AnnotationOptions {
+  identity: false | string;
+  transport: false | string;
+  sourceLocations: false | string;
+  sources: Record<string, SourceLocation>;
+}
+
 function applyTypeMappers(
   schema: unknown,
   mappers: Record<string, JSONSchema>,
+  ann: AnnotationOptions,
 ): unknown {
   if (Array.isArray(schema)) {
-    return schema.map((s) => applyTypeMappers(s, mappers));
+    return schema.map((s) => applyTypeMappers(s, mappers, ann));
   }
   if (!schema || typeof schema !== "object") return schema;
   const sentinel = detectSentinel(schema);
   if (sentinel && mappers[sentinel]) {
-    return { ...mappers[sentinel] };
+    return decorateMappedNode(sentinel, mappers[sentinel]!, ann);
   }
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(schema as Record<string, unknown>)) {
-    out[k] = applyTypeMappers(v, mappers);
+    out[k] = applyTypeMappers(v, mappers, ann);
   }
   return out;
+}
+
+function decorateMappedNode(
+  name: string,
+  base: JSONSchema,
+  ann: AnnotationOptions,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...base };
+  if (ann.identity) out[ann.identity] = name;
+  if (ann.transport) {
+    const hint: TransportHint | undefined = WELL_KNOWN_TRANSPORT[name];
+    if (hint) out[ann.transport] = hint;
+  }
+  if (ann.sourceLocations) {
+    const src = ann.sources[name];
+    if (src) out[ann.sourceLocations] = formatSource(src);
+  }
+  return out;
+}
+
+function annotateNamedDefinition(
+  schema: JSONSchema,
+  name: string,
+  ann: AnnotationOptions,
+): JSONSchema {
+  if (!ann.identity && !ann.sourceLocations) return schema;
+  const out = { ...(schema as Record<string, unknown>) };
+  if (ann.identity && out[ann.identity] === undefined) {
+    out[ann.identity] = name;
+  }
+  if (ann.sourceLocations) {
+    const src = ann.sources[name];
+    if (src && out[ann.sourceLocations] === undefined) {
+      out[ann.sourceLocations] = formatSource(src);
+    }
+  }
+  return out as JSONSchema;
+}
+
+function formatSource(src: SourceLocation): string {
+  return `${src.file}:${src.line}:${src.column}`;
 }
 
 function pickOverloads(

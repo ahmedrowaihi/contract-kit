@@ -130,5 +130,8 @@ function pickSchema(
     encodeRefs: opts.encodeRefs,
     expose: opts.expose,
     typeMappers: opts.typeMappers,
+    identity: opts.identity,
+    transport: opts.transport,
+    sourceLocations: opts.sourceLocations,
   };
 }

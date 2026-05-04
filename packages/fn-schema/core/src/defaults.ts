@@ -27,5 +27,8 @@ export function resolveSchemaOptions(o?: SchemaOptions): ResolvedSchemaOptions {
     encodeRefs: o?.encodeRefs ?? true,
     expose: o?.expose ?? "export",
     typeMappers: o?.typeMappers ?? {},
+    identity: o?.identity ?? false,
+    transport: o?.transport ?? false,
+    sourceLocations: o?.sourceLocations ?? false,
   };
 }

@@ -170,6 +170,25 @@ export interface SchemaOptions {
    * User entries override built-ins.
    */
   typeMappers?: Record<string, JSONSchema>;
+  /**
+   * Attach the originating TS type name to mapped + named-type schemas via a
+   * vendor-extension keyword. Pass `false` (default) for pure JSON Schema, or
+   * a key name (typically `"x-fn-schema-ts"`) to opt in. Required for
+   * canvas-style nominal-type matching across functions.
+   */
+  identity?: false | string;
+  /**
+   * Attach a transport hint (`"multipart"` / `"base64"` / `"json"`) to
+   * binary-shaped schemas (File/Blob/Buffer/Uint8Array/ArrayBuffer) under a
+   * vendor-extension keyword. Pass `false` (default) or a key name (typically
+   * `"x-fn-schema-transport"`). Lets frontends pick the wire format.
+   */
+  transport?: false | string;
+  /**
+   * Attach the source-file location of every named type as a vendor-extension
+   * keyword. `false` (default) or a key name (typically `"x-fn-schema-source"`).
+   */
+  sourceLocations?: false | string;
 }
 
 export interface ResolvedSchemaOptions {
@@ -181,6 +200,9 @@ export interface ResolvedSchemaOptions {
   encodeRefs: boolean;
   expose: "all" | "export" | "none";
   typeMappers: Record<string, JSONSchema>;
+  identity: false | string;
+  transport: false | string;
+  sourceLocations: false | string;
 }
 
 /* ─────────────────────────────── Hooks ───────────────────────────── */

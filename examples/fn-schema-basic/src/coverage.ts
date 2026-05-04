@@ -39,3 +39,9 @@ export function takeBigInt(n: bigint): bigint {
 export function takeBranded(id: UserId): UserId {
   return id;
 }
+
+/** Literal-type union — must NOT be rewritten to sentinels. */
+export function takeLiteralUnion(kind: "Date" | "URL" | "RegExp"): "ok" {
+  void kind;
+  return "ok";
+}

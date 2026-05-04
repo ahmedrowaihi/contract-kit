@@ -133,3 +133,84 @@ describe("type-mapper coverage", () => {
     expect(names).toContain("Buffer");
   });
 });
+
+describe("identity, transport, source-location keywords", () => {
+  it("identity attaches x-fn-schema-ts to mapped + named definitions", async () => {
+    const result = await runCoverage({
+      files: [coverageFile],
+      tsConfigPath: tsConfig,
+      signature: { parameters: "first-only" },
+      schema: { identity: "x-fn-schema-ts" },
+    });
+
+    const date = result.signatures.find((s) => s.id === "takeDate")!;
+    expect(date.output).toMatchObject({
+      type: "string",
+      format: "date-time",
+      "x-fn-schema-ts": "Date",
+    });
+
+    const branded = result.signatures.find((s) => s.id === "takeBranded")!;
+    expect(branded.input).toMatchObject({
+      type: "string",
+      "x-fn-schema-ts": "UserId",
+    });
+
+    const def = result.definitions.DateInput as Record<string, unknown>;
+    expect(def?.["x-fn-schema-ts"]).toBe("DateInput");
+  });
+
+  it("transport hint maps File/Blob → multipart, Buffer → base64", async () => {
+    const result = await runCoverage({
+      files: [coverageFile],
+      tsConfigPath: tsConfig,
+      signature: { parameters: "first-only" },
+      schema: { transport: "x-fn-schema-transport" },
+    });
+    const buf = result.signatures.find((s) => s.id === "takeBuffer")!;
+    expect(buf.input).toMatchObject({
+      type: "string",
+      contentEncoding: "base64",
+      "x-fn-schema-transport": "base64",
+    });
+    expect(buf.output).toMatchObject({
+      "x-fn-schema-transport": "base64",
+    });
+  });
+
+  it("sourceLocations attaches x-fn-schema-source to named definitions", async () => {
+    const result = await runCoverage({
+      files: [coverageFile],
+      tsConfigPath: tsConfig,
+      signature: { parameters: "first-only" },
+      schema: { sourceLocations: "x-fn-schema-source" },
+    });
+    const def = result.definitions.DateInput as Record<string, unknown>;
+    const src = def?.["x-fn-schema-source"];
+    expect(typeof src).toBe("string");
+    expect(src as string).toMatch(/coverage\.ts:\d+:\d+$/);
+  });
+
+  it("does NOT rewrite well-known names inside string-literal types", async () => {
+    const result = await runCoverage();
+    const sig = result.signatures.find((s) => s.id === "takeLiteralUnion")!;
+    const input = sig.input as Record<string, unknown>;
+    // Must remain a string-literal union, not a sentinel-replaced object
+    expect(input.type).toBe("string");
+    expect(input.enum).toEqual(["Date", "URL", "RegExp"]);
+  });
+
+  it("all three keywords default off when not requested", async () => {
+    const result = await runCoverage();
+    const date = result.signatures.find((s) => s.id === "takeDate")!;
+    expect(
+      (date.output as Record<string, unknown>)["x-fn-schema-ts"],
+    ).toBeUndefined();
+    expect(
+      (date.output as Record<string, unknown>)["x-fn-schema-transport"],
+    ).toBeUndefined();
+    const def = result.definitions.DateInput as Record<string, unknown>;
+    expect(def?.["x-fn-schema-source"]).toBeUndefined();
+    expect(def?.["x-fn-schema-ts"]).toBeUndefined();
+  });
+});

@@ -31,6 +31,20 @@ export const LOSSY_REASONS: Record<string, string> = {
   BigInt: "JSON numbers cannot represent the full bigint range",
 };
 
+/**
+ * Wire-format hint per TS type. `multipart` = raw upload; `base64` = JSON
+ * payload; `json` = already JSON. Drives the `transport` extension keyword.
+ */
+export type TransportHint = "multipart" | "base64" | "json";
+
+export const WELL_KNOWN_TRANSPORT: Record<string, TransportHint> = {
+  File: "multipart",
+  Blob: "multipart",
+  Buffer: "base64",
+  Uint8Array: "base64",
+  ArrayBuffer: "base64",
+};
+
 export function sentinelTypeAlias(name: string): string {
   return `__FnSchemaMap_${name.replace(/[^A-Za-z0-9_]/g, "_")}`;
 }
