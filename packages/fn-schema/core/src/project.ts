@@ -145,6 +145,7 @@ async function runExtract(
         output: finalised.output,
         async: fn.async,
         generic: fn.generic,
+        coverage: finalised.coverage,
       });
       if (finalised.definitions) {
         for (const [k, v] of Object.entries(finalised.definitions)) {

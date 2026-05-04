@@ -119,6 +119,51 @@ describe("type-mapper coverage", () => {
     expect(branded.output).toEqual({ type: "string", format: "uuid" });
   });
 
+  it("CoverageReport carries per-occurrence context (side, paramIndex, paramName)", async () => {
+    const result = await extract({
+      files: [coverageFile],
+      tsConfigPath: tsConfig,
+      // No `parameters: "first-only"` here — we want both array slots and the return slot
+      // visible so a single type appearing in input AND output produces two occurrences.
+    });
+
+    type CoverageEntry = {
+      name: string;
+      count: number;
+      occurrences: {
+        side: "input" | "output";
+        overloadIndex: number;
+        paramIndex?: number;
+        paramName?: string;
+      }[];
+    };
+
+    // takeDate(input: DateInput): Date — Date appears as the return; DateInput input is its own slot
+    const dateSig = result.signatures.find((s) => s.id === "takeDate");
+    expect(dateSig).toBeDefined();
+    type Coverage = { mapped: CoverageEntry[] };
+    const dateCoverage = (dateSig as unknown as { coverage: Coverage })
+      .coverage;
+    const dateEntry = dateCoverage.mapped.find((m) => m.name === "Date");
+    expect(dateEntry).toBeDefined();
+    expect(dateEntry?.count).toBe(1);
+    expect(dateEntry?.occurrences[0]).toMatchObject({
+      side: "output",
+      overloadIndex: 0,
+    });
+
+    // takeBuffer(b: Buffer): Uint8Array — Buffer is a single input occurrence with paramIndex=0
+    const bufSig = result.signatures.find((s) => s.id === "takeBuffer");
+    const bufCoverage = (bufSig as unknown as { coverage: Coverage }).coverage;
+    const bufEntry = bufCoverage.mapped.find((m) => m.name === "Buffer");
+    expect(bufEntry?.occurrences[0]).toMatchObject({
+      side: "input",
+      overloadIndex: 0,
+      paramIndex: 0,
+      paramName: "b",
+    });
+  });
+
   it("emits TYPE_MAPPED diagnostics for every mapped reference", async () => {
     const result = await runCoverage();
     const mapped = result.diagnostics.filter((d) => d.code === "TYPE_MAPPED");

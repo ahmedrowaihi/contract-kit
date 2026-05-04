@@ -67,10 +67,35 @@ export interface SignaturePair {
   coverage?: CoverageReport;
 }
 
+/**
+ * Where a coverage note fired — which overload, which side of the signature,
+ * and (for input parameters) which slot. Lets downstream tools render
+ * per-occurrence diagnostics instead of collapsing repeats by type name.
+ */
+export interface CoverageOccurrence {
+  side: "input" | "output";
+  /** Index into the resolved overload list (0 = first / oldest). */
+  overloadIndex: number;
+  /** Parameter slot index (input only). */
+  paramIndex?: number;
+  /** Parameter binding name (input only). */
+  paramName?: string;
+}
+
+export interface CoverageEntry {
+  name: string;
+  count: number;
+  occurrences: CoverageOccurrence[];
+}
+
+export interface LossyCoverageEntry extends CoverageEntry {
+  reason: string;
+}
+
 export interface CoverageReport {
-  mapped: { name: string }[];
-  lossy: { name: string; reason: string }[];
-  notRepresentable: { name: string }[];
+  mapped: CoverageEntry[];
+  lossy: LossyCoverageEntry[];
+  notRepresentable: CoverageEntry[];
 }
 
 export interface Extractor {
@@ -266,6 +291,7 @@ export interface SignatureEntry {
   output: JSONSchema;
   async: boolean;
   generic: boolean;
+  coverage?: CoverageReport;
 }
 
 export interface ExtractStats {

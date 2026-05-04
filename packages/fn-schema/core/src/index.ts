@@ -6,6 +6,9 @@ export { resolveNaming } from "./naming.js";
 export { createProject } from "./project.js";
 export { type ParsedTarget, parseTarget } from "./targets.js";
 export type {
+  CoverageEntry,
+  CoverageOccurrence,
+  CoverageReport,
   Diagnostic,
   DiagnosticCode,
   DiagnosticSeverity,
@@ -24,6 +27,7 @@ export type {
   InMemorySource,
   JSDocInfo,
   JSONSchema,
+  LossyCoverageEntry,
   NamePattern,
   NamingStrategy,
   OverloadStrategy,

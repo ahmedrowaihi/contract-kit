@@ -1,5 +1,6 @@
 import path from "node:path";
 import type {
+  CoverageOccurrence,
   JSONSchema,
   OverloadStrategy,
   ResolvedSchemaOptions,
@@ -177,17 +178,84 @@ export function buildSchemas(
     input,
     output: mappedOutput,
     definitions,
-    coverage: {
-      mapped: uniqueNames(allNotes, "well-known").map((name) => ({ name })),
-      lossy: allNotes
-        .filter(
-          (n): n is Extract<AliasNote, { kind: "lossy" }> => n.kind === "lossy",
-        )
-        .map((n) => ({ name: n.name, reason: n.reason })),
-      notRepresentable: uniqueNames(allNotes, "not-representable").map(
-        (name) => ({ name }),
-      ),
-    },
+    coverage: buildCoverageReport(filteredOverloads),
+  };
+}
+
+interface CoverageBuckets {
+  mapped: Map<string, CoverageOccurrence[]>;
+  lossy: Map<string, { reason: string; occurrences: CoverageOccurrence[] }>;
+  notRepresentable: Map<string, CoverageOccurrence[]>;
+}
+
+function buildCoverageReport(overloads: OverloadSignature[]) {
+  const buckets: CoverageBuckets = {
+    mapped: new Map(),
+    lossy: new Map(),
+    notRepresentable: new Map(),
+  };
+
+  const recordMapped = (name: string, occ: CoverageOccurrence) => {
+    const list = buckets.mapped.get(name);
+    if (list) list.push(occ);
+    else buckets.mapped.set(name, [occ]);
+  };
+  const recordLossy = (
+    name: string,
+    reason: string,
+    occ: CoverageOccurrence,
+  ) => {
+    const cur = buckets.lossy.get(name);
+    if (cur) cur.occurrences.push(occ);
+    else buckets.lossy.set(name, { reason, occurrences: [occ] });
+  };
+  const recordNotRepresentable = (name: string, occ: CoverageOccurrence) => {
+    const list = buckets.notRepresentable.get(name);
+    if (list) list.push(occ);
+    else buckets.notRepresentable.set(name, [occ]);
+  };
+
+  const dispatch = (note: AliasNote, occ: CoverageOccurrence) => {
+    if (note.kind === "well-known") recordMapped(note.name, occ);
+    else if (note.kind === "lossy") recordLossy(note.name, note.reason, occ);
+    else recordNotRepresentable(note.name, occ);
+  };
+
+  for (let oi = 0; oi < overloads.length; oi++) {
+    const o = overloads[oi]!;
+    for (let pi = 0; pi < o.parameters.length; pi++) {
+      const p = o.parameters[pi]!;
+      const occ: CoverageOccurrence = {
+        side: "input",
+        overloadIndex: oi,
+        paramIndex: pi,
+        paramName: p.name,
+      };
+      for (const n of p.alias.notes) dispatch(n, occ);
+    }
+    const occ: CoverageOccurrence = { side: "output", overloadIndex: oi };
+    for (const n of o.returnAlias.notes) dispatch(n, occ);
+  }
+
+  return {
+    mapped: [...buckets.mapped].map(([name, occurrences]) => ({
+      name,
+      count: occurrences.length,
+      occurrences,
+    })),
+    lossy: [...buckets.lossy].map(([name, v]) => ({
+      name,
+      reason: v.reason,
+      count: v.occurrences.length,
+      occurrences: v.occurrences,
+    })),
+    notRepresentable: [...buckets.notRepresentable].map(
+      ([name, occurrences]) => ({
+        name,
+        count: occurrences.length,
+        occurrences,
+      }),
+    ),
   };
 }
 
