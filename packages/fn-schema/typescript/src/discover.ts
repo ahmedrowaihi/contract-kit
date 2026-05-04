@@ -31,21 +31,15 @@ export interface OverloadSignature {
 }
 
 /**
- * Internal handle used during discovery and schema generation. Carries
- * pre-resolved type expressions + their required imports so the schema
- * synthesis step is purely string assembly — no further ts-morph work needed.
+ * Pre-resolved handle the schema step assembles into a virtual file. The
+ * implementation signature is mirrored at the top level for convenience;
+ * `overloads` always includes it as its last entry.
  */
 export interface DiscoveredFunction extends FunctionInfo {
   sourceFilePath: string;
   importable: boolean;
-  /** Implementation signature (or the only signature when no overloads). */
   resolvedParameters: ResolvedParameter[];
   returnAlias: ResolvedAlias;
-  /**
-   * All overload signatures. Always non-empty: contains at least the
-   * implementation signature (also reflected in `resolvedParameters` /
-   * `returnAlias`). Older overloads come first.
-   */
   overloads: OverloadSignature[];
 }
 
@@ -82,7 +76,6 @@ function discoverInFile(
       out.push(info);
       continue;
     }
-    // Object-literal methods: `export const api = { create(input: X) {} }`
     out.push(...describeObjectLiteralMembers(vd, filePath, sf, virtualDir));
   }
 
@@ -109,8 +102,6 @@ function discoverInFile(
 
   return out;
 }
-
-/* ─────────────────────────── declarations ────────────────────────── */
 
 function describeFunctionDeclaration(
   fd: FunctionDeclaration,
@@ -199,7 +190,6 @@ function describeObjectLiteralMembers(
   const out: DiscoveredFunction[] = [];
   const obj = init as ObjectLiteralExpression;
   for (const prop of obj.getProperties()) {
-    // `create(input: X) { ... }` shorthand
     if (Node.isMethodDeclaration(prop)) {
       const memberName = prop.getName();
       const sig = describeSignature(prop, sf, virtualDir);
@@ -223,7 +213,6 @@ function describeObjectLiteralMembers(
       });
       continue;
     }
-    // `create: (input: X) => ...` or `create: function(...) {}`
     if (Node.isPropertyAssignment(prop)) {
       const memberInit = prop.getInitializer();
       if (
@@ -245,8 +234,6 @@ function describeObjectLiteralMembers(
         async: fn.isAsync(),
         generic: fn.getTypeParameters().length > 0,
         parameters: sig.parameters.map(stripAlias),
-        // PropertyAssignment doesn't expose getJsDocs(); skip — JSDoc on
-        // the inner function expression is rare in practice.
         jsDoc: undefined,
         className: containerName,
         sourceFilePath: filePath,
@@ -351,8 +338,7 @@ function describeSignature(
   const resolved: ResolvedParameter[] = [];
   for (let i = 0; i < params.length; i++) {
     const p = params[i]!;
-    // Skip the `this` parameter — TS uses it only for type narrowing,
-    // it isn't a real argument.
+    // `this` is a TS-only narrowing parameter, not a real arg.
     if (i === 0 && p.getName() === "this") continue;
     resolved.push(resolveParameter(p, resolved.length, hostFile, virtualDir));
   }
@@ -395,12 +381,9 @@ function stripAlias(p: ResolvedParameter): ParameterInfo {
 }
 
 /**
- * A function should be treated as generic when EITHER its declaration carries
- * type parameters OR any resolved parameter / return references an
- * unresolved type parameter (e.g. methods on a generic class:
- * `class Box<T> { get(): T }` has 0 type-params at the method level but `T`
- * still escapes into the schema). Without this, buildSchemas() would attempt
- * extraction and fail at runtime with a tjsg parser error.
+ * Methods on generic classes (`class Box<T> { get(): T }`) declare zero
+ * type parameters at the method level but `T` still escapes into the
+ * resolved signature; treat them as generic so the skip path triggers.
  */
 function hasUnresolvedGenerics(
   declaredTypeParamCount: number,
@@ -414,8 +397,6 @@ function hasUnresolvedGenerics(
   );
 }
 
-/* ─────────────────────────── overload collection ────────────────────── */
-
 function collectFunctionOverloads(
   impl: FunctionDeclaration,
 ): FunctionDeclaration[] {
@@ -427,8 +408,6 @@ function collectMethodOverloads(impl: MethodDeclaration): MethodDeclaration[] {
   const overloads = impl.getOverloads();
   return [...overloads, impl];
 }
-
-/* ─────────────────────────── misc ────────────────────── */
 
 function positionOf(node: Node): { line: number; column: number } {
   const sf = node.getSourceFile();

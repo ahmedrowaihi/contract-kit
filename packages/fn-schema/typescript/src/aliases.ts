@@ -1,4 +1,5 @@
 import path from "node:path";
+import type { JSONSchema } from "@ahmedrowaihi/fn-schema-core";
 import {
   type ImportDeclaration,
   Node,
@@ -7,39 +8,44 @@ import {
   type Type,
   type TypeNode,
 } from "ts-morph";
+import {
+  LOSSY_REASONS,
+  NOT_REPRESENTABLE,
+  sentinelTypeAlias,
+  WELL_KNOWN_NAMES,
+} from "./well-known.js";
 
 export type ImportKind = "named" | "default" | "namespace";
 
 export interface AliasImport {
-  /** Module specifier as written (relative or package). */
   module: string;
-  /** Local identifier name brought into the virtual file. */
   name: string;
-  /** Whether to import as a type-only specifier. */
   typeOnly: boolean;
-  /** Specifier shape — distinguishes `{ X }`, `X`, `* as X`. */
   kind: ImportKind;
 }
 
+export type AliasNote =
+  | { kind: "well-known"; name: string; defaultSchema?: JSONSchema }
+  | { kind: "not-representable"; name: string }
+  | { kind: "lossy"; name: string; reason: string };
+
+const PRIMITIVE_DEFAULTS: Record<string, JSONSchema> = {
+  string: { type: "string" },
+  number: { type: "number" },
+  boolean: { type: "boolean" },
+  null: { type: "null" },
+  bigint: { type: "integer" },
+};
+
 export interface ResolvedAlias {
-  /** Source-text expression to put on the right side of `type Foo = …`. */
   text: string;
-  /** Imports that must be present in the virtual file for `text` to resolve. */
   imports: AliasImport[];
-  /** True when the type contains unresolved generic parameters. */
   hasUnresolvedGenerics: boolean;
+  notes: AliasNote[];
 }
 
-/**
- * Resolve a parameter / return Type from a host SourceFile into:
- *   • a bare type expression (no `import("…").X` qualifications), and
- *   • the explicit imports needed to bring referenced identifiers into scope.
- *
- * Strategy: prefer the source-level TypeNode when present (preserves user
- * intent — utility types, unions, mapped types). Walk it for type references
- * and resolve each via the type checker. Fall back to the resolved Type
- * formatted with bare names when no annotation exists.
- */
+const TYPE_FLAG_ES_SYMBOL = 4096;
+
 export function resolveTypeExpression(
   node: Node,
   type: Type,
@@ -48,30 +54,51 @@ export function resolveTypeExpression(
   typeNode?: TypeNode,
 ): ResolvedAlias {
   const acc = new ImportAccumulator(hostFile, virtualDir);
+  const notes: AliasNote[] = [];
+
+  if (!type.isLiteral()) {
+    const flags = type.compilerType.flags;
+    if ((flags & TYPE_FLAG_ES_SYMBOL) !== 0) {
+      notes.push({ kind: "not-representable", name: "symbol" });
+    }
+  }
 
   if (typeNode) {
-    collectFromTypeNode(typeNode, acc);
+    collectFromTypeNode(typeNode, acc, notes);
+    const { text, brand, primitive } = stripBrand(typeNode.getText());
+    if (brand) {
+      notes.push({
+        kind: "well-known",
+        name: brand,
+        defaultSchema: primitive ? PRIMITIVE_DEFAULTS[primitive] : undefined,
+      });
+    }
     return {
-      text: typeNode.getText(),
+      text: rewriteWellKnown(text, notes),
       imports: acc.toList(),
       hasUnresolvedGenerics: typeContainsTypeParameter(type),
+      notes,
     };
   }
 
-  // No source annotation — derive from the resolved Type.
   const text = type.getText(node);
   if (text.includes("import(")) {
-    // Strip `import("path").X` qualifications and collect imports for them.
-    return rewriteImportQualifications(text, acc, hostFile, virtualDir, type);
+    return rewriteImportQualifications(
+      text,
+      acc,
+      hostFile,
+      virtualDir,
+      type,
+      notes,
+    );
   }
   return {
-    text,
+    text: rewriteWellKnown(text, notes),
     imports: [],
     hasUnresolvedGenerics: typeContainsTypeParameter(type),
+    notes,
   };
 }
-
-/* ────────────────────────── identifier walking ───────────────────────── */
 
 interface AccEntry {
   typeOnly: boolean;
@@ -80,7 +107,6 @@ interface AccEntry {
 
 class ImportAccumulator {
   private readonly entries = new Map<string, Map<string, AccEntry>>();
-  /** Exposed for retargeting helper — the virtual directory we render into. */
   readonly virtualDirRef: string;
   constructor(
     private readonly hostFile: SourceFile,
@@ -113,8 +139,6 @@ class ImportAccumulator {
       this.entries.set(module, names);
     }
     const prior = names.get(name);
-    // Once we've seen a non-type import, don't downgrade. Specifier kind
-    // is set on first sight — re-imports keep the original shape.
     names.set(name, {
       typeOnly: prior?.typeOnly === false ? false : typeOnly,
       kind: prior?.kind ?? kind,
@@ -132,15 +156,19 @@ class ImportAccumulator {
   }
 }
 
-function collectFromTypeNode(node: TypeNode, acc: ImportAccumulator): void {
+function collectFromTypeNode(
+  node: TypeNode,
+  acc: ImportAccumulator,
+  notes: AliasNote[],
+): void {
   const visit = (n: Node): void => {
     if (Node.isTypeReference(n)) {
       const nameNode = n.getTypeName();
       const ident = leftmostIdentifier(nameNode);
-      if (ident) registerIdentifier(ident, acc);
+      if (ident) registerIdentifier(ident, acc, notes);
     } else if (Node.isExpressionWithTypeArguments(n)) {
       const expr = n.getExpression();
-      if (Node.isIdentifier(expr)) registerIdentifier(expr, acc);
+      if (Node.isIdentifier(expr)) registerIdentifier(expr, acc, notes);
     }
     n.forEachChild(visit);
   };
@@ -153,7 +181,11 @@ function leftmostIdentifier(node: Node): Node | null {
   return null;
 }
 
-function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
+function registerIdentifier(
+  ident: Node,
+  acc: ImportAccumulator,
+  notes: AliasNote[],
+): void {
   if (!Node.isIdentifier(ident)) return;
   const name = ident.getText();
   if (isTsLibraryName(name)) return;
@@ -162,33 +194,32 @@ function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
   const sourceFile = ident.getSourceFile();
   const decls = ident.getSymbol()?.getDeclarations() ?? [];
 
-  // Skip ambient symbols (Blob, AbortSignal, Buffer, …) — they live in
-  // .d.ts files and are globally available; importing them from the host
-  // would emit `import { Blob }` which doesn't exist as a real export.
-  if (
+  const allAmbient =
     decls.length > 0 &&
-    decls.every((d) => d.getSourceFile().isDeclarationFile())
-  ) {
+    decls.every((d) => d.getSourceFile().isDeclarationFile());
+
+  if (allAmbient && WELL_KNOWN_NAMES.has(name)) {
+    notes.push({ kind: "well-known", name });
     return;
   }
+  if (allAmbient && NOT_REPRESENTABLE.has(name)) {
+    notes.push({ kind: "not-representable", name });
+    return;
+  }
+  if (allAmbient) return;
 
   for (const decl of decls) {
-    // Check ImportDeclaration ancestor FIRST — an import binding's source
-    // file is the host, so the local-declaration check below would
-    // misclassify imported types as "declared in host".
+    // Imported binding's declaration source file is the host, so check the
+    // import-ancestor branch before the host-declared branch.
     const importDecl = decl.getFirstAncestorByKind(
       SyntaxKind.ImportDeclaration,
     );
     if (importDecl) {
       const spec = (importDecl as ImportDeclaration).getModuleSpecifierValue();
       if (spec) {
-        // Resolve aliased imports back to the exported name so the virtual
-        // file uses the *exported* identifier, not the host's local alias.
-        const exportedName = exportedNameFromDecl(decl, name);
-        const reTargeted = retargetSpecifier(spec, sourceFile, acc);
         acc.addExternal(
-          reTargeted,
-          exportedName,
+          retargetSpecifier(spec, sourceFile, acc),
+          exportedNameFromDecl(decl, name),
           true,
           importKindFromDecl(decl),
         );
@@ -197,45 +228,41 @@ function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
     }
 
     const declSf = decl.getSourceFile();
-    // Genuinely declared in the host: re-import from host (named, type-only).
-    if (declSf === sourceFile) {
+    if (declSf === sourceFile || !declSf.isDeclarationFile()) {
+      const branded = detectBrandedAlias(decl);
+      if (branded) {
+        notes.push({
+          kind: "well-known",
+          name,
+          defaultSchema: branded.primitive
+            ? PRIMITIVE_DEFAULTS[branded.primitive]
+            : undefined,
+        });
+        return;
+      }
+      if (declSf === sourceFile) {
+        acc.addLocal(name, true, "named");
+        return;
+      }
       acc.addLocal(name, true, "named");
       return;
     }
-
-    // Symbol resolved to a non-host file with no import in the host (likely
-    // an ambient/global from another .d.ts). Skip rather than emit a broken
-    // self-import.
     if (declSf.isDeclarationFile()) return;
-
-    // Anything else is unexpected — fall back to host re-import.
-    acc.addLocal(name, true, "named");
-    return;
   }
 }
 
-/**
- * For `import { Foo as Bar } from "x"`, the host references `Bar`, but the
- * exported name on the module is `Foo`. The virtual file must use the
- * exported name to resolve correctly. This helper walks the ImportSpecifier
- * to recover the original name when an alias is present.
- */
+// `import { Foo as Bar }` — the virtual file must use the exported name `Foo`,
+// not the host's local alias `Bar`.
 function exportedNameFromDecl(decl: Node, fallback: string): string {
   if (Node.isImportSpecifier(decl)) {
-    // ts-morph 28 exposes the underlying TS node directly; the
-    // `propertyName` slot holds the exported name when the import is aliased.
     const propertyName = decl.compilerNode.propertyName;
     if (propertyName) return propertyName.text;
   }
   return fallback;
 }
 
-/**
- * Translate a module specifier written from the host's POV into one the
- * virtual file can resolve. Bare specifiers (packages) pass through; relative
- * specifiers get resolved against the host directory then re-expressed as
- * relative to the virtual directory.
- */
+// Relative specifiers are written from the host's POV; the virtual file lives
+// in a sibling directory and needs them re-expressed.
 function retargetSpecifier(
   spec: string,
   hostFile: SourceFile,
@@ -264,8 +291,6 @@ function isTypeParameter(ident: Node): boolean {
 }
 
 function isTsLibraryName(name: string): boolean {
-  // Built-in names that ts-json-schema-generator handles natively or that
-  // don't need an import. Conservative — better to over-import than miss.
   return TS_LIB.has(name);
 }
 
@@ -293,14 +318,10 @@ const TS_LIB = new Set<string>([
   "Set",
   "WeakMap",
   "WeakSet",
-  "Date",
-  "RegExp",
   "Error",
   "String",
   "Number",
   "Boolean",
-  "Symbol",
-  "BigInt",
   "Object",
   "Function",
   "Uppercase",
@@ -317,38 +338,94 @@ function typeContainsTypeParameter(type: Type): boolean {
   return false;
 }
 
-/* ──────────────── fallback for inferred (no-typeNode) types ──────────────── */
-
 function rewriteImportQualifications(
   text: string,
   acc: ImportAccumulator,
   hostFile: SourceFile,
   virtualDir: string,
   _type: Type,
+  notes: AliasNote[],
 ): ResolvedAlias {
-  // Replace each `import("/abs/path").Identifier` with `Identifier` and
-  // register an import sourced from that path.
   const importRe = /import\("([^"]+)"\)\.([A-Za-z_$][\w$]*)/g;
   const rewritten = text.replace(importRe, (_match, modulePath, name) => {
-    // Heuristic: if the module path matches the host file (modulo extension),
-    // re-import from the host. Otherwise import from the absolute path.
     const hostNoExt = hostFile.getFilePath().replace(/\.tsx?$/, "");
     if (path.normalize(modulePath) === path.normalize(hostNoExt)) {
       acc.addLocal(name);
     } else {
-      const spec = relSpecifierFromAbs(modulePath, virtualDir);
-      acc.addExternal(spec, name);
+      acc.addExternal(relSpecifierFromAbs(modulePath, virtualDir), name);
     }
     return name;
   });
   return {
-    text: rewritten,
+    text: rewriteWellKnown(rewritten, notes),
     imports: acc.toList(),
     hasUnresolvedGenerics: false,
+    notes,
   };
 }
 
-/* ──────────────────────── module-specifier helpers ──────────────────────── */
+function rewriteWellKnown(text: string, notes: AliasNote[]): string {
+  let out = text;
+  const dynamicNames = new Set(
+    notes.filter((n) => n.kind === "well-known").map((n) => n.name),
+  );
+  const lossySeen = new Set(
+    notes.filter((n) => n.kind === "lossy").map((n) => n.name),
+  );
+  const allNames = new Set<string>([...WELL_KNOWN_NAMES, ...dynamicNames]);
+  for (const name of allNames) {
+    const re = new RegExp(`\\b${escapeRegExp(name)}\\b`, "g");
+    if (re.test(out)) {
+      if (!dynamicNames.has(name)) {
+        notes.push({ kind: "well-known", name });
+        dynamicNames.add(name);
+      }
+      const lossyReason = LOSSY_REASONS[name];
+      if (lossyReason && !lossySeen.has(name)) {
+        notes.push({ kind: "lossy", name, reason: lossyReason });
+        lossySeen.add(name);
+      }
+      out = out.replace(
+        new RegExp(`\\b${escapeRegExp(name)}\\b`, "g"),
+        sentinelTypeAlias(name),
+      );
+    }
+  }
+  return out;
+}
+
+function stripBrand(text: string): {
+  text: string;
+  brand: string | null;
+  primitive: string | null;
+} {
+  const brandRe =
+    /^(.+?)\s*&\s*\{\s*(?:readonly\s+)?(?:__brand|_brand|brand|kind)\s*:\s*"([^"]+)"\s*;?\s*\}\s*$/;
+  const m = text.match(brandRe);
+  if (!m) return { text, brand: null, primitive: null };
+  const stripped = m[1]!.trim();
+  return { text: stripped, brand: m[2]!, primitive: stripped };
+}
+
+/**
+ * Detect named branded aliases (`type UserId = string & { __brand: "UserId" }`).
+ * The brand-text regex only catches inline forms; this resolves the alias's
+ * RHS via ts-morph and runs the same matcher against it.
+ */
+function detectBrandedAlias(
+  decl: Node,
+): { brand: string; primitive: string | null } | null {
+  if (!Node.isTypeAliasDeclaration(decl)) return null;
+  const rhs = decl.getTypeNode();
+  if (!rhs) return null;
+  const { brand, primitive } = stripBrand(rhs.getText());
+  if (!brand) return null;
+  return { brand, primitive };
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 function relSpecifier(absHostFile: string, virtualDir: string): string {
   const noExt = absHostFile.replace(/\.tsx?$/, "");

@@ -64,6 +64,13 @@ export interface SignaturePair {
   input: JSONSchema | JSONSchema[];
   output: JSONSchema;
   definitions?: Record<string, JSONSchema>;
+  coverage?: CoverageReport;
+}
+
+export interface CoverageReport {
+  mapped: { name: string }[];
+  lossy: { name: string; reason: string }[];
+  notRepresentable: { name: string }[];
 }
 
 export interface Extractor {
@@ -157,6 +164,12 @@ export interface SchemaOptions {
   additionalProperties?: boolean;
   encodeRefs?: boolean;
   expose?: "all" | "export" | "none";
+  /**
+   * Map TS type names to canonical JSON Schema. Merged on top of built-ins
+   * (Date, URL, RegExp, File, Blob, Buffer, Uint8Array, ArrayBuffer, bigint).
+   * User entries override built-ins.
+   */
+  typeMappers?: Record<string, JSONSchema>;
 }
 
 export interface ResolvedSchemaOptions {
@@ -167,6 +180,7 @@ export interface ResolvedSchemaOptions {
   additionalProperties: boolean;
   encodeRefs: boolean;
   expose: "all" | "export" | "none";
+  typeMappers: Record<string, JSONSchema>;
 }
 
 /* ─────────────────────────────── Hooks ───────────────────────────── */
@@ -256,7 +270,10 @@ export type DiagnosticCode =
   | "FILE_READ_ERROR"
   | "INVALID_TARGET"
   | "DUPLICATE_ID"
-  | "NO_EXTRACTOR";
+  | "NO_EXTRACTOR"
+  | "TYPE_MAPPED"
+  | "LOSSY_MAPPING"
+  | "NOT_REPRESENTABLE";
 
 export interface Diagnostic {
   severity: DiagnosticSeverity;

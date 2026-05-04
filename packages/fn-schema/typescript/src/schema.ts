@@ -16,12 +16,17 @@ import {
 } from "ts-json-schema-generator";
 import type { Project as TsMorphProject } from "ts-morph";
 import type { Program } from "typescript";
-import { type AliasImport, renderImports } from "./aliases.js";
+import { type AliasImport, type AliasNote, renderImports } from "./aliases.js";
 import type {
   DiscoveredFunction,
   OverloadSignature,
   ResolvedParameter,
 } from "./discover.js";
+import {
+  detectSentinel,
+  renderSentinelDeclaration,
+  WELL_KNOWN_SCHEMAS,
+} from "./well-known.js";
 
 export const VIRTUAL_DIR = "__fn_schema_virtual__";
 const INPUT_PREFIX = "__In_";
@@ -31,6 +36,7 @@ interface BuildContext {
   project: TsMorphProject;
   signature: ResolvedSignatureOptions;
   schema: ResolvedSchemaOptions;
+  typeMappers?: Record<string, JSONSchema>;
 }
 
 export class SignatureSkipped extends Error {
@@ -59,11 +65,27 @@ export function buildSchemas(
 
   const overloads = pickOverloads(fn.overloads, ctx.signature.overloads);
   const skip = ctx.signature.skipParameter;
-  // Apply skipParameter per-overload — preserves correctness when arities differ.
   const filteredOverloads: OverloadSignature[] = overloads.map((o) => ({
     parameters: skip ? o.parameters.filter((p) => !skip(p)) : o.parameters,
     returnAlias: o.returnAlias,
   }));
+
+  const allNotes: AliasNote[] = filteredOverloads.flatMap((o) => [
+    ...o.parameters.flatMap((p) => p.alias.notes),
+    ...o.returnAlias.notes,
+  ]);
+  const wellKnownNames = uniqueNames(allNotes, "well-known");
+  const inferredDefaults: Record<string, JSONSchema> = {};
+  for (const n of allNotes) {
+    if (n.kind === "well-known" && n.defaultSchema) {
+      inferredDefaults[n.name] = n.defaultSchema;
+    }
+  }
+  const mappers: Record<string, JSONSchema> = {
+    ...inferredDefaults,
+    ...WELL_KNOWN_SCHEMAS,
+    ...(ctx.typeMappers ?? {}),
+  };
 
   const maxArity = filteredOverloads.reduce(
     (max, o) => Math.max(max, o.parameters.length),
@@ -75,12 +97,12 @@ export function buildSchemas(
     filteredOverloads,
     maxArity,
     ctx.signature,
+    wellKnownNames,
   );
   ctx.project.createSourceFile(virtualPath, source, { overwrite: true });
 
   const config = buildGeneratorConfig(virtualPath, ctx.schema);
-  // ts-morph bundles its own `typescript` — runtime objects are correct shape
-  // but module identities differ. Cast.
+  /** ts-morph bundles its own `typescript`; runtime shape matches but module identities differ. */
   const program = ctx.project.getProgram().compilerObject as unknown as Program;
   const parser = createParser(program, config);
   const formatter = createFormatter(config);
@@ -97,8 +119,14 @@ export function buildSchemas(
   mergeDefinitions(definitions, rawOutput.definitions);
   const output = stripWrapper(rawOutput);
 
-  // The "primary" signature for arity / param-name / optional metadata when
-  // the schema strategy needs it (object form). Last signature is the impl.
+  for (let i = 0; i < inputSchemas.length; i++) {
+    inputSchemas[i] = applyTypeMappers(inputSchemas[i]!, mappers) as JSONSchema;
+  }
+  const mappedOutput = applyTypeMappers(output, mappers) as JSONSchema;
+  for (const k of Object.keys(definitions)) {
+    definitions[k] = applyTypeMappers(definitions[k]!, mappers) as JSONSchema;
+  }
+
   const primary = filteredOverloads[filteredOverloads.length - 1]!;
 
   const input: JSONSchema | JSONSchema[] = (() => {
@@ -113,10 +141,48 @@ export function buildSchemas(
     }
   })();
 
-  return { input, output, definitions };
+  return {
+    input,
+    output: mappedOutput,
+    definitions,
+    coverage: {
+      mapped: uniqueNames(allNotes, "well-known").map((name) => ({ name })),
+      lossy: allNotes
+        .filter(
+          (n): n is Extract<AliasNote, { kind: "lossy" }> => n.kind === "lossy",
+        )
+        .map((n) => ({ name: n.name, reason: n.reason })),
+      notRepresentable: uniqueNames(allNotes, "not-representable").map(
+        (name) => ({ name }),
+      ),
+    },
+  };
 }
 
-/* ──────────────────────────── overload pick ────────────────────────── */
+function uniqueNames(notes: AliasNote[], kind: AliasNote["kind"]): string[] {
+  const seen = new Set<string>();
+  for (const n of notes) if (n.kind === kind) seen.add(n.name);
+  return [...seen];
+}
+
+function applyTypeMappers(
+  schema: unknown,
+  mappers: Record<string, JSONSchema>,
+): unknown {
+  if (Array.isArray(schema)) {
+    return schema.map((s) => applyTypeMappers(s, mappers));
+  }
+  if (!schema || typeof schema !== "object") return schema;
+  const sentinel = detectSentinel(schema);
+  if (sentinel && mappers[sentinel]) {
+    return { ...mappers[sentinel] };
+  }
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(schema as Record<string, unknown>)) {
+    out[k] = applyTypeMappers(v, mappers);
+  }
+  return out;
+}
 
 function pickOverloads(
   overloads: OverloadSignature[],
@@ -133,8 +199,6 @@ function pickOverloads(
       return overloads;
   }
 }
-
-/* ─────────────────────────── virtual source ────────────────────────── */
 
 function virtualFileFor(fn: DiscoveredFunction): string {
   const dir = virtualDirFor(fn.sourceFilePath);
@@ -153,6 +217,7 @@ function renderVirtualSource(
   overloads: OverloadSignature[],
   maxArity: number,
   signature: ResolvedSignatureOptions,
+  wellKnownNames: string[],
 ): string {
   const allImports: AliasImport[] = overloads.flatMap((o) => [
     ...o.parameters.flatMap((p) => p.alias.imports),
@@ -162,6 +227,9 @@ function renderVirtualSource(
 
   const lines: string[] = [];
   if (importBlock) lines.push(importBlock);
+  for (const name of wellKnownNames) {
+    lines.push(renderSentinelDeclaration(name));
+  }
 
   for (let i = 0; i < maxArity; i++) {
     const variants = overloads.map((o) =>
@@ -181,13 +249,10 @@ function renderVirtualSource(
 
 function paramExpr(
   p: ResolvedParameter | undefined,
-  signature: ResolvedSignatureOptions,
+  _signature: ResolvedSignatureOptions,
 ): string {
   if (!p) return "undefined";
   const base = p.alias.text;
-  // Optional params should always allow undefined so a union with another
-  // overload that simply lacks the slot stays compatible.
-  if (p.optional && !signature.unwrapPromise) return `(${base}) | undefined`;
   if (p.optional) return `(${base}) | undefined`;
   return `(${base})`;
 }
@@ -197,8 +262,6 @@ function union(parts: string[]): string {
   if (unique.length === 1) return unique[0]!;
   return unique.join(" | ");
 }
-
-/* ──────────────────────────── tjsg config ──────────────────────────── */
 
 function buildGeneratorConfig(
   virtualPath: string,
@@ -231,7 +294,7 @@ function mergeDefinitions(
 ): void {
   if (!source) return;
   for (const [k, v] of Object.entries(source)) {
-    // JSON Schema definitions can be `true` / `false` — coerce to object form.
+    // JSON Schema allows `true`/`false` as a definition shorthand.
     if (typeof v === "boolean") {
       target[k] = v ? {} : ({ not: {} } as JSONSchema);
     } else {
