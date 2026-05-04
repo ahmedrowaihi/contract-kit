@@ -57,6 +57,7 @@ export function typescript(
               project,
               signature: pickSignature(opts),
               schema: pickSchema(opts),
+              typeMappers: opts.typeMappers,
             });
           } catch (err) {
             if (err instanceof SignatureSkipped) {
@@ -128,5 +129,9 @@ function pickSchema(
     additionalProperties: opts.additionalProperties,
     encodeRefs: opts.encodeRefs,
     expose: opts.expose,
+    typeMappers: opts.typeMappers,
+    identity: opts.identity,
+    transport: opts.transport,
+    sourceLocations: opts.sourceLocations,
   };
 }

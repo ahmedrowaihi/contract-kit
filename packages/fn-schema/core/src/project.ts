@@ -145,6 +145,7 @@ async function runExtract(
         output: finalised.output,
         async: fn.async,
         generic: fn.generic,
+        coverage: finalised.coverage,
       });
       if (finalised.definitions) {
         for (const [k, v] of Object.entries(finalised.definitions)) {
@@ -160,6 +161,9 @@ async function runExtract(
           }
           definitions[k] = v;
         }
+      }
+      if (finalised.coverage) {
+        emitCoverageDiagnostics(finalised.coverage, fn, sink);
       }
     } catch (err) {
       const skipped = err instanceof Error && err.name === "SignatureSkipped";
@@ -333,14 +337,47 @@ function errMessage(err: unknown): string {
   return String(err);
 }
 
-/**
- * Cheap equality check used to decide whether re-emitting a definition under
- * the same key represents a real conflict (different shape) or just the
- * happy case of two functions referencing the same shared type. Stringify
- * with sorted keys so property order doesn't trigger a false positive.
- */
+/** Equality via stable-key JSON — distinguishes a real shape conflict from two
+ *  functions referencing the same shared type. */
 function shallowSchemaEqual(a: JSONSchema, b: JSONSchema): boolean {
   return stableStringify(a) === stableStringify(b);
+}
+
+function emitCoverageDiagnostics(
+  coverage: NonNullable<SignaturePair["coverage"]>,
+  fn: FunctionInfo,
+  sink: DiagnosticSink,
+): void {
+  for (const m of coverage.mapped) {
+    sink.push({
+      severity: "info",
+      code: "TYPE_MAPPED",
+      message: `"${m.name}" mapped to canonical JSON Schema`,
+      file: fn.file,
+      location: fn.location,
+      function: fn.name,
+    });
+  }
+  for (const l of coverage.lossy) {
+    sink.push({
+      severity: "warning",
+      code: "LOSSY_MAPPING",
+      message: `"${l.name}" mapped lossily — ${l.reason}`,
+      file: fn.file,
+      location: fn.location,
+      function: fn.name,
+    });
+  }
+  for (const n of coverage.notRepresentable) {
+    sink.push({
+      severity: "error",
+      code: "NOT_REPRESENTABLE",
+      message: `"${n.name}" has no JSON Schema representation`,
+      file: fn.file,
+      location: fn.location,
+      function: fn.name,
+    });
+  }
 }
 
 function stableStringify(value: unknown): string {

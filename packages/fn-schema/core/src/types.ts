@@ -64,6 +64,38 @@ export interface SignaturePair {
   input: JSONSchema | JSONSchema[];
   output: JSONSchema;
   definitions?: Record<string, JSONSchema>;
+  coverage?: CoverageReport;
+}
+
+/**
+ * Where a coverage note fired — which overload, which side of the signature,
+ * and (for input parameters) which slot. Lets downstream tools render
+ * per-occurrence diagnostics instead of collapsing repeats by type name.
+ */
+export interface CoverageOccurrence {
+  side: "input" | "output";
+  /** Index into the resolved overload list (0 = first / oldest). */
+  overloadIndex: number;
+  /** Parameter slot index (input only). */
+  paramIndex?: number;
+  /** Parameter binding name (input only). */
+  paramName?: string;
+}
+
+export interface CoverageEntry {
+  name: string;
+  count: number;
+  occurrences: CoverageOccurrence[];
+}
+
+export interface LossyCoverageEntry extends CoverageEntry {
+  reason: string;
+}
+
+export interface CoverageReport {
+  mapped: CoverageEntry[];
+  lossy: LossyCoverageEntry[];
+  notRepresentable: CoverageEntry[];
 }
 
 export interface Extractor {
@@ -157,6 +189,31 @@ export interface SchemaOptions {
   additionalProperties?: boolean;
   encodeRefs?: boolean;
   expose?: "all" | "export" | "none";
+  /**
+   * Map TS type names to canonical JSON Schema. Merged on top of built-ins
+   * (Date, URL, RegExp, File, Blob, Buffer, Uint8Array, ArrayBuffer, bigint).
+   * User entries override built-ins.
+   */
+  typeMappers?: Record<string, JSONSchema>;
+  /**
+   * Attach the originating TS type name to mapped + named-type schemas via a
+   * vendor-extension keyword. Pass `false` (default) for pure JSON Schema, or
+   * a key name (typically `"x-fn-schema-ts"`) to opt in. Required for
+   * canvas-style nominal-type matching across functions.
+   */
+  identity?: false | string;
+  /**
+   * Attach a transport hint (`"multipart"` / `"base64"` / `"json"`) to
+   * binary-shaped schemas (File/Blob/Buffer/Uint8Array/ArrayBuffer) under a
+   * vendor-extension keyword. Pass `false` (default) or a key name (typically
+   * `"x-fn-schema-transport"`). Lets frontends pick the wire format.
+   */
+  transport?: false | string;
+  /**
+   * Attach the source-file location of every named type as a vendor-extension
+   * keyword. `false` (default) or a key name (typically `"x-fn-schema-source"`).
+   */
+  sourceLocations?: false | string;
 }
 
 export interface ResolvedSchemaOptions {
@@ -167,6 +224,10 @@ export interface ResolvedSchemaOptions {
   additionalProperties: boolean;
   encodeRefs: boolean;
   expose: "all" | "export" | "none";
+  typeMappers: Record<string, JSONSchema>;
+  identity: false | string;
+  transport: false | string;
+  sourceLocations: false | string;
 }
 
 /* ─────────────────────────────── Hooks ───────────────────────────── */
@@ -230,6 +291,7 @@ export interface SignatureEntry {
   output: JSONSchema;
   async: boolean;
   generic: boolean;
+  coverage?: CoverageReport;
 }
 
 export interface ExtractStats {
@@ -256,7 +318,10 @@ export type DiagnosticCode =
   | "FILE_READ_ERROR"
   | "INVALID_TARGET"
   | "DUPLICATE_ID"
-  | "NO_EXTRACTOR";
+  | "NO_EXTRACTOR"
+  | "TYPE_MAPPED"
+  | "LOSSY_MAPPING"
+  | "NOT_REPRESENTABLE";
 
 export interface Diagnostic {
   severity: DiagnosticSeverity;
