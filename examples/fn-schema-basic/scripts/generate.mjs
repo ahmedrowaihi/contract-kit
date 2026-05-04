@@ -13,11 +13,11 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 
 const result = await extract({
-	cwd: root,
-	files: [path.join(root, "src/handlers.ts")],
-	tsConfigPath: path.join(root, "tsconfig.json"),
-	naming: "function-name",
-	signature: { parameters: "first-only", unwrapPromise: true },
+  cwd: root,
+  files: [path.join(root, "src/handlers.ts")],
+  tsConfigPath: path.join(root, "tsconfig.json"),
+  naming: "function-name",
+  signature: { parameters: "first-only", unwrapPromise: true },
 });
 
 const outDir = path.join(root, "generated");
@@ -27,17 +27,17 @@ const bundle = emit.toBundle(result, { pretty: true });
 await writeFile(path.join(outDir, "schemas.json"), `${bundle}\n`);
 
 await emit.toFiles(result, {
-	dir: path.join(outDir, "by-signature"),
-	format: "json-pretty",
+  dir: path.join(outDir, "by-signature"),
+  format: "json-pretty",
 });
 
 const errors = result.diagnostics.filter((d) => d.severity === "error");
 const warnings = result.diagnostics.filter((d) => d.severity === "warning");
 
 console.log(
-	`fn-schema: ${result.signatures.length} signature(s), ` +
-		`${Object.keys(result.definitions).length} definition(s), ` +
-		`${warnings.length} warning(s), ${errors.length} error(s)`,
+  `fn-schema: ${result.signatures.length} signature(s), ` +
+    `${Object.keys(result.definitions).length} definition(s), ` +
+    `${warnings.length} warning(s), ${errors.length} error(s)`,
 );
 for (const w of warnings) console.warn(`  warn [${w.code}] ${w.message}`);
 for (const e of errors) console.error(`  err  [${e.code}] ${e.message}`);
