@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-typescript",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript extractor for fn-schema. Walks source via ts-morph, synthesizes virtual type aliases for each function's parameters and return, then converts them to JSON Schema via ts-json-schema-generator. Re-exports a pre-wired `extract` for single-language use.",
   "keywords": [
     "json-schema",

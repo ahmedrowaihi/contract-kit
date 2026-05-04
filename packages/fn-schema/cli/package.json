@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI wrapper for fn-schema. Thin orchestrator over @ahmedrowaihi/fn-schema-core with the TypeScript extractor pre-registered. Loads optional fn-schema.config.{ts,js,json} via c12.",
   "keywords": [
     "json-schema",
