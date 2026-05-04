@@ -26,11 +26,13 @@ export interface Reader<T extends Bundle> {
 export function createReader<T extends Bundle>(bundle: T): Reader<T> {
   const signatures = bundle.signatures as Record<string, BundleSignature>;
   const definitions = bundle.definitions;
+  const hasOwn = (obj: object, key: string): boolean =>
+    Object.prototype.hasOwnProperty.call(obj, key);
 
   const resolveRef = (ref: string): Record<string, unknown> | undefined => {
     if (!ref.startsWith(DEFINITIONS_PREFIX)) return undefined;
     const name = ref.slice(DEFINITIONS_PREFIX.length);
-    return definitions[name];
+    return hasOwn(definitions, name) ? definitions[name] : undefined;
   };
 
   const followRef = (schema: unknown): unknown => {
@@ -46,24 +48,28 @@ export function createReader<T extends Bundle>(bundle: T): Reader<T> {
   return {
     bundle,
     get(id) {
-      return signatures[id] as T["signatures"][typeof id] | undefined;
+      return hasOwn(signatures, id)
+        ? (signatures[id] as T["signatures"][typeof id])
+        : undefined;
     },
     has(id): id is typeof id & SignatureId<T> {
-      return id in signatures;
+      return hasOwn(signatures, id);
     },
     resolve(name) {
-      return definitions[name] as T["definitions"][typeof name] | undefined;
+      return hasOwn(definitions, name)
+        ? (definitions[name] as T["definitions"][typeof name])
+        : undefined;
     },
     resolveRef,
     inputOf(id) {
-      const sig = signatures[id];
-      if (!sig) return undefined;
+      if (!hasOwn(signatures, id)) return undefined;
+      const sig = signatures[id]!;
       if (Array.isArray(sig.input)) return sig.input.map(followRef);
       return followRef(sig.input);
     },
     outputOf(id) {
-      const sig = signatures[id];
-      if (!sig) return undefined;
+      if (!hasOwn(signatures, id)) return undefined;
+      const sig = signatures[id]!;
       return followRef(sig.output);
     },
     findByIdentity(name, identityKey = DEFAULT_IDENTITY_KEY) {

@@ -1,4 +1,8 @@
 export interface BundleSignature {
+  /** Original TS function name (independent of the `id` it's keyed by). */
+  name?: string;
+  /** Absolute path of the source file the signature was extracted from. */
+  file?: string;
   input: unknown;
   output: unknown;
 }

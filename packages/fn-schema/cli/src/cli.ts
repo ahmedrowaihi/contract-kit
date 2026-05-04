@@ -131,18 +131,20 @@ const main = defineCommand({
       return;
     }
 
-    const files = await fg(patternList, {
-      cwd,
-      absolute: true,
-      onlyFiles: true,
-      ignore: [
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/__fn_schema_virtual__/**",
-      ],
-    });
+    const listFiles = (): Promise<string[]> =>
+      fg(patternList, {
+        cwd,
+        absolute: true,
+        onlyFiles: true,
+        ignore: [
+          "**/node_modules/**",
+          "**/dist/**",
+          "**/__fn_schema_virtual__/**",
+        ],
+      });
 
-    if (files.length === 0) {
+    const initialFiles = await listFiles();
+    if (initialFiles.length === 0) {
       consola.warn(`No files matched: ${patternList.join(", ")}`);
       return;
     }
@@ -200,14 +202,22 @@ const main = defineCommand({
       extractors: [typescript(config.typescript)],
     });
 
-    const runOnce = async (): Promise<number> => {
+    const runOnce = async (
+      currentFiles: string[] = initialFiles,
+    ): Promise<number> => {
+      const files = await listFiles();
+      const fileList = files.length > 0 ? files : currentFiles;
       const start = Date.now();
-      consola.start(`Extracting from ${files.length} file(s)...`);
-      const result = await project.extract({ ...extractOpts, files });
+      consola.start(`Extracting from ${fileList.length} file(s)...`);
+      const result = await project.extract({
+        ...extractOpts,
+        files: fileList,
+      });
       logDiagnostics(result);
       await emitOutputs(result, {
         cwd,
         pretty: args.pretty,
+        dialect: extractOpts.schema?.dialect,
         outDir,
         bundlePath,
         bundleTypes,
@@ -225,7 +235,7 @@ const main = defineCommand({
       return errs;
     };
 
-    const errors = await runOnce();
+    const errors = await runOnce(initialFiles);
 
     if (!args.watch) {
       project.dispose();
@@ -285,6 +295,7 @@ async function emitOutputs(
   opts: {
     cwd: string;
     pretty: boolean;
+    dialect?: "draft-07" | "draft-2020-12" | "openapi-3.1";
     outDir?: string;
     bundlePath?: string;
     bundleTypes: boolean;
@@ -301,7 +312,10 @@ async function emitOutputs(
   if (opts.bundlePath) {
     const abs = path.resolve(opts.cwd, opts.bundlePath);
     await mkdir(path.dirname(abs), { recursive: true });
-    const json = emit.toBundle(result, { pretty: opts.pretty });
+    const json = emit.toBundle(result, {
+      pretty: opts.pretty,
+      dialect: opts.dialect,
+    });
     await writeFile(abs, json);
     consola.success(`Wrote bundle to ${opts.bundlePath}`);
     if (opts.bundleTypes) {

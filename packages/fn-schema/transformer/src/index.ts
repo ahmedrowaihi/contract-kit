@@ -14,6 +14,8 @@ export interface TransformerOptions {
 }
 
 interface BundleSig {
+  name?: string;
+  file?: string;
   input: unknown;
   output: unknown;
 }
@@ -28,9 +30,14 @@ interface Bundle {
  * call with the literal schema object pulled from the bundle, so consuming code
  * pays zero runtime cost and ships zero ts-morph dependency.
  *
+ * Bundle lookup goes through three fallbacks: id-as-key (works when the
+ * extractor used `naming: "function-name"`), name field (set by core's
+ * `emit.toBundle` since 0.x — survives `naming: "file-function"` and renamed
+ * imports), and finally type-checker symbol resolution for aliased imports
+ * like `import { createUser as makeUser } from "./api"`.
+ *
  * Usage with ts-patch:
  * ```jsonc
- * // tsconfig.json
  * {
  *   "compilerOptions": {
  *     "plugins": [
@@ -44,7 +51,7 @@ interface Bundle {
  * ```
  */
 export default function transformer(
-  _program: ts.Program,
+  program: ts.Program,
   options: TransformerOptions,
 ): ts.TransformerFactory<ts.SourceFile> {
   if (!options?.bundlePath) {
@@ -58,11 +65,37 @@ export default function transformer(
     : path.resolve(cwd, options.bundlePath);
 
   let bundle: Bundle | null = null;
-  const loadBundle = (): Bundle => {
-    if (bundle) return bundle;
+  let nameIndex: Map<string, BundleSig> | null = null;
+  const loadBundle = (): { bundle: Bundle; byName: Map<string, BundleSig> } => {
+    if (bundle && nameIndex) return { bundle, byName: nameIndex };
     const raw = readFileSync(abs, "utf-8");
     bundle = JSON.parse(raw) as Bundle;
-    return bundle;
+    nameIndex = new Map();
+    for (const [id, sig] of Object.entries(bundle.signatures)) {
+      if (sig.name) nameIndex.set(sig.name, sig);
+      // Always also index by the id itself so id-as-key lookups still work.
+      nameIndex.set(id, sig);
+    }
+    return { bundle, byName: nameIndex };
+  };
+
+  const checker = program.getTypeChecker();
+
+  const lookupSig = (arg: ts.Identifier): BundleSig | undefined => {
+    const { byName } = loadBundle();
+    // Layer 1 — direct match on the local identifier text.
+    const direct = byName.get(arg.text);
+    if (direct) return direct;
+    // Layer 2 — resolve via type checker so `import { createUser as makeUser }`
+    // finds the entry under its exported name.
+    const sym = checker.getSymbolAtLocation(arg);
+    if (!sym) return undefined;
+    const aliased =
+      (sym.flags & ts.SymbolFlags.Alias) !== 0
+        ? checker.getAliasedSymbol(sym)
+        : sym;
+    const exportedName = aliased.getName();
+    return byName.get(exportedName);
   };
 
   return (context) => (sourceFile) => {
@@ -74,7 +107,7 @@ export default function transformer(
       ) {
         const arg = node.arguments[0];
         if (arg && ts.isIdentifier(arg)) {
-          const sig = loadBundle().signatures[arg.text];
+          const sig = lookupSig(arg);
           if (sig) {
             switch (node.expression.text) {
               case "schemaOf":

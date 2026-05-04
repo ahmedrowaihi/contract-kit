@@ -27,7 +27,12 @@ export function toBundle(
     signatures: Object.fromEntries(
       result.signatures.map((s) => [
         s.id,
-        { input: s.input, output: s.output },
+        {
+          name: s.name,
+          file: s.file,
+          input: s.input,
+          output: s.output,
+        },
       ]),
     ),
   };

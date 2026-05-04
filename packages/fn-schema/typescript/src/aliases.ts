@@ -7,6 +7,7 @@ import {
   SyntaxKind,
   type Type,
   type TypeNode,
+  ts,
 } from "ts-morph";
 import {
   LOSSY_REASONS,
@@ -52,7 +53,8 @@ export interface ResolvedAlias {
   sources: Record<string, SourceLocation>;
 }
 
-const TYPE_FLAG_ES_SYMBOL = 4096;
+/** Use ts.TypeFlags directly — the numeric value drifts across TS releases. */
+const SYMBOL_FLAGS = ts.TypeFlags.ESSymbol | ts.TypeFlags.UniqueESSymbol;
 
 export function resolveTypeExpression(
   node: Node,
@@ -67,7 +69,7 @@ export function resolveTypeExpression(
 
   if (!type.isLiteral()) {
     const flags = type.compilerType.flags;
-    if ((flags & TYPE_FLAG_ES_SYMBOL) !== 0) {
+    if ((flags & SYMBOL_FLAGS) !== 0) {
       notes.push({ kind: "not-representable", name: "symbol" });
     }
   }
