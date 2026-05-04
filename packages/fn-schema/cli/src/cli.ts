@@ -68,6 +68,21 @@ const main = defineCommand({
       description:
         "JSON Schema dialect: draft-07 | draft-2020-12 | openapi-3.1.",
     },
+    identity: {
+      type: "string",
+      description:
+        'Attach the originating TS type name under this keyword (e.g. "x-fn-schema-ts"). Off when omitted.',
+    },
+    transport: {
+      type: "string",
+      description:
+        'Attach a transport hint (multipart/base64) for binary types under this keyword (e.g. "x-fn-schema-transport"). Off when omitted.',
+    },
+    "source-locations": {
+      type: "string",
+      description:
+        'Attach a "file:line:col" location to named definitions under this keyword (e.g. "x-fn-schema-source"). Off when omitted.',
+    },
     pretty: {
       type: "boolean",
       default: false,
@@ -138,6 +153,12 @@ const main = defineCommand({
             | "draft-2020-12"
             | "openapi-3.1"
             | undefined) ?? config.schema?.dialect,
+        identity: pickKey(args.identity, config.schema?.identity),
+        transport: pickKey(args.transport, config.schema?.transport),
+        sourceLocations: pickKey(
+          args["source-locations"],
+          config.schema?.sourceLocations,
+        ),
       },
       naming:
         (args.naming as
@@ -222,6 +243,20 @@ function mergeInclude(
     ...(configInclude ?? {}),
     ...(cliTag ? { jsDocTag: cliTag } : {}),
   };
+}
+
+/** Resolve a CLI string flag against a config-file fallback. Empty string or
+ *  literal "false" turns the feature off; any other non-empty string is the
+ *  vendor-extension keyword. */
+function pickKey(
+  cli: string | undefined,
+  fallback: false | string | undefined,
+): false | string {
+  if (typeof cli === "string") {
+    if (cli === "" || cli === "false") return false;
+    return cli;
+  }
+  return fallback ?? false;
 }
 
 function mergeExclude(
