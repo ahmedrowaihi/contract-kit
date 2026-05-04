@@ -1,0 +1,24 @@
+{
+  "name": "fn-schema-basic",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Demonstrates @ahmedrowaihi/fn-schema-typescript: extract input/output JSON Schemas from real TypeScript function signatures and verify them with vitest.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "generate": "node scripts/generate.mjs",
+    "extract": "fn-schema 'src/**/*.ts' --out generated/cli --pretty --naming file-function"
+  },
+  "dependencies": {
+    "@ahmedrowaihi/fn-schema-core": "workspace:*",
+    "@ahmedrowaihi/fn-schema-typescript": "workspace:*"
+  },
+  "devDependencies": {
+    "@ahmedrowaihi/fn-schema-cli": "workspace:*",
+    "@ahmedrowaihi/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
+  }
+}

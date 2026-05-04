@@ -3,6 +3,7 @@ packages:
   - "packages/openapi/*"
   - "packages/openapi/plugins/*"
   - "packages/asyncapi/*"
+  - "packages/fn-schema/*"
   - "apps/*"
   - "examples/*"
   - "tooling/*"
