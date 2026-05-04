@@ -35,6 +35,8 @@ const CATEGORIES = [
   "OpenAPI spec discovery",
   "AsyncAPI primitives",
   "AsyncAPI generators",
+  "fn-schema primitives",
+  "fn-schema TypeScript",
   "Apps",
   "Other",
 ];
@@ -54,6 +56,12 @@ const CATEGORY_BY_NAME = {
   "@ahmedrowaihi/openapi-recon": "OpenAPI spec discovery",
   "@ahmedrowaihi/asyncapi-core": "AsyncAPI primitives",
   "@ahmedrowaihi/asyncapi-typescript": "AsyncAPI generators",
+  "@ahmedrowaihi/fn-schema-core": "fn-schema primitives",
+  "@ahmedrowaihi/fn-schema-typescript": "fn-schema TypeScript",
+  "@ahmedrowaihi/fn-schema-cli": "fn-schema TypeScript",
+  "@ahmedrowaihi/fn-schema-loader": "fn-schema TypeScript",
+  "@ahmedrowaihi/fn-schema-unplugin": "fn-schema TypeScript",
+  "@ahmedrowaihi/fn-schema-transformer": "fn-schema TypeScript",
   "@ahmedrowaihi/glean": "Apps",
 };
 
