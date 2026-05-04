@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { emit } from "@ahmedrowaihi/fn-schema-core";
 import { extract } from "@ahmedrowaihi/fn-schema-typescript";
@@ -54,7 +54,8 @@ const main = defineCommand({
     },
     "unwrap-promise": {
       type: "boolean",
-      default: true,
+      // No default — let config-file value win when the flag is omitted.
+      // Resolution chain: CLI flag → config.signature.unwrapPromise → core default (true).
       description: "Unwrap Promise<T> in return types (default: true).",
     },
     naming: {
@@ -176,16 +177,17 @@ const main = defineCommand({
       consola.success(`Wrote ${written.length} file(s) to ${outDir}`);
     }
     if (bundlePath) {
+      const abs = path.resolve(cwd, bundlePath);
+      await mkdir(path.dirname(abs), { recursive: true });
       const json = emit.toBundle(result, { pretty: args.pretty });
-      await writeFile(path.resolve(cwd, bundlePath), json);
+      await writeFile(abs, json);
       consola.success(`Wrote bundle to ${bundlePath}`);
     }
     if (openapiPath) {
+      const abs = path.resolve(cwd, openapiPath);
+      await mkdir(path.dirname(abs), { recursive: true });
       const doc = emit.toOpenAPI(result, { title: "fn-schema" });
-      await writeFile(
-        path.resolve(cwd, openapiPath),
-        JSON.stringify(doc, null, args.pretty ? 2 : 0),
-      );
+      await writeFile(abs, JSON.stringify(doc, null, args.pretty ? 2 : 0));
       consola.success(`Wrote OpenAPI document to ${openapiPath}`);
     }
 
@@ -230,7 +232,14 @@ function mergeExclude(
   const out: { name?: RegExp | (string | RegExp)[] } = {
     ...(configExclude as object),
   };
-  if (cliName) out.name = new RegExp(cliName);
+  if (cliName) {
+    try {
+      out.name = new RegExp(cliName);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Invalid --exclude-name regex "${cliName}": ${msg}`);
+    }
+  }
   return out;
 }
 

@@ -18,6 +18,7 @@ export function parseTarget(input: string | TargetRef): ParsedTarget | null {
   const member = raw.slice(hash + 1);
   const dot = member.indexOf(".");
   if (dot === -1) return { file, functionName: member };
+  if (dot === 0 || dot === member.length - 1) return null;
   return {
     file,
     className: member.slice(0, dot),

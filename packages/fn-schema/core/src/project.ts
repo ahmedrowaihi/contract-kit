@@ -148,6 +148,16 @@ async function runExtract(
       });
       if (finalised.definitions) {
         for (const [k, v] of Object.entries(finalised.definitions)) {
+          const prior = definitions[k];
+          if (prior && !shallowSchemaEqual(prior, v)) {
+            sink.push({
+              severity: "warning",
+              code: "DUPLICATE_ID",
+              message: `Definition "${k}" emitted with conflicting shapes from "${fn.name}"; later schema overwrites the earlier one (cross-file types with the same name should be renamed or aliased)`,
+              file: fn.file,
+              function: fn.name,
+            });
+          }
           definitions[k] = v;
         }
       }
@@ -321,4 +331,29 @@ function uniqueId(
 function errMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
+}
+
+/**
+ * Cheap equality check used to decide whether re-emitting a definition under
+ * the same key represents a real conflict (different shape) or just the
+ * happy case of two functions referencing the same shared type. Stringify
+ * with sorted keys so property order doesn't trigger a false positive.
+ */
+function shallowSchemaEqual(a: JSONSchema, b: JSONSchema): boolean {
+  return stableStringify(a) === stableStringify(b);
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  const keys = Object.keys(value as object).sort();
+  const body = keys
+    .map(
+      (k) =>
+        `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`,
+    )
+    .join(",");
+  return `{${body}}`;
 }

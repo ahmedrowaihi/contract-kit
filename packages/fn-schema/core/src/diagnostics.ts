@@ -20,7 +20,7 @@ export class DiagnosticSink {
   }
 
   all(): Diagnostic[] {
-    return this.entries;
+    return [...this.entries];
   }
 }
 

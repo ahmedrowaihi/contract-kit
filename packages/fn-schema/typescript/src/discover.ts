@@ -135,7 +135,7 @@ function describeFunctionDeclaration(
     language: "typescript",
     exported,
     async: fd.isAsync(),
-    generic: fd.getTypeParameters().length > 0,
+    generic: hasUnresolvedGenerics(fd.getTypeParameters().length, overloads),
     parameters: impl.parameters.map(stripAlias),
     jsDoc: parseJsDoc(fd.getJsDocs()),
     sourceFilePath: filePath,
@@ -173,7 +173,7 @@ function describeVariableDeclaration(
     language: "typescript",
     exported,
     async: fn.isAsync(),
-    generic: fn.getTypeParameters().length > 0,
+    generic: hasUnresolvedGenerics(fn.getTypeParameters().length, [sig]),
     parameters: sig.parameters.map(stripAlias),
     jsDoc: parseJsDoc(stmt?.getJsDocs() ?? []),
     sourceFilePath: filePath,
@@ -285,7 +285,7 @@ function describeMethod(
     language: "typescript",
     exported: classExported,
     async: m.isAsync(),
-    generic: m.getTypeParameters().length > 0,
+    generic: hasUnresolvedGenerics(m.getTypeParameters().length, overloads),
     parameters: impl.parameters.map(stripAlias),
     jsDoc: parseJsDoc(m.getJsDocs()),
     className,
@@ -321,7 +321,7 @@ function describeExportAssignment(
     language: "typescript",
     exported: true,
     async: fn.isAsync(),
-    generic: fn.getTypeParameters().length > 0,
+    generic: hasUnresolvedGenerics(fn.getTypeParameters().length, [sig]),
     parameters: sig.parameters.map(stripAlias),
     jsDoc: parseJsDoc(ea.getJsDocs()),
     sourceFilePath: filePath,
@@ -392,6 +392,26 @@ function resolveParameter(
 function stripAlias(p: ResolvedParameter): ParameterInfo {
   const { alias: _drop, ...rest } = p;
   return rest;
+}
+
+/**
+ * A function should be treated as generic when EITHER its declaration carries
+ * type parameters OR any resolved parameter / return references an
+ * unresolved type parameter (e.g. methods on a generic class:
+ * `class Box<T> { get(): T }` has 0 type-params at the method level but `T`
+ * still escapes into the schema). Without this, buildSchemas() would attempt
+ * extraction and fail at runtime with a tjsg parser error.
+ */
+function hasUnresolvedGenerics(
+  declaredTypeParamCount: number,
+  overloads: OverloadSignature[],
+): boolean {
+  if (declaredTypeParamCount > 0) return true;
+  return overloads.some(
+    (o) =>
+      o.returnAlias.hasUnresolvedGenerics ||
+      o.parameters.some((p) => p.alias.hasUnresolvedGenerics),
+  );
 }
 
 /* ─────────────────────────── overload collection ────────────────────── */

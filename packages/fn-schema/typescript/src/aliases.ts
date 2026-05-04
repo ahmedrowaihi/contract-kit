@@ -162,6 +162,16 @@ function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
   const sourceFile = ident.getSourceFile();
   const decls = ident.getSymbol()?.getDeclarations() ?? [];
 
+  // Skip ambient symbols (Blob, AbortSignal, Buffer, …) — they live in
+  // .d.ts files and are globally available; importing them from the host
+  // would emit `import { Blob }` which doesn't exist as a real export.
+  if (
+    decls.length > 0 &&
+    decls.every((d) => d.getSourceFile().isDeclarationFile())
+  ) {
+    return;
+  }
+
   for (const decl of decls) {
     // Check ImportDeclaration ancestor FIRST — an import binding's source
     // file is the host, so the local-declaration check below would
@@ -172,10 +182,16 @@ function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
     if (importDecl) {
       const spec = (importDecl as ImportDeclaration).getModuleSpecifierValue();
       if (spec) {
-        // Re-target relative specifiers so they resolve from the
-        // virtual file's location, not the host's.
+        // Resolve aliased imports back to the exported name so the virtual
+        // file uses the *exported* identifier, not the host's local alias.
+        const exportedName = exportedNameFromDecl(decl, name);
         const reTargeted = retargetSpecifier(spec, sourceFile, acc);
-        acc.addExternal(reTargeted, name, true, importKindFromDecl(decl));
+        acc.addExternal(
+          reTargeted,
+          exportedName,
+          true,
+          importKindFromDecl(decl),
+        );
         return;
       }
     }
@@ -187,10 +203,31 @@ function registerIdentifier(ident: Node, acc: ImportAccumulator): void {
       return;
     }
 
-    // Some other ambient/global decl — best-effort fall back to host.
+    // Symbol resolved to a non-host file with no import in the host (likely
+    // an ambient/global from another .d.ts). Skip rather than emit a broken
+    // self-import.
+    if (declSf.isDeclarationFile()) return;
+
+    // Anything else is unexpected — fall back to host re-import.
     acc.addLocal(name, true, "named");
     return;
   }
+}
+
+/**
+ * For `import { Foo as Bar } from "x"`, the host references `Bar`, but the
+ * exported name on the module is `Foo`. The virtual file must use the
+ * exported name to resolve correctly. This helper walks the ImportSpecifier
+ * to recover the original name when an alias is present.
+ */
+function exportedNameFromDecl(decl: Node, fallback: string): string {
+  if (Node.isImportSpecifier(decl)) {
+    // ts-morph 28 exposes the underlying TS node directly; the
+    // `propertyName` slot holds the exported name when the import is aliased.
+    const propertyName = decl.compilerNode.propertyName;
+    if (propertyName) return propertyName.text;
+  }
+  return fallback;
 }
 
 /**
