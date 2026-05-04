@@ -1,14 +1,14 @@
 {
-  "name": "@ahmedrowaihi/fn-schema-cli",
+  "name": "@ahmedrowaihi/fn-schema-loader",
   "version": "0.1.0",
-  "description": "CLI wrapper for fn-schema. Thin orchestrator over @ahmedrowaihi/fn-schema-core with the TypeScript extractor pre-registered. Loads optional fn-schema.config.{ts,js,json} via c12.",
+  "description": "Type-safe reader for fn-schema bundles. Resolves $ref pointers, indexes signatures by id and named types by identity keyword. Zero runtime dependencies — works in any JS runtime that can read JSON.",
   "keywords": [
     "json-schema",
     "function-signature",
-    "cli",
-    "codegen"
+    "reader",
+    "loader"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/fn-schema/cli",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/fn-schema/loader",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
@@ -20,15 +20,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
-    "directory": "packages/fn-schema/cli"
+    "directory": "packages/fn-schema/loader"
   },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "fn-schema": "./dist/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -51,13 +48,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@ahmedrowaihi/fn-schema-core": "workspace:*",
-    "@ahmedrowaihi/fn-schema-typescript": "workspace:*",
-    "c12": "^3.3.4",
-    "chokidar": "^4.0.3",
-    "citty": "^0.2.2",
-    "consola": "^3.4.2",
-    "fast-glob": "^3.3.3"
+    "@ahmedrowaihi/fn-schema-core": "workspace:*"
   },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",

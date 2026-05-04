@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ahmedrowaihi/fn-schema-core": "workspace:*",
+    "@ahmedrowaihi/fn-schema-loader": "workspace:*",
     "@ahmedrowaihi/fn-schema-typescript": "workspace:*"
   },
   "devDependencies": {

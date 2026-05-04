@@ -1,14 +1,14 @@
 {
-  "name": "@ahmedrowaihi/fn-schema-cli",
+  "name": "@ahmedrowaihi/fn-schema-transformer",
   "version": "0.1.0",
-  "description": "CLI wrapper for fn-schema. Thin orchestrator over @ahmedrowaihi/fn-schema-core with the TypeScript extractor pre-registered. Loads optional fn-schema.config.{ts,js,json} via c12.",
+  "description": "TypeScript compiler-API transformer that inlines fn-schema results into emitted code. Replaces `schemaOf(myFunction)` calls with the literal JSON Schema at build time, eliminating runtime extraction cost. Plug into ts-patch, swc, esbuild, or any tool that accepts a custom TS transformer.",
   "keywords": [
     "json-schema",
     "function-signature",
-    "cli",
-    "codegen"
+    "typescript-transformer",
+    "compile-time"
   ],
-  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/fn-schema/cli",
+  "homepage": "https://github.com/ahmedrowaihi/contract-kit/tree/main/packages/fn-schema/transformer",
   "bugs": {
     "url": "https://github.com/ahmedrowaihi/contract-kit/issues"
   },
@@ -20,19 +20,20 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ahmedrowaihi/contract-kit.git",
-    "directory": "packages/fn-schema/cli"
+    "directory": "packages/fn-schema/transformer"
   },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "fn-schema": "./dist/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
     },
     "./package.json": "./package.json"
   },
@@ -52,16 +53,15 @@
   },
   "dependencies": {
     "@ahmedrowaihi/fn-schema-core": "workspace:*",
-    "@ahmedrowaihi/fn-schema-typescript": "workspace:*",
-    "c12": "^3.3.4",
-    "chokidar": "^4.0.3",
-    "citty": "^0.2.2",
-    "consola": "^3.4.2",
-    "fast-glob": "^3.3.3"
+    "@ahmedrowaihi/fn-schema-typescript": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
   },
   "devDependencies": {
     "@ahmedrowaihi/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "typescript": "5.9.3",
     "vitest": "catalog:"
   },
   "engines": {
