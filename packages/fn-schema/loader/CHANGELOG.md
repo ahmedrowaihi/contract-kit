@@ -1,5 +1,12 @@
 # @ahmedrowaihi/fn-schema-loader
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [dbaeb22]
+  - @ahmedrowaihi/fn-schema-core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

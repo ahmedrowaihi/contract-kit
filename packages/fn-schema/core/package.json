@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Language-agnostic core for fn-schema: extract function input/output JSON Schemas from source code. Defines the Extractor contract and ships emitters (files, bundle, OpenAPI) that operate on the shared FunctionInfo IR.",
   "keywords": [
     "json-schema",

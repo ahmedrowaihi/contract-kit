@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-unplugin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Bundler plugin for fn-schema. Exposes a virtual module that resolves to the extracted bundle, with HMR on source change in dev. Built on unplugin so the same package powers Vite, webpack, Rollup, esbuild, Rspack, Rolldown, and Farm.",
   "keywords": [
     "json-schema",

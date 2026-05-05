@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-transformer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "TypeScript compiler-API transformer that inlines fn-schema results into emitted code. Replaces `schemaOf(myFunction)` calls with the literal JSON Schema at build time, eliminating runtime extraction cost. Plug into ts-patch, swc, esbuild, or any tool that accepts a custom TS transformer.",
   "keywords": [
     "json-schema",
