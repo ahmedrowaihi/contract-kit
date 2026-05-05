@@ -319,8 +319,6 @@ function describeExportAssignment(
   };
 }
 
-/* ─────────────────────────── signature helper ────────────────────── */
-
 type SignatureNode =
   | FunctionDeclaration
   | ArrowFunction

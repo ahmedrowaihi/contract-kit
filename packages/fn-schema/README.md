@@ -28,7 +28,7 @@ const bundleJson = emit.toBundle(result, { pretty: true });
 
 ```bash
 # CLI — same thing, from the terminal
-npx fn-schema 'src/**/*.ts' --bundle generated/schemas.json --pretty
+npx fn-schema extract 'src/**/*.ts' --bundle generated/schemas.json --pretty
 ```
 
 The CLI is a thin wrapper over `extract()`. Every flag maps to an `ExtractOptions` field. Use whichever fits your build chain.
@@ -42,6 +42,7 @@ The CLI is a thin wrapper over `extract()`. Every flag maps to an `ExtractOption
 | Auto-regen during dev                          | `cli --watch` (any framework) or `unplugin` (Vite/webpack/…)  |
 | Inline schemas as JS literals at compile time  | `transformer`                                                 |
 | Embed in your own tooling                      | `core` + `typescript` directly                                |
+| Browse / inspect / diff your schemas           | `cli scan` · `cli inspect` · `cli browse` · `cli diff`        |
 
 ## Quick start
 
@@ -77,7 +78,7 @@ reader.findByIdentity("User");
 
 ```bash
 pnpm add -D @ahmedrowaihi/fn-schema-cli
-npx fn-schema 'src/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
+npx fn-schema extract 'src/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
 ```
 
 ```ts

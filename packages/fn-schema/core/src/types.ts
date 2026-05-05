@@ -2,8 +2,6 @@ import type { JSONSchema7 } from "json-schema";
 
 export type JSONSchema = JSONSchema7;
 
-/* ─────────────────────────── Function IR ─────────────────────────── */
-
 export type FunctionKind =
   | "function"
   | "arrow"
@@ -51,8 +49,6 @@ export interface FunctionInfo {
   /** Decorator names when `kind === "method"`. */
   decorators?: string[];
 }
-
-/* ──────────────────────── Extractor contract ─────────────────────── */
 
 /** Per-extractor init payload. Extractors decide which fields they need. */
 export interface ExtractorInitOptions {
@@ -118,8 +114,6 @@ export interface ExtractorInstance {
   dispose(): void;
 }
 
-/* ───────────────────────── Filter / naming ───────────────────────── */
-
 export type NamePattern = string | RegExp;
 
 export interface IncludeFilter {
@@ -152,8 +146,6 @@ export type NamingStrategy =
   | "file-function"
   | "jsdoc-tag"
   | ((fn: FunctionInfo) => string);
-
-/* ─────────────────────── Signature / schema options ─────────────── */
 
 export type ParametersStrategy = "array" | "first-only" | "object";
 
@@ -230,8 +222,6 @@ export interface ResolvedSchemaOptions {
   sourceLocations: false | string;
 }
 
-/* ─────────────────────────────── Hooks ───────────────────────────── */
-
 export interface SchemaContext {
   function: FunctionInfo;
   position: "input" | "output" | "parameter";
@@ -242,8 +232,6 @@ export interface ExtractHooks {
   onFunction?: (fn: FunctionInfo) => FunctionInfo | null | void;
   onSchema?: (schema: JSONSchema, ctx: SchemaContext) => JSONSchema;
 }
-
-/* ─────────────────────── Top-level extract API ───────────────────── */
 
 export interface TargetRef {
   /** "src/api.ts#createUser" or "src/api.ts#User.create" */
@@ -276,8 +264,6 @@ export interface ExtractOptions {
   onDiagnostic?: (d: Diagnostic) => void;
   failFast?: boolean;
 }
-
-/* ──────────────────────── Result + diagnostics ───────────────────── */
 
 export interface SignatureEntry {
   id: string;
@@ -332,16 +318,21 @@ export interface Diagnostic {
   function?: string;
 }
 
-/* ────────────────────────── Project facade ───────────────────────── */
-
 export interface ProjectOptions {
   extractors: Extractor[];
   cwd?: string;
   tsConfigPath?: string;
 }
 
+export interface DiscoverResult {
+  signatures: FunctionInfo[];
+  diagnostics: Diagnostic[];
+  stats: ExtractStats;
+}
+
 export interface Project {
   extract(options?: Partial<ExtractOptions>): Promise<ExtractResult>;
+  discover(options?: Partial<ExtractOptions>): Promise<DiscoverResult>;
   refresh(paths?: string[]): void;
   dispose(): void;
 }

@@ -48,7 +48,7 @@ await writeFile(
 ### Via CLI
 
 ```bash
-npx fn-schema 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
+npx fn-schema extract 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
 ```
 
 The `.ts` wrapper next to `schemas.json` is what unlocks literal-typed lookups in the reader.

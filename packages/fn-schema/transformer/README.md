@@ -42,7 +42,7 @@ await writeFile("generated/schemas.json", emit.toBundle(result));
 **CLI**:
 
 ```bash
-npx fn-schema 'src/api/**/*.ts' --bundle generated/schemas.json --pretty
+npx fn-schema extract 'src/api/**/*.ts' --bundle generated/schemas.json --pretty
 ```
 
 ### 2. Configure ts-patch

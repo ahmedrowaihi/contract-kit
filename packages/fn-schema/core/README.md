@@ -30,6 +30,18 @@ const result = await project.extract({
 project.dispose()
 ```
 
+### Discovery without schemas
+
+`Project.discover()` walks the same files but stops at function detection — no schema generation. Use it when you only need names, locations, JSDoc tags, and the like.
+
+```ts
+const { signatures, stats } = await project.discover({
+  files: ["src/**/*.ts"],
+  include: { jsDocTag: "schema" },
+})
+for (const fn of signatures) console.log(fn.name, fn.file, fn.location)
+```
+
 ## Emitters
 
 ```ts

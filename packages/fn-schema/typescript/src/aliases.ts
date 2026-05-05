@@ -526,8 +526,6 @@ function relSpecifierFromAbs(absPath: string, virtualDir: string): string {
   return rel;
 }
 
-/* ─────────────────────────── public render ─────────────────────────── */
-
 export function renderImports(imports: AliasImport[]): string {
   if (imports.length === 0) return "";
 
