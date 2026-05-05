@@ -101,20 +101,37 @@ export const inspectCommand = defineCommand({
         schema: {
           ...(config.schema ?? {}),
           identity:
-            typeof args.identity === "string" ? args.identity : undefined,
+            typeof args.identity === "string"
+              ? args.identity
+              : config.schema?.identity,
           transport:
-            typeof args.transport === "string" ? args.transport : undefined,
+            typeof args.transport === "string"
+              ? args.transport
+              : config.schema?.transport,
         },
       });
 
-      const sig = result.signatures.find((s) => s.name === args.name);
-      if (!sig) {
+      const matches = result.signatures.filter((s) => s.name === args.name);
+      if (matches.length === 0) {
         consola.error(
           `Function "${args.name}" not found in ${files.length} file(s).`,
         );
         process.exitCode = 1;
         return;
       }
+      if (matches.length > 1) {
+        consola.error(
+          `Function "${args.name}" matched ${matches.length} signatures. Narrow the patterns and try again:`,
+        );
+        for (const m of matches) {
+          consola.error(
+            `  ${path.relative(cwd, m.file)}:${m.location.line}:${m.location.column}`,
+          );
+        }
+        process.exitCode = 1;
+        return;
+      }
+      const sig = matches[0];
 
       if (args.json) {
         process.stdout.write(

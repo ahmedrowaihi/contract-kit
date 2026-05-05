@@ -69,6 +69,11 @@ export function mergeExclude(
   if (!cliName && !configExclude) return undefined;
   const out: ExcludeFilter = { ...(configExclude ?? {}) };
   if (cliName) {
+    if (cliName.length > 500) {
+      throw new Error(
+        `--exclude-name pattern is too long (${cliName.length} chars; max 500)`,
+      );
+    }
     try {
       out.name = new RegExp(cliName);
     } catch (err) {

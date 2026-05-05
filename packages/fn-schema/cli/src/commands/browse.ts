@@ -1,10 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  createProject,
-  emit,
-  type FunctionInfo,
-} from "@ahmedrowaihi/fn-schema-core";
+import { createProject, emit } from "@ahmedrowaihi/fn-schema-core";
 import { typescript } from "@ahmedrowaihi/fn-schema-typescript";
 import {
   cancel,
@@ -98,10 +94,10 @@ export const browseCommand = defineCommand({
         return;
       }
 
-      const picked = await multiselect<string>({
+      const picked = await multiselect<number>({
         message: "Select functions",
-        options: discovery.signatures.map((fn) => ({
-          value: keyOf(fn),
+        options: discovery.signatures.map((fn, i) => ({
+          value: i,
           label: fn.name,
           hint: `${path.relative(cwd, fn.file)}:${fn.location.line}`,
         })),
@@ -109,7 +105,17 @@ export const browseCommand = defineCommand({
       });
       if (isCancel(picked)) return cancel("Cancelled.");
 
-      const chosen = new Set(picked);
+      const chosenIndexes = new Set(picked);
+      const chosenSigs = discovery.signatures.filter((_, i) =>
+        chosenIndexes.has(i),
+      );
+      const chosenFiles = Array.from(new Set(chosenSigs.map((fn) => fn.file)));
+      const chosenNamePatterns = Array.from(
+        new Set(
+          chosenSigs.map((fn) => new RegExp(`^${escapeRegExp(fn.name)}$`)),
+        ),
+      );
+
       const action = await select<Action>({
         message: "What now?",
         options: [
@@ -128,11 +134,14 @@ export const browseCommand = defineCommand({
       e.start("Extracting selected functions");
       const result = await project.extract({
         ...baseExtractOpts(args, config, cwd),
-        files,
+        files: chosenFiles,
         signature: config.signature,
         schema: config.schema,
         naming: config.naming,
-        filter: (fn) => chosen.has(keyOf(fn)),
+        include: {
+          ...baseExtractOpts(args, config, cwd).include,
+          name: chosenNamePatterns,
+        },
       });
       e.stop(`Extracted ${result.signatures.length} signature(s)`);
 
@@ -144,8 +153,8 @@ export const browseCommand = defineCommand({
   },
 });
 
-function keyOf(fn: FunctionInfo): string {
-  return `${fn.file}#${fn.name}@${fn.location.line}:${fn.location.column}`;
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function maybeAskPath(action: Action): Promise<string | null> {

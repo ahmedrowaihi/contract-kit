@@ -59,7 +59,8 @@ export const diffCommand = defineCommand({
     const hasBreaking =
       report.signatures.removed.length > 0 ||
       report.signatures.changed.length > 0 ||
-      report.definitions.removed.length > 0;
+      report.definitions.removed.length > 0 ||
+      report.definitions.changed.length > 0;
     const hasAny =
       hasBreaking ||
       report.signatures.added.length > 0 ||

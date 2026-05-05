@@ -195,11 +195,12 @@ export const extractCommand = defineCommand({
       extractors: [typescript(config.typescript)],
     });
 
-    const runOnce = async (
-      currentFiles: string[] = initialFiles,
-    ): Promise<number> => {
-      const files = await listFiles();
-      const fileList = files.length > 0 ? files : currentFiles;
+    const runOnce = async (): Promise<number> => {
+      const fileList = await listFiles();
+      if (fileList.length === 0) {
+        consola.warn(`No files matched: ${patternList.join(", ")}`);
+        return 0;
+      }
       const start = Date.now();
       consola.start(`Extracting from ${fileList.length} file(s)...`);
       const result = await project.extract({
@@ -228,7 +229,7 @@ export const extractCommand = defineCommand({
       return errs;
     };
 
-    const errors = await runOnce(initialFiles);
+    const errors = await runOnce();
 
     if (!args.watch) {
       project.dispose();
