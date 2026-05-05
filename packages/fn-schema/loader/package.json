@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/fn-schema-loader",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Type-safe reader for fn-schema bundles. Resolves $ref pointers, indexes signatures by id and named types by identity keyword. Zero runtime dependencies — works in any JS runtime that can read JSON.",
   "keywords": [
     "json-schema",

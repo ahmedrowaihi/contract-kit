@@ -1,6 +1,6 @@
 {
   "name": "fn-schema-basic",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "description": "Demonstrates @ahmedrowaihi/fn-schema-typescript: extract input/output JSON Schemas from real TypeScript function signatures and verify them with vitest.",
