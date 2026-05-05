@@ -17,7 +17,7 @@ The bin is `fn-schema`. Run via `npx fn-schema ...`, or wire a `package.json` sc
 ```jsonc
 {
   "scripts": {
-    "schemas": "fn-schema 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty",
+    "schemas": "fn-schema extract 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty",
   },
 }
 ```
@@ -26,30 +26,53 @@ The bin is `fn-schema`. Run via `npx fn-schema ...`, or wire a `package.json` sc
 
 ```bash
 # per-signature JSON files
-npx fn-schema 'src/**/*.ts' --out generated --pretty
+npx fn-schema extract 'src/**/*.ts' --out generated --pretty
 
 # single bundled JSON
-npx fn-schema 'src/**/*.ts' --bundle generated/schemas.json --pretty
+npx fn-schema extract 'src/**/*.ts' --bundle generated/schemas.json --pretty
 
 # bundle + typed TS wrapper for the loader package
-npx fn-schema 'src/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
+npx fn-schema extract 'src/**/*.ts' --bundle generated/schemas.json --bundle-types --pretty
 
 # OpenAPI 3.1 components doc
-npx fn-schema 'src/**/*.ts' --openapi generated/openapi.json --pretty
+npx fn-schema extract 'src/**/*.ts' --openapi generated/openapi.json --pretty
 ```
 
 ## Watch mode
 
 ```bash
-npx fn-schema 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --watch
+npx fn-schema extract 'src/api/**/*.ts' --bundle generated/schemas.json --bundle-types --watch
 ```
 
 Keeps a warm `Project` between rebuilds, so changes after the first run land in tens of milliseconds.
 
+## Discovery & diff commands
+
+```bash
+# list every function the extractor would see (no schema generation)
+npx fn-schema scan 'src/**/*.ts'
+
+# resolved input/output schema for a single function
+npx fn-schema inspect createUser 'src/api/**/*.ts'
+
+# interactive picker — discover, multi-select, then print/bundle/files/openapi
+npx fn-schema browse 'src/**/*.ts'
+
+# bundle-vs-bundle diff (CI-friendly: --breaking-only exits 1 only on removed/changed)
+npx fn-schema diff old/schemas.json new/schemas.json --breaking-only
+```
+
+| Command   | Purpose                                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `scan`    | Read-only function listing — fast, no schemas. Pipe `--json` to other tools or eyeball filter regexes.      |
+| `inspect` | Resolved input/output for one function. Verify mappings without writing the bundle.                         |
+| `browse`  | Interactive (clack) picker. Pick functions, then choose an action: print, bundle, per-file, or OpenAPI doc. |
+| `diff`    | Compare two emitted bundles. `--breaking-only` for CI gates that fail only on removed or changed shapes.    |
+
 ## Vendor-extension keywords
 
 ```bash
-npx fn-schema 'src/**/*.ts' --bundle generated/schemas.json \
+npx fn-schema extract 'src/**/*.ts' --bundle generated/schemas.json \
   --identity x-fn-schema-ts \
   --transport x-fn-schema-transport \
   --source-locations x-fn-schema-source

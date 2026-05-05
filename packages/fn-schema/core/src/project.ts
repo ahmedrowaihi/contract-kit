@@ -4,11 +4,13 @@ import { applyFilter, resolveFilter } from "./filter.js";
 import { resolveNaming } from "./naming.js";
 import type {
   Diagnostic,
+  DiscoverResult,
   ExtractHooks,
   ExtractOptions,
   Extractor,
   ExtractorInstance,
   ExtractResult,
+  ExtractStats,
   FunctionInfo,
   JSONSchema,
   Project,
@@ -53,6 +55,11 @@ export function createProject(opts: ProjectOptions): Project {
       const init = await ensureInit();
       return runExtract(init, merged, cwd);
     },
+    async discover(callOpts) {
+      const merged = mergeOptions(opts, callOpts);
+      const init = await ensureInit();
+      return runDiscover(init, merged);
+    },
     refresh(paths) {
       if (!entries) return;
       const list = paths ?? [];
@@ -92,29 +99,12 @@ async function runExtract(
   const sigOpts = resolveSignatureOptions(options.signature);
   const schemaOpts = resolveSchemaOptions(options.schema);
 
-  const filesByExtractor = groupFiles(entries, options, sink);
-  let filesScanned = 0;
-
-  const allDiscovered: { entry: ExtractorEntry; fn: FunctionInfo }[] = [];
-  for (const [language, { files, entry }] of filesByExtractor) {
-    if (files.length === 0) continue;
-    filesScanned += files.length;
-    try {
-      const found = await entry.instance.discover(files, filter);
-      for (const fn of found) {
-        if (!applyFilter(fn, filter)) continue;
-        const transformed = applyOnFunctionHook(fn, options.hooks);
-        if (!transformed) continue;
-        allDiscovered.push({ entry, fn: transformed });
-      }
-    } catch (err) {
-      sink.push({
-        severity: "error",
-        code: "EXTRACTOR_FAILURE",
-        message: `Extractor "${language}" failed during discover: ${errMessage(err)}`,
-      });
-    }
-  }
+  const { discovered: allDiscovered, filesScanned } = await runDiscoverPass(
+    entries,
+    options,
+    sink,
+    filter,
+  );
 
   const signatures: SignatureEntry[] = [];
   const definitions: Record<string, JSONSchema> = {};
@@ -199,6 +189,68 @@ async function runExtract(
       durationMs: Date.now() - start,
     },
   };
+}
+
+async function runDiscover(
+  entries: ExtractorEntry[],
+  options: ExtractOptions,
+): Promise<DiscoverResult> {
+  const start = Date.now();
+  const sink = new DiagnosticSink(options.onDiagnostic, options.failFast);
+  const filter = resolveFilter(
+    options.include,
+    options.exclude,
+    options.filter,
+  );
+  const { discovered, filesScanned } = await runDiscoverPass(
+    entries,
+    options,
+    sink,
+    filter,
+  );
+  return {
+    signatures: discovered.map((d) => d.fn),
+    diagnostics: sink.all(),
+    stats: {
+      filesScanned,
+      functionsFound: discovered.length,
+      durationMs: Date.now() - start,
+    },
+  };
+}
+
+async function runDiscoverPass(
+  entries: ExtractorEntry[],
+  options: ExtractOptions,
+  sink: DiagnosticSink,
+  filter: ResolvedFilter,
+): Promise<{
+  discovered: { entry: ExtractorEntry; fn: FunctionInfo }[];
+  filesScanned: number;
+}> {
+  const filesByExtractor = groupFiles(entries, options, sink);
+  let filesScanned = 0;
+  const discovered: { entry: ExtractorEntry; fn: FunctionInfo }[] = [];
+  for (const [language, { files, entry }] of filesByExtractor) {
+    if (files.length === 0) continue;
+    filesScanned += files.length;
+    try {
+      const found = await entry.instance.discover(files, filter);
+      for (const fn of found) {
+        if (!applyFilter(fn, filter)) continue;
+        const transformed = applyOnFunctionHook(fn, options.hooks);
+        if (!transformed) continue;
+        discovered.push({ entry, fn: transformed });
+      }
+    } catch (err) {
+      sink.push({
+        severity: "error",
+        code: "EXTRACTOR_FAILURE",
+        message: `Extractor "${language}" failed during discover: ${errMessage(err)}`,
+      });
+    }
+  }
+  return { discovered, filesScanned };
 }
 
 interface FileGroup {

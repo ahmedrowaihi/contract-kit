@@ -8,7 +8,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "generate": "node scripts/generate.mjs",
-    "extract": "fn-schema 'src/**/*.ts' --out generated/cli --pretty --naming file-function"
+    "extract": "fn-schema extract \"src/**/*.ts\" --out generated/cli --pretty --naming file-function"
   },
   "dependencies": {
     "@ahmedrowaihi/fn-schema-core": "workspace:*",

@@ -12,6 +12,7 @@ export type {
   Diagnostic,
   DiagnosticCode,
   DiagnosticSeverity,
+  DiscoverResult,
   ExcludeFilter,
   ExtractHooks,
   ExtractOptions,
